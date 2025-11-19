@@ -11,9 +11,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             UserSeeder::class,
-            // LayananSeeder::class, // nanti
-            // ArmadaSeeder::class,  // nanti
-            // SupirSeeder::class,   // nanti
+            PenggunaSeeder::class,
+            LayananSeeder::class,
+            ArmadaSeeder::class,
+            SupirSeeder::class,
+            PemesananSeeder::class,
+            UlasanSeeder::class,
         ]);
     }
 }

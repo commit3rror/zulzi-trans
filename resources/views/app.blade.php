@@ -1,14 +1,15 @@
-<!-- resources/views/app.blade.php -->
 <!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zulzi Trans</title>
-    @viteReactRefresh
-    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
-</head>
-<body>
-    <div id="app"></div>
-</body>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Zulzi Trans</title>
+
+        @viteReactRefresh
+        @vite(['resources/css/app.css', 'resources/js/main.jsx'])
+    </head>
+
+    <body class="antialiased">
+        <div id="root"></div>
+    </body>
 </html>
