@@ -1,7 +1,10 @@
 import './bootstrap';
-import '../css/app.css'; // <--- TAMBAHKAN BARIS INI (Sangat Penting!)
+import '../css/app.css';
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+const appName = 'Zulzi Trans';
+
 
 // Impor komponen App utama
 import AdminPanel from '@/Pages/AdminPanel.jsx';

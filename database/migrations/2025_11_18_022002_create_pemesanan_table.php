@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Pastikan nama tabel sesuai dengan yang Anda gunakan (pemesanan)
         Schema::create('pemesanan', function (Blueprint $table) {
             $table->id('id_pemesanan');
 
@@ -35,6 +36,9 @@ return new class extends Migration
             $table->string('foto_barang')->nullable();
             $table->integer('jumlah_orang')->nullable();
             $table->integer('lama_rental')->nullable();
+            
+            // Tambahkan timestamp (created_at, updated_at) karena seeder biasanya memerlukannya
+            $table->timestamps();
         });
     }
 

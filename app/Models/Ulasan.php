@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\User;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -34,6 +34,8 @@ class Ulasan extends Model
         'rating_kendaraan',
         'rating_pelayanan',
         'komentar',
+        'tanggapan_admin',
+        'is_displayed',
         'tgl_ulasan',
     ];
 
@@ -42,6 +44,7 @@ class Ulasan extends Model
         'rating_kendaraan' => 'integer',
         'rating_pelayanan' => 'integer',
         'tgl_ulasan' => 'date',
+        'is_displayed' => 'boolean',
     ];
 
     public $timestamps = false; // ERD tidak menunjukkannya
@@ -54,6 +57,7 @@ class Ulasan extends Model
     public function pengguna()
     {
         return $this->belongsTo(User::class, 'id_pengguna', 'id_pengguna');
+      
     }
 
     /**

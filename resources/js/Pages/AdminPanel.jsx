@@ -5,6 +5,8 @@ import ArmadaPage from '@/Pages/ArmadaPage.jsx';
 import PenggunaPage from '@/Pages/PenggunaPage.jsx';
 import PembayaranPage from '@/Pages/PembayaranPage.jsx';
 import PesananPage from '@/Pages/PesananPage.jsx';
+import KelolaSupir from '@/Pages/KelolaSupir.jsx';
+import KelolaUlasan from '@/Pages/KelolaUlasan.jsx';
 
 /**
  * Ini adalah komponen App utama yang bertindak sebagai router
@@ -44,6 +46,10 @@ const AdminPanel = () => {
                 return <PembayaranPage {...props} />;
             case 'pesanan' :
                 return <PesananPage {...props} />;
+            case 'supir':
+                return <KelolaSupir {...props} />;
+            case 'ulasan':
+                return <KelolaUlasan {...props} />;
             default:
                 return <div className="p-10 text-center text-gray-400">Halaman "{activePage}" belum dibuat.</div>;
         }
@@ -62,6 +68,10 @@ const AdminPanel = () => {
                 return { title: 'Verifikasi Pembayaran', subtitle: 'Verifikasi Pembayaran dari Pelanggan' };
             case 'pesanan' :
                 return {title : 'Pengelolaan Pesanan dan Jadwal', subtitle: 'Kelola Pesanan dan Jadwal Perjalanan'};
+            case 'supir':
+                return { title: 'Pengelolaan Supir', subtitle: 'Kelola data supir untuk armada' };
+            case 'ulasan':
+                return { title: 'Manajemen Ulasan', subtitle: 'Kelola ulasan pelanggan untuk landing page' };
             default:
                 return { title: 'Halaman Tidak Ditemukan', subtitle: '' };
         }
