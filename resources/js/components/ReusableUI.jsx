@@ -20,7 +20,7 @@ export const FormInput = ({
     return (
         <div className="space-y-2">
             {label && (
-                <label htmlFor={name} className="block text-sm font-medium text-primary-dark">
+                <label htmlFor={name} className="block text-sm font-medium text-gray-700">
                     {label} {required && <span className="text-red-500">*</span>}
                 </label>
             )}
@@ -32,7 +32,9 @@ export const FormInput = ({
                 onChange={onChange}
                 placeholder={placeholder}
                 disabled={disabled}
-                className={`input-field ${error ? 'border-red-500 focus:ring-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
+                    error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+                } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             />
             {error && (
                 <p className="text-sm text-red-600 mt-1">{error}</p>
@@ -57,7 +59,7 @@ export const FormSelect = ({
     return (
         <div className="space-y-2">
             {label && (
-                <label htmlFor={name} className="block text-sm font-medium text-primary-dark">
+                <label htmlFor={name} className="block text-sm font-medium text-gray-700">
                     {label} {required && <span className="text-red-500">*</span>}
                 </label>
             )}
@@ -67,7 +69,9 @@ export const FormSelect = ({
                 value={value}
                 onChange={onChange}
                 disabled={disabled}
-                className={`input-field ${error ? 'border-red-500 focus:ring-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
+                    error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+                } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             >
                 {children}
             </select>
@@ -95,7 +99,7 @@ export const FormTextarea = ({
     return (
         <div className="space-y-2">
             {label && (
-                <label htmlFor={name} className="block text-sm font-medium text-primary-dark">
+                <label htmlFor={name} className="block text-sm font-medium text-gray-700">
                     {label} {required && <span className="text-red-500">*</span>}
                 </label>
             )}
@@ -107,7 +111,9 @@ export const FormTextarea = ({
                 placeholder={placeholder}
                 rows={rows}
                 disabled={disabled}
-                className={`input-field resize-none ${error ? 'border-red-500 focus:ring-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                className={`w-full px-4 py-2 border rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
+                    error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+                } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             />
             {error && (
                 <p className="text-sm text-red-600 mt-1">{error}</p>
@@ -121,13 +127,13 @@ export const FormTextarea = ({
 /**
  * StatCard - Kartu statistik untuk dashboard
  */
-export const StatCard = ({ label, value, subtext, icon: Icon, iconBgColor = 'bg-primary' }) => {
+export const StatCard = ({ label, value, subtext, icon: Icon, iconBgColor = 'bg-indigo-600' }) => {
     return (
-        <div className="card p-6">
+        <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm text-gray-500 font-medium">{label}</p>
-                    <h3 className="text-3xl font-bold text-primary-dark mt-2">{value}</h3>
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{value}</h3>
                     {subtext && (
                         <p className="text-xs text-gray-500 mt-1">{subtext}</p>
                     )}
@@ -145,13 +151,13 @@ export const StatCard = ({ label, value, subtext, icon: Icon, iconBgColor = 'bg-
 /**
  * PrimaryButton - Tombol utama untuk aksi penting
  */
-export const PrimaryButton = ({ onClick, icon: Icon, children, type = 'button', disabled = false }) => {
+export const PrimaryButton = ({ onClick, icon: Icon, children, type = 'button', disabled = false, className = '' }) => {
     return (
         <button
             type={type}
             onClick={onClick}
             disabled={disabled}
-            className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
         >
             {Icon && <Icon className="w-5 h-5" />}
             {children}
@@ -162,13 +168,13 @@ export const PrimaryButton = ({ onClick, icon: Icon, children, type = 'button', 
 /**
  * SecondaryButton - Tombol sekunder
  */
-export const SecondaryButton = ({ onClick, icon: Icon, children, type = 'button', disabled = false }) => {
+export const SecondaryButton = ({ onClick, icon: Icon, children, type = 'button', disabled = false, className = '' }) => {
     return (
         <button
             type={type}
             onClick={onClick}
             disabled={disabled}
-            className="btn-secondary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
         >
             {Icon && <Icon className="w-5 h-5" />}
             {children}
@@ -218,7 +224,7 @@ export const SearchInput = ({ value, onChange, placeholder = 'Cari data...' }) =
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className="input-field pl-10"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
         </div>
     );
@@ -274,11 +280,11 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
             />
             
             {/* Modal Container */}
-            <div className="flex min-height-full items-center justify-center p-4">
+            <div className="flex min-h-full items-center justify-center p-4">
                 <div className={`relative bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} transform transition-all`}>
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                        <h3 className="text-xl font-bold text-primary-dark">{title}</h3>
+                        <h3 className="text-xl font-bold text-gray-900">{title}</h3>
                         <button
                             onClick={onClose}
                             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -348,8 +354,8 @@ export const Alert = ({ type = 'info', message, onClose }) => {
  */
 export const Loading = ({ message = 'Loading...' }) => {
     return (
-        <div className="flex flex-col items-center justify-center min-height-screen">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+        <div className="flex flex-col items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
             <p className="mt-4 text-gray-500 font-medium">{message}</p>
         </div>
     );
@@ -382,12 +388,12 @@ export const Table = ({ headers, children }) => {
     return (
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gradient-primary">
+                <thead className="bg-gray-50">
                     <tr>
                         {headers.map((header, index) => (
                             <th
                                 key={index}
-                                className="px-6 py-3 text-left text-xs font-bold text-primary-dark uppercase tracking-wider"
+                                className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
                             >
                                 {header}
                             </th>

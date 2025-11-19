@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
     plugins: [
@@ -8,11 +9,17 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.jsx'],
             refresh: true,
         }),
-        react(),
+        react(),  // ← HAPUS fastRefresh: false
     ],
     resolve: {
         alias: {
-            '@': '/resources/js',
+            '@': path.resolve(__dirname, './resources/js'),
+        },
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+    },
+    server: {
+        hmr: {
+            host: 'localhost',
         },
     },
 });

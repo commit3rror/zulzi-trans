@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { FormInput, Alert, LoadingButton } from '@/components/ReusableUI';
 import { ArrowLeft } from 'lucide-react';
-import userService from '@/services/userService';
+import userService from '../../../service/userService.js';
+
 
 const ProfilePage = () => {
     const navigate = useNavigate();

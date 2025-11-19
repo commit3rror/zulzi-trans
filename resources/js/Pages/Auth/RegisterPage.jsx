@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import {useAuth}from '../../hooks/useAuth';
 import { FormInput, Alert, LoadingButton } from '@/components/ReusableUI';
 import { CheckCircle } from 'lucide-react';
 
@@ -61,96 +61,142 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="register-container">
-            <div className="register-content">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 py-12 px-4">
+            <div className="max-w-6xl mx-auto">
+                <div className="grid md:grid-cols-2 gap-8 items-center">
 
-                {/* Promo Section */}
-                <div className="promo-section">
-                    <h2>Perjalanan Dimulai dari Sini</h2>
-                    <p>Nikmati kemudahan booking transportasi dari layanan Zulzi Trans!</p>
-                    <ul className="promo-list">
-                        <li><CheckCircle /> Booking cepat dan mudah</li>
-                        <li><CheckCircle /> Driver berpengalaman</li>
-                        <li><CheckCircle /> Layanan tersedia 24/7</li>
-                    </ul>
-                </div>
+                    {/* Promo Section */}
+                    <div className="text-white bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-8 md:p-12 shadow-2xl">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                            Perjalanan Dimulai dari Sini
+                        </h2>
+                        <p className="text-indigo-100 text-lg mb-8">
+                            Nikmati kemudahan booking transportasi dari layanan Zulzi Trans!
+                        </p>
+                        
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
+                                <div>
+                                    <h3 className="font-semibold text-lg">Booking Cepat & Mudah</h3>
+                                    <p className="text-indigo-100 text-sm">Proses pemesanan yang simpel dan efisien</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
+                                <div>
+                                    <h3 className="font-semibold text-lg">Driver Berpengalaman</h3>
+                                    <p className="text-indigo-100 text-sm">Tim profesional yang siap melayani Anda</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
+                                <div>
+                                    <h3 className="font-semibold text-lg">Layanan 24/7</h3>
+                                    <p className="text-indigo-100 text-sm">Tersedia kapan saja Anda membutuhkan</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                {/* Form Section */}
-                <div className="register-card">
-                    <h1>Daftar Akun Baru</h1>
-                    <p>Buat akun untuk memulai perjalanan Anda!</p>
+                    {/* Form Section */}
+                    <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
+                        <div className="mb-8">
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                Daftar Akun Baru
+                            </h1>
+                            <p className="text-gray-500">
+                                Buat akun untuk memulai perjalanan Anda!
+                            </p>
+                        </div>
 
-                    {alert && (
-                        <Alert
-                            type={alert.type}
-                            message={alert.message}
-                            onClose={() => setAlert(null)}
-                        />
-                    )}
+                        {alert && (
+                            <Alert
+                                type={alert.type}
+                                message={alert.message}
+                                onClose={() => setAlert(null)}
+                            />
+                        )}
 
-                    <form onSubmit={handleSubmit} className="register-form">
-                        <FormInput
-                            label="Nama"
-                            name="nama"
-                            type="text"
-                            value={formData.nama}
-                            onChange={handleChange}
-                            error={errors.nama}
-                            placeholder="Masukkan nama lengkap"
-                            required
-                        />
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <FormInput
+                                label="Nama Lengkap"
+                                name="nama"
+                                type="text"
+                                value={formData.nama}
+                                onChange={handleChange}
+                                error={errors.nama}
+                                placeholder="Masukkan nama lengkap"
+                                required
+                            />
 
-                        <FormInput
-                            label="Email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            error={errors.email}
-                            placeholder="Masukkan email"
-                            required
-                        />
+                            <FormInput
+                                label="Email"
+                                name="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                error={errors.email}
+                                placeholder="Masukkan email"
+                                required
+                            />
 
-                        <FormInput
-                            label="No HP"
-                            name="no_telepon"
-                            type="text"
-                            value={formData.no_telepon}
-                            onChange={handleChange}
-                            error={errors.no_telepon}
-                            placeholder="Masukkan nomor HP"
-                            required
-                        />
+                            <FormInput
+                                label="Nomor HP"
+                                name="no_telepon"
+                                type="text"
+                                value={formData.no_telepon}
+                                onChange={handleChange}
+                                error={errors.no_telepon}
+                                placeholder="Contoh: 08123456789"
+                                required
+                            />
 
-                        <FormInput
-                            label="Password"
-                            name="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            error={errors.password}
-                            placeholder="Masukkan password"
-                            required
-                        />
+                            <FormInput
+                                label="Password"
+                                name="password"
+                                type="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                error={errors.password}
+                                placeholder="Minimal 8 karakter"
+                                required
+                            />
 
-                        <FormInput
-                            label="Konfirmasi Password"
-                            name="password_confirmation"
-                            type="password"
-                            value={formData.password_confirmation}
-                            onChange={handleChange}
-                            error={errors.password_confirmation}
-                            placeholder="Ulangi password"
-                            required
-                        />
+                            <FormInput
+                                label="Konfirmasi Password"
+                                name="password_confirmation"
+                                type="password"
+                                value={formData.password_confirmation}
+                                onChange={handleChange}
+                                error={errors.password_confirmation}
+                                placeholder="Ulangi password"
+                                required
+                            />
 
-                        <LoadingButton type="submit" loading={loading}>🚀 Buat Akun</LoadingButton>
-                    </form>
+                            <LoadingButton 
+                                type="submit" 
+                                loading={loading}
+                                className="w-full"
+                            >
+                                🚀 Buat Akun
+                            </LoadingButton>
+                        </form>
 
-                    <p className="login-redirect">
-                        Sudah punya akun?{' '}
-                        <Link to="/login">Login</Link>
-                    </p>
+                        <div className="mt-6 text-center">
+                            <p className="text-gray-600">
+                                Sudah punya akun?{' '}
+                                <Link 
+                                    to="/login"
+                                    className="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors"
+                                >
+                                    Login di sini
+                                </Link>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
