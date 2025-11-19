@@ -1,6 +1,6 @@
 <?php
 
-namespace App; // Lokasi default model User.php
+namespace App\Models; // Lokasi default model User.php
 // Jika Anda punya folder app/Models, ganti namespace menjadi: namespace App\Models;
 
 use App\Models\Pembayaran;
@@ -30,7 +30,7 @@ class User extends Authenticatable
      *
      * @var string
      */
-    protected $table = 'pengguna';
+    protected $table = 'user';
 
     /**
      * Primary key untuk model ini.
@@ -105,5 +105,15 @@ class User extends Authenticatable
     public function pembayaranDiverifikasi()
     {
         return $this->hasMany(Pembayaran::class, 'id_admin', 'id_pengguna');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role_pengguna === 'admin';
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role_pengguna === 'customer';
     }
 }
