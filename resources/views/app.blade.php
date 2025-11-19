@@ -6,7 +6,8 @@
         <title>Zulzi Trans</title>
 
         @viteReactRefresh
-        @vite('resources/js/main.jsx') 
+        @vite(['resources/css/app.css', 'resources/js/main.jsx'])
+    
     </head>
     <body class="antialiased">
         <div id="root"></div>

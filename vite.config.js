@@ -7,10 +7,10 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css', 
-                'resources/js/app.jsx'
+                'resources/js/main.jsx' // UBAH DARI app.jsx KE main.jsx
             ],
             refresh: true,
         }),
-        react(), // Tambahkan plugin React
+        react(),
     ],
 });
