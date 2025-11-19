@@ -4,15 +4,14 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Zulzi Trans App</title>
+        <title>Zulzi Trans</title>
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Vite React & CSS -->
-        @vite(['resources/js/app.jsx'])
+        @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     </head>
+    <body class="font-sans antialiased bg-gray-50">
     <body class="antialiased">
         <div id="app"></div>
     </body>

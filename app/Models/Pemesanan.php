@@ -20,6 +20,7 @@ class Pemesanan extends Model
         'id_pengguna',
         'id_armada',
         'id_layanan',
+        'id_supir',
         'tgl_pesan',
         'tgl_mulai',
         'tgl_selesai',
@@ -27,12 +28,14 @@ class Pemesanan extends Model
         'lokasi_tujuan',
         'total_biaya',
         'status_pemesanan',
-        'id_supir',
         'deskripsi_barang',
         'est_berat_ton',
-        'foto_barang',
+        'foto_barang', // Untuk semua file upload
         'jumlah_orang',
         'lama_rental',
+        'jenis_sampah', // Kolom baru dari Form Sampah
+        'perkiraan_volume', // Kolom baru dari Form Sampah
+        'catatan', // Dari Form Rental
     ];
 
     protected $casts = [
