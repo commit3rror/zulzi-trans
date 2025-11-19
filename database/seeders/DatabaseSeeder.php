@@ -12,6 +12,9 @@ class DatabaseSeeder extends Seeder
             // Pastikan urutannya benar
             LayananSeeder::class, // Data Layanan (Agar dropdown Armada muncul)
             PenggunaSeeder::class, // Data Pengguna Dummy (Baru)
+            PemesananSeeder::class,
+            PembayaranSeeder::class,
+
         ]);
     }
 }

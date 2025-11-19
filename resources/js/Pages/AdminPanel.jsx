@@ -3,6 +3,8 @@ import AdminLayout from '@/Layouts/AdminLayout.jsx';
 import DashboardPage from '@/Pages/DashboardPage.jsx';
 import ArmadaPage from '@/Pages/ArmadaPage.jsx';
 import PenggunaPage from '@/Pages/PenggunaPage.jsx';
+import PembayaranPage from '@/Pages/PembayaranPage.jsx';
+import PesananPage from '@/Pages/PesananPage.jsx';
 
 /**
  * Ini adalah komponen App utama yang bertindak sebagai router
@@ -26,7 +28,7 @@ const AdminPanel = () => {
         // Update URL di browser tanpa me-reload halaman
         window.history.pushState(null, '', `/admin/${pageId}`);
     };
-    
+
     // Render halaman yang sesuai
     const renderPage = () => {
         const props = { setHeaderAction }; // Prop untuk dikirim ke setiap halaman
@@ -38,6 +40,10 @@ const AdminPanel = () => {
                 return <ArmadaPage {...props} />;
             case 'pengguna':
                 return <PenggunaPage {...props} />;
+            case 'pembayaran':
+                return <PembayaranPage {...props} />;
+            case 'pesanan' :
+                return <PesananPage {...props} />;
             default:
                 return <div className="p-10 text-center text-gray-400">Halaman "{activePage}" belum dibuat.</div>;
         }
@@ -52,6 +58,10 @@ const AdminPanel = () => {
                 return { title: 'Pengelolaan Armada', subtitle: 'Kelola data armada kendaraan Anda' };
             case 'pengguna':
                 return { title: 'Pengelolaan Pengguna', subtitle: 'Kelola data pengguna sistem' };
+            case 'pembayaran':
+                return { title: 'Verifikasi Pembayaran', subtitle: 'Verifikasi Pembayaran dari Pelanggan' };
+            case 'pesanan' :
+                return {title : 'Pengelolaan Pesanan dan Jadwal', subtitle: 'Kelola Pesanan dan Jadwal Perjalanan'};
             default:
                 return { title: 'Halaman Tidak Ditemukan', subtitle: '' };
         }
