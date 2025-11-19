@@ -3,6 +3,8 @@ import AdminLayout from '@/Layouts/AdminLayout.jsx';
 import DashboardPage from '@/Pages/DashboardPage.jsx';
 import ArmadaPage from '@/Pages/ArmadaPage.jsx';
 import PenggunaPage from '@/Pages/PenggunaPage.jsx';
+import PembayaranPage from '@/Pages/PembayaranPage.jsx';
+import PesananPage from '@/Pages/PesananPage.jsx';
 import KelolaSupir from '@/Pages/KelolaSupir.jsx';
 import KelolaUlasan from '@/Pages/KelolaUlasan.jsx';
 
@@ -28,7 +30,7 @@ const AdminPanel = () => {
         // Update URL di browser tanpa me-reload halaman
         window.history.pushState(null, '', `/admin/${pageId}`);
     };
-    
+
     // Render halaman yang sesuai
     const renderPage = () => {
         const props = { setHeaderAction }; // Prop untuk dikirim ke setiap halaman
@@ -40,6 +42,10 @@ const AdminPanel = () => {
                 return <ArmadaPage {...props} />;
             case 'pengguna':
                 return <PenggunaPage {...props} />;
+            case 'pembayaran':
+                return <PembayaranPage {...props} />;
+            case 'pesanan' :
+                return <PesananPage {...props} />;
             case 'supir':
                 return <KelolaSupir {...props} />;
             case 'ulasan':
@@ -58,6 +64,10 @@ const AdminPanel = () => {
                 return { title: 'Pengelolaan Armada', subtitle: 'Kelola data armada kendaraan Anda' };
             case 'pengguna':
                 return { title: 'Pengelolaan Pengguna', subtitle: 'Kelola data pengguna sistem' };
+            case 'pembayaran':
+                return { title: 'Verifikasi Pembayaran', subtitle: 'Verifikasi Pembayaran dari Pelanggan' };
+            case 'pesanan' :
+                return {title : 'Pengelolaan Pesanan dan Jadwal', subtitle: 'Kelola Pesanan dan Jadwal Perjalanan'};
             case 'supir':
                 return { title: 'Pengelolaan Supir', subtitle: 'Kelola data supir untuk armada' };
             case 'ulasan':

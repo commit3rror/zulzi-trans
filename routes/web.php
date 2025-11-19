@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\LayananController;
 use App\Http\Controllers\Admin\SupirController;
 use App\Http\Controllers\Admin\UlasanController;
 use App\Http\Controllers\PenggunaController;
+use App\Http\Controllers\Admin\PembayaranController;
+use App\Http\Controllers\PesananController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,13 +21,13 @@ use App\Http\Controllers\PenggunaController;
 
 // Redirect root ke dashboard
 Route::get('/', function () {
-    return redirect('/admin/dashboard'); 
+    return redirect('/admin');
 });
 
 // --- JALUR DATA (API) ---
 // Tambahkan 'api/' di depan agar tidak bentrok dengan URL browser
 Route::prefix('api/admin')->group(function () {
-    
+
     Route::get('/dashboard-stats', [DashboardController::class, 'getStats']);
 
     // Route Armada
@@ -47,6 +49,38 @@ Route::prefix('api/admin')->group(function () {
     // Route Pengguna
     Route::get('/pengguna', [PenggunaController::class, 'index']);
     Route::delete('/pengguna/{id_pengguna}', [PenggunaController::class, 'destroy']);
+
+    // ========================================
+    // Routes untuk Pembayaran
+    // ========================================
+
+    // GET /api/admin/pembayaran - Mendapatkan semua pembayaran dengan filter pencarian
+    Route::get('/pembayaran', [PembayaranController::class, 'index']);
+
+    // GET /api/admin/pembayaran/{id} - Mendapatkan detail pembayaran berdasarkan ID
+    Route::get('/pembayaran/{id}', [PembayaranController::class, 'show']);
+
+    // POST /api/admin/pembayaran/{id}/verify - Verifikasi pembayaran (approve/reject)
+    // Body: { "action": "approve" } atau { "action": "reject" }
+    Route::post('/pembayaran/{id}/verify', [PembayaranController::class, 'verify']);
+
+    // GET /api/admin/pembayaran/statistics/all - Mendapatkan statistik pembayaran
+    Route::get('/pembayaran/statistics/all', [PembayaranController::class, 'statistics']);
+
+
+    // Route pemesanan
+    Route::get('/pemesanan', [PemesananController::class, 'index']);
+    Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
+    Route::post('/pemesanan', [PemesananController::class, 'store']);
+    Route::put('/pemesanan/{id}', [PemesananController::class, 'update']);
+    Route::delete('/pemesanan/{id}', [PemesananController::class, 'destroy']);
+
+    // Route khusus untuk verifikasi dan assign
+    Route::put('/pemesanan/{id}/verifikasi', [PemesananController::class, 'verifikasi']);
+    Route::put('/pemesanan/{id}/assign', [PemesananController::class, 'assignSupirArmada']);
+
+
+
 });
 
 // Route Catch-all: Menyerahkan semua request URL ke React (kecuali API)

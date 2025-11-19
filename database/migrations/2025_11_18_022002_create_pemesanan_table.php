@@ -14,7 +14,7 @@ return new class extends Migration
         // Pastikan nama tabel sesuai dengan yang Anda gunakan (pemesanan)
         Schema::create('pemesanan', function (Blueprint $table) {
             $table->id('id_pemesanan');
-            
+
             // Foreign Keys
             $table->foreignId('id_pengguna')->constrained('user', 'id_pengguna')->onDelete('cascade');
             $table->foreignId('id_armada')->nullable()->constrained('armada', 'id_armada')->onDelete('set null');
@@ -27,10 +27,7 @@ return new class extends Migration
             $table->date('tgl_selesai');
             $table->string('lokasi_jemput');
             $table->string('lokasi_tujuan');
-
-            // PERBAIKAN: Ganti float ke decimal(15, 2) agar cukup untuk nominal juta/miliar
-            $table->decimal('total_biaya', 15, 2); 
-            
+            $table->double('total_biaya', 15, 2);
             $table->string('status_pemesanan', 20);
 
             // Kolom Opsional (nullable)
