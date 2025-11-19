@@ -29,7 +29,7 @@ const LoginPage = () => {
         try {
             await login(formData);
             setAlert({ type: 'success', message: 'Login berhasil!' });
-            setTimeout(() => navigate('/admin/dashboard'), 1000); // Arahkan ke dashboard
+            setTimeout(() => navigate('/beranda'), 1000); // Arahkan ke dashboard
         } catch (err) {
             console.error('Login error:', err);
             if (err.errors) setErrors(err.errors);
