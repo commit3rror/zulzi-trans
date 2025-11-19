@@ -25,54 +25,48 @@ export function AuthProvider({ children }) {
 
     const login = async (credentials) => {
         try {
-            const response = await fetch('/api/login', {
+            // 1. TAMBAH: Ambil CSRF cookie dari Laravel Sanctum
+            await fetch('http://localhost:8000/sanctum/csrf-cookie', {
+                method: 'GET',
+                credentials: 'include', // WAJIB
+            });
+            
+            // 2. Gunakan URL Absolute
+            const response = await fetch('http://localhost:8000/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
+                credentials: 'include', // WAJIB untuk kirim cookie CSRF
                 body: JSON.stringify(credentials),
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw data;
-            }
             
-            if (data.token) {
-                localStorage.setItem('token', data.token);
-            }
-            if (data.user) {
-                localStorage.setItem('user', JSON.stringify(data.user));
-                setUser(data.user);
-            }
-
-            return data;
+            // ... (kode selanjutnya)
         } catch (error) {
             console.error('Login error:', error);
             throw error;
         }
     };
-
+    
     const register = async (userData) => {
         try {
-            const response = await fetch('/api/register', {
+            // 1. TAMBAH: Ambil CSRF cookie
+            await fetch('http://localhost:8000/sanctum/csrf-cookie', {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            // 2. Gunakan URL Absolute
+            const response = await fetch('http://localhost:8000/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
+                credentials: 'include', // WAJIB untuk kirim cookie CSRF
                 body: JSON.stringify(userData),
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw data;
-            }
-
-            return data;
         } catch (error) {
             console.error('Register error:', error);
             throw error;
