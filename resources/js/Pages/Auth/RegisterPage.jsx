@@ -1,6 +1,7 @@
+// resources/js/Pages/Auth/RegisterPage.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {useAuth}from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { FormInput, Alert, LoadingButton } from '@/components/ReusableUI';
 import { CheckCircle } from 'lucide-react';
 
@@ -13,7 +14,7 @@ const RegisterPage = () => {
         email: '',
         no_telepon: '',
         password: '',
-        password_confirmation: '',
+        password_confirmation: '', // Pastikan field ini ada untuk validasi 'confirmed' Laravel
     });
 
     const [errors, setErrors] = useState({});
@@ -36,25 +37,34 @@ const RegisterPage = () => {
         setErrors({});
 
         try {
+            // Panggil fungsi register dari context
             const response = await register(formData);
+            
             setAlert({
                 type: 'success',
                 message: response.message || 'Registrasi berhasil!',
             });
 
-            setTimeout(() => navigate('/login'), 1500);
+            setTimeout(() => navigate('/login'), 1500); // Redirect ke dashboard setelah sukses
 
         } catch (error) {
             console.error('Register error:', error);
 
+            // Menangani error validasi dari Laravel (status 422)
             if (error.errors) {
                 setErrors(error.errors);
+                setAlert({
+                    type: 'error',
+                    message: 'Mohon periksa kembali inputan Anda.',
+                });
+            } else {
+                // Menangani error umum (misal server error atau message manual)
+                setAlert({
+                    type: 'error',
+                    // Gunakan optional chaining (?.) dan fallback text
+                    message: error.message || error.error || 'Terjadi kesalahan pada sistem.',
+                });
             }
-
-            setAlert({
-                type: 'error',
-                message: error.message || 'Registrasi gagal! Periksa kembali data Anda.',
-            });
         } finally {
             setLoading(false);
         }
@@ -66,7 +76,7 @@ const RegisterPage = () => {
                 <div className="grid md:grid-cols-2 gap-8 items-center">
 
                     {/* Promo Section */}
-                    <div className="text-white bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-8 md:p-12 shadow-2xl">
+                    <div className="text-white bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-8 md:p-12 shadow-2xl hidden md:block">
                         <h2 className="text-3xl md:text-4xl font-bold mb-4">
                             Perjalanan Dimulai dari Sini
                         </h2>
@@ -82,7 +92,6 @@ const RegisterPage = () => {
                                     <p className="text-indigo-100 text-sm">Proses pemesanan yang simpel dan efisien</p>
                                 </div>
                             </div>
-                            
                             <div className="flex items-start gap-3">
                                 <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
                                 <div>
@@ -90,7 +99,6 @@ const RegisterPage = () => {
                                     <p className="text-indigo-100 text-sm">Tim profesional yang siap melayani Anda</p>
                                 </div>
                             </div>
-                            
                             <div className="flex items-start gap-3">
                                 <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
                                 <div>
@@ -127,7 +135,7 @@ const RegisterPage = () => {
                                 type="text"
                                 value={formData.nama}
                                 onChange={handleChange}
-                                error={errors.nama}
+                                error={errors.nama && errors.nama[0]} // Ambil index 0 array error Laravel
                                 placeholder="Masukkan nama lengkap"
                                 required
                             />
@@ -138,7 +146,7 @@ const RegisterPage = () => {
                                 type="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                error={errors.email}
+                                error={errors.email && errors.email[0]}
                                 placeholder="Masukkan email"
                                 required
                             />
@@ -149,7 +157,7 @@ const RegisterPage = () => {
                                 type="text"
                                 value={formData.no_telepon}
                                 onChange={handleChange}
-                                error={errors.no_telepon}
+                                error={errors.no_telepon && errors.no_telepon[0]}
                                 placeholder="Contoh: 08123456789"
                                 required
                             />
@@ -160,18 +168,19 @@ const RegisterPage = () => {
                                 type="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                error={errors.password}
+                                error={errors.password && errors.password[0]}
                                 placeholder="Minimal 8 karakter"
                                 required
                             />
 
+                            {/* Field Konfirmasi Password Wajib Ada */}
                             <FormInput
                                 label="Konfirmasi Password"
                                 name="password_confirmation"
                                 type="password"
                                 value={formData.password_confirmation}
                                 onChange={handleChange}
-                                error={errors.password_confirmation}
+                                error={errors.password_confirmation && errors.password_confirmation[0]}
                                 placeholder="Ulangi password"
                                 required
                             />

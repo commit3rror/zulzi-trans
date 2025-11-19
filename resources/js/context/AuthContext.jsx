@@ -1,4 +1,6 @@
+// resources/js/context/AuthContext.jsx
 import React, { useState, useEffect, createContext, useContext } from 'react';
+import authService from '../../service/authService'; // Pastikan path import benar
 
 const AuthContext = createContext(null);
 
@@ -7,92 +9,45 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-        
-        if (token && storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (error) {
-                console.error('Error parsing user data:', error);
-                localStorage.removeItem('user');
-                localStorage.removeItem('token');
+        const initAuth = async () => {
+            const token = localStorage.getItem('auth_token');
+            const storedUser = localStorage.getItem('user');
+            
+            if (token && storedUser) {
+                try {
+                    // Opsional: Verifikasi token ke server
+                    // const res = await authService.me();
+                    // setUser(res.data); 
+                    setUser(JSON.parse(storedUser));
+                } catch (error) {
+                    console.error('Session invalid:', error);
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('auth_token');
+                }
             }
-        }
-        
-        setLoading(false);
+            setLoading(false);
+        };
+
+        initAuth();
     }, []);
 
     const login = async (credentials) => {
-        try {
-            // 1. TAMBAH: Ambil CSRF cookie dari Laravel Sanctum
-            await fetch('http://localhost:8000/sanctum/csrf-cookie', {
-                method: 'GET',
-                credentials: 'include', // WAJIB
-            });
-            
-            // 2. Gunakan URL Absolute
-            const response = await fetch('http://localhost:8000/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                credentials: 'include', // WAJIB untuk kirim cookie CSRF
-                body: JSON.stringify(credentials),
-            });
-            
-            // ... (kode selanjutnya)
-        } catch (error) {
-            console.error('Login error:', error);
-            throw error;
-        }
+        // authService akan melempar error jika gagal, yang akan ditangkap oleh LoginPage
+        const response = await authService.login(credentials);
+        setUser(response.data.user);
+        return response;
     };
     
     const register = async (userData) => {
-        try {
-            // 1. TAMBAH: Ambil CSRF cookie
-            await fetch('http://localhost:8000/sanctum/csrf-cookie', {
-                method: 'GET',
-                credentials: 'include',
-            });
-
-            // 2. Gunakan URL Absolute
-            const response = await fetch('http://localhost:8000/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                credentials: 'include', // WAJIB untuk kirim cookie CSRF
-                body: JSON.stringify(userData),
-            });
-        } catch (error) {
-            console.error('Register error:', error);
-            throw error;
-        }
+        // authService akan melempar error jika gagal, yang akan ditangkap oleh RegisterPage
+        const response = await authService.register(userData);
+        // setUser(response.data.user);
+        return response;
     };
 
     const logout = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            
-            if (token) {
-                await fetch('/api/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setUser(null);
-        }
+        await authService.logout();
+        setUser(null);
     };
 
     const updateUser = (updatedUser) => {
@@ -119,10 +74,8 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
     const context = useContext(AuthContext);
-    
     if (!context) {
         throw new Error('useAuth must be used within AuthProvider');
     }
-    
     return context;
 }
