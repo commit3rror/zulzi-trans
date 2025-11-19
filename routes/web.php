@@ -1,32 +1,19 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ArmadaController; // <-- TAMBAHKAN INI
+use Inertia\Inertia;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
+// Welcome/Landing Page
 Route::get('/', function () {
-    return view('welcome');
+    return Inertia::render('Welcome');
 });
 
-// ... (rute /user yang mungkin sudah ada)
+// About Page
+Route::get('/about', function () {
+    return Inertia::render('AboutPage');
+})->name('about');
 
-Route::prefix('admin')->middleware('auth:sanctum')->group(function () { 
-    // Rute dashboard dari sebelumnya
-    Route::get('/dashboard-stats', [DashboardController::class, 'getStats']);
-
-    // TAMBAHKAN RUTE INI UNTUK ARMADA
-    Route::apiResource('armada', ArmadaController::class)->parameters([
-        'armada' => 'id_armada' // Ini untuk menyesuaikan 'id_armada'
-    ]);
+// Admin routes (jika ada)
+Route::middleware(['auth'])->group(function () {
+    // Tambahkan route admin di sini
 });
