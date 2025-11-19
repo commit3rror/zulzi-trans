@@ -2,8 +2,8 @@ import React from 'react';
 import { CheckCircle, Target, Users, Award } from 'lucide-react';
 
 // Pastikan import ini mengarah ke komponen yang BARU SAJA kita update (Capital C)
-import Navbar from '../Components-temp/Navbar'; 
-import Footer from '../Components-temp/Footer';
+import Navbar from '../Components/Navbar'; 
+import Footer from '../Components/Footer';
 
 export default function AboutPage(props) {
   // Ambil auth dari props jika tersedia
