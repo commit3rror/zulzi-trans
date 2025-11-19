@@ -41,7 +41,6 @@ class Armada extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'nama_armada',
         'no_plat',
         'layanan',
         'jenis_kendaraan',

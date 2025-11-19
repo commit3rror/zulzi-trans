@@ -5,14 +5,16 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 const appName = 'Zulzi Trans';
 
-createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
-    setup({ el, App, props }) {
-        const root = createRoot(el);
-        root.render(<App {...props} />);
-    },
-    progress: {
-        color: '#3B82F6',
-    },
-});
+
+// Impor komponen App utama
+import AdminPanel from '@/Pages/AdminPanel.jsx';
+
+const container = document.getElementById('app');
+if (container) {
+    const root = createRoot(container);
+    root.render(
+        <React.StrictMode>
+            <AdminPanel />
+        </React.StrictMode>
+    );
+}

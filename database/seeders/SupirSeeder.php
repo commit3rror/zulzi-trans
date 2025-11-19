@@ -2,33 +2,47 @@
 
 namespace Database\Seeders;
 
+use App\Models\Supir; // Pastikan model Supir di-import
 use Illuminate\Database\Seeder;
-use App\Models\Supir;
 
 class SupirSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        $data = [
+        // Data sesuai mockup
+        $drivers = [
             [
-                'nama' => 'Ahmad Junaedi',
-                'no_telepon' => '081234560001',
-                'no_sim' => 'A-123456789001',
-                'status_supir' => 'Tersedia',
+                'nama' => 'Ahmad Yani',
+                'no_sim' => '1234567890123456',
+                'no_telepon' => '081234567890',
+                // Kita simpan 'Pengalaman (Tahun)' di kolom 'status_supir' sementara
+                'status_supir' => 5, 
             ],
             [
-                'nama' => 'Bambang Pamungkas',
-                'no_telepon' => '081234560002',
-                'no_sim' => 'B1-123456789002',
-                'status_supir' => 'Bertugas',
+                'nama' => 'Budi Santoso',
+                'no_sim' => '2345678901234567',
+                'no_telepon' => '081234567891',
+                'status_supir' => 8, 
+            ],
+            [
+                'nama' => 'Chandra Wijaya',
+                'no_sim' => '3456789012345678',
+                'no_telepon' => '081234567892',
+                'status_supir' => 3, 
+            ],
+            [
+                'nama' => 'Dedi Kurniawan',
+                'no_sim' => '4567890123456789',
+                'no_telepon' => '081234567893',
+                'status_supir' => 10, 
             ],
         ];
 
-        foreach ($data as $item) {
-            Supir::firstOrCreate(
-                ['no_sim' => $item['no_sim']], 
-                $item
-            );
+        foreach ($drivers as $driver) {
+            Supir::firstOrCreate($driver);
         }
     }
 }
