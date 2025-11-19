@@ -1,74 +1,79 @@
 import React from 'react';
-import { Facebook, Instagram } from 'lucide-react'; // Pastikan install lucide-react
+import { Truck, Phone, Mail, MapPin, Instagram, Facebook } from 'lucide-react';
 
-const Footer = () => {
+export default function Footer() {
     return (
-        <footer className="bg-[#0f3456] text-white pt-12 pb-6 mt-auto">
-            <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                {/* Kolom 1: Logo & Deskripsi */}
-                <div className="col-span-1 md:col-span-1">
-                    <div className="flex items-center gap-2 mb-4">
-                        <h2 className="text-2xl font-bold">ZULZI TRANS</h2>
-                    </div>
-                    <p className="text-sm text-gray-300 leading-relaxed">
-                        Solusi transportasi terpercaya untuk segala kebutuhan bisnis Anda. Dengan armada lengkap dan supir berpengalaman, kami siap melayani 24/7 di seluruh Indonesia.
-                    </p>
-                </div>
-
-                {/* Kolom 2: Layanan */}
-                <div>
-                    <h3 className="font-bold text-lg mb-4">Layanan Kami</h3>
-                    <ul className="space-y-2 text-gray-300 text-sm">
-                        <li><a href="#" className="hover:text-white">Angkut Barang</a></li>
-                        <li><a href="#" className="hover:text-white">Angkut Sampah</a></li>
-                        <li><a href="#" className="hover:text-white">Rental Mobil</a></li>
-                    </ul>
-                </div>
-
-                {/* Kolom 3: Link Cepat */}
-                <div>
-                    <h3 className="font-bold text-lg mb-4">Link Cepat</h3>
-                    <ul className="space-y-2 text-gray-300 text-sm">
-                        <li><a href="/" className="hover:text-white">Beranda</a></li>
-                        <li><a href="/pemesanan" className="hover:text-white">Pemesanan</a></li>
-                        <li><a href="/tentang" className="hover:text-white">Tentang Kami</a></li>
-                    </ul>
-                </div>
-
-                {/* Kolom 4: Kontak */}
-                <div>
-                    <h3 className="font-bold text-lg mb-4">Kontak Kami</h3>
-                    <div className="space-y-3 text-gray-300 text-sm">
-                        <div className="flex items-center gap-2">
-                            <Instagram size={18} /> <span>zulzi.trans</span>
+        <footer className="bg-[#001a33] text-white pt-20 pb-10 border-t-4 border-[#00a3e0]">
+            <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
+                    
+                    {/* BRAND INFO */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-6">
+                            <div className="w-8 h-8 bg-white rounded flex items-center justify-center text-[#003366]">
+                                <Truck size={16} strokeWidth={3} />
+                            </div>
+                            <span className="text-xl font-extrabold tracking-tight font-sans">ZULZI TRANS</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            {/* Ikon TikTok bisa pakai svg custom atau library lain */}
-                            <span>🎵</span> <span>zulzi.trans</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Facebook size={18} /> <span>zulzi.trans</span>
+                        <p className="text-gray-400 text-sm leading-relaxed mb-6 pr-4">
+                            Mitra transportasi terpercaya Anda. Menyediakan layanan logistik dan perjalanan dengan armada prima dan pelayanan profesional.
+                        </p>
+                        <div className="flex gap-3">
+                            <a href="#" className="w-9 h-9 bg-[#ffffff10] rounded-full flex items-center justify-center hover:bg-[#00a3e0] hover:text-white transition-all"><Instagram size={16} /></a>
+                            <a href="#" className="w-9 h-9 bg-[#ffffff10] rounded-full flex items-center justify-center hover:bg-[#00a3e0] hover:text-white transition-all"><Facebook size={16} /></a>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Area Layanan Box */}
-            <div className="max-w-7xl mx-auto px-6 mb-8">
-                <div className="bg-[#1a456e] p-4 rounded-lg border border-[#2a5d8f]">
-                    <h4 className="text-yellow-400 font-semibold flex items-center gap-2 mb-1">
-                        📍 Area Layanan
-                    </h4>
-                    <p className="text-xs text-gray-300">Jabodetabek, Jawa Barat, Jawa Tengah, Jawa Timur, dan seluruh Indonesia</p>
-                </div>
-            </div>
+                    {/* LAYANAN */}
+                    <div>
+                        <h4 className="text-lg font-bold mb-6 text-[#00a3e0]">Layanan Kami</h4>
+                        <ul className="space-y-3 text-sm text-gray-400">
+                            <li><a href="#" className="hover:text-white transition-colors no-underline">Sewa Truk Box</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors no-underline">Rental Mobil</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors no-underline">Bus Pariwisata</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors no-underline">Pindahan Rumah</a></li>
+                        </ul>
+                    </div>
 
-            {/* Copyright */}
-            <div className="text-center text-xs text-gray-400 border-t border-gray-700 pt-6">
-                © 2025 Zulzi Trans. Hak Cipta Dilindungi. | PT Zulzi Trans Indonesia
+                    {/* LINK CEPAT */}
+                    <div>
+                        <h4 className="text-lg font-bold mb-6 text-[#00a3e0]">Link Cepat</h4>
+                        <ul className="space-y-3 text-sm text-gray-400">
+                            <li><a href="/" className="hover:text-white transition-colors no-underline">Beranda</a></li>
+                            <li><a href="#tentang" className="hover:text-white transition-colors no-underline">Tentang Kami</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors no-underline">Syarat & Ketentuan</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors no-underline">Kebijakan Privasi</a></li>
+                        </ul>
+                    </div>
+
+                    {/* KONTAK */}
+                    <div>
+                        <h4 className="text-lg font-bold mb-6 text-[#00a3e0]">Hubungi Kami</h4>
+                        <ul className="space-y-4 text-sm text-gray-400">
+                            <li className="flex items-start gap-3">
+                                <Phone size={18} className="text-[#00a3e0] mt-0.5" /> 
+                                <span>+62 812 3456 7890<br/><span className="text-xs text-gray-500">Senin - Minggu (24 Jam)</span></span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Mail size={18} className="text-[#00a3e0] mt-0.5" /> 
+                                <span>cs@zulzitrans.com</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <MapPin size={18} className="text-[#00a3e0] mt-0.5" /> 
+                                <span>Jl. Raya Logistik No. 123,<br/>Jakarta Timur, Indonesia</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="border-t border-[#ffffff10] pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+                    <p>&copy; {new Date().getFullYear()} PT. Zulzi Trans Indonesia. All rights reserved.</p>
+                    <div className="flex gap-6">
+                        <a href="#" className="hover:text-white no-underline">Privacy Policy</a>
+                        <a href="#" className="hover:text-white no-underline">Terms of Service</a>
+                    </div>
+                </div>
             </div>
         </footer>
     );
-};
-
-export default Footer;
+}

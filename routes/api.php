@@ -7,6 +7,7 @@ use App\Http\Controllers\PemesananController; // <-- Import Controller
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------

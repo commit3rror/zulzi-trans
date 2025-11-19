@@ -208,13 +208,22 @@ export const ActionButton = ({ type, onClick, title }) => {
             className={`p-2 rounded-lg transition-all duration-200 ${className}`}
         >
             <Icon className="w-5 h-5" />
-import { Search, Edit2, Trash2, X } from 'lucide-react';
+        </button> 
+    );
+};
+
+// ----------------------------------------------------------------------
+// BAGIAN INI ADALAH KODE YANG ANDA PASTE (VERSI KEDUA/DUPLIKAT)
+// SAYA UBAH NAMA IMPORT DAN VARIABELNYA MENJADI [NAMA]_V2 AGAR TIDAK ERROR
+// ----------------------------------------------------------------------
+
+import { Search as Search_V2, Edit2 as Edit2_V2, Trash2 as Trash2_V2, X as X_V2 } from 'lucide-react';
 
 /**
- * StatCard (Dashboard)
+ * StatCard (Dashboard) - VERSI 2
  * Kartu untuk menampilkan statistik di halaman dashboard.
  */
-export const StatCard = ({ label, value, subtext, icon: Icon, iconBgColor }) => (
+export const StatCard_V2 = ({ label, value, subtext, icon: Icon, iconBgColor }) => (
     <div className="bg-white border border-slate-100 p-6 rounded-xl shadow-sm flex flex-col justify-between h-full">
         <div className="flex justify-between items-start mb-4">
             <span className="text-slate-500 text-sm font-medium">{label}</span>
@@ -230,10 +239,10 @@ export const StatCard = ({ label, value, subtext, icon: Icon, iconBgColor }) => 
 );
 
 /**
- * PrimaryButton
+ * PrimaryButton - VERSI 2
  * Tombol aksi utama (misal: "Tambah Armada").
  */
-export const PrimaryButton = ({ children, onClick, icon: Icon, className = "" }) => (
+export const PrimaryButton_V2 = ({ children, onClick, icon: Icon, className = "" }) => (
     <button
         onClick={onClick}
         className={`flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-sm ${className}`}
@@ -244,14 +253,14 @@ export const PrimaryButton = ({ children, onClick, icon: Icon, className = "" })
 );
 
 /**
- * ActionButton (Tabel)
+ * ActionButton (Tabel) - VERSI 2
  * Tombol aksi kecil di dalam tabel (Edit, Hapus).
  */
-export const ActionButton = ({ type, onClick }) => {
+export const ActionButton_V2 = ({ type, onClick }) => {
     const className = type === 'edit'
         ? 'text-slate-400 hover:text-blue-600'
         : 'text-slate-400 hover:text-red-600';
-    const Icon = type === 'edit' ? Edit2 : Trash2;
+    const Icon = type === 'edit' ? Edit2_V2 : Trash2_V2;
 
     return (
         <button onClick={onClick} className={`transition-colors p-1.5 ${className}`}>
@@ -299,10 +308,16 @@ export const StatusBadge = ({ status }) => {
 
     return (
         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}>
- * SearchInput
+            {status}
+        </span>
+    );
+};
+
+/**
+ * SearchInput - VERSI 2
  * Kotak pencarian yang reusable.
  */
-export const SearchInput = ({ value, onChange, placeholder }) => (
+export const SearchInput_V2 = ({ value, onChange, placeholder }) => (
     <div className="relative w-full max-w-sm">
         <input
             type="text"
@@ -311,15 +326,15 @@ export const SearchInput = ({ value, onChange, placeholder }) => (
             onChange={onChange}
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
         />
-        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search_V2 size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
     </div>
 );
 
 /**
- * StatusBadge (Tabel)
+ * StatusBadge (Tabel) - VERSI 2
  * Label status (Tersedia, Digunakan) di tabel.
  */
-export const StatusBadge = ({ status }) => {
+export const StatusBadge_V2 = ({ status }) => {
     const styles = status === 'Tersedia'
         ? 'bg-green-100 text-green-700'
         : 'bg-blue-100 text-blue-700';
@@ -371,11 +386,16 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
                     {/* Content */}
                     {children}
                 </div>
+            </div>
+        </div>
+    );
+};
+
 /**
- * Modal
+ * Modal - VERSI 2
  * Komponen pop-up untuk form Tambah/Edit.
  */
-export const Modal = ({ isOpen, onClose, title, children }) => {
+export const Modal_V2 = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
 
     return (
@@ -385,7 +405,7 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
                 <div className="flex justify-between items-center p-5 border-b border-slate-100">
                     <h3 className="text-lg font-bold text-slate-800">{title}</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-                        <X size={20} />
+                        <X_V2 size={20} />
                     </button>
                 </div>
                 {/* Konten (Form) */}
@@ -513,11 +533,12 @@ export const EmptyState = ({ message = 'Tidak ada data', icon: Icon }) => {
         </div>
     );
 };
+
 /**
- * FormInput
+ * FormInput - VERSI 2
  * Komponen input standar untuk form di dalam modal.
  */
-export const FormInput = ({ label, name, value, onChange, error, type = 'text', ...props }) => (
+export const FormInput_V2 = ({ label, name, value, onChange, error, type = 'text', ...props }) => (
     <div className="w-full">
         <label htmlFor={name} className="block text-xs font-medium text-slate-600 mb-1.5">{label}</label>
         <input
@@ -536,10 +557,10 @@ export const FormInput = ({ label, name, value, onChange, error, type = 'text', 
 );
 
 /**
- * FormSelect
+ * FormSelect - VERSI 2
  * Komponen select standar untuk form di dalam modal.
  */
-export const FormSelect = ({ label, name, value, onChange, error, children }) => (
+export const FormSelect_V2 = ({ label, name, value, onChange, error, children }) => (
     <div className="w-full">
         <label htmlFor={name} className="block text-xs font-medium text-slate-600 mb-1.5">{label}</label>
         <select
