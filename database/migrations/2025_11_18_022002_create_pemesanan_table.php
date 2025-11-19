@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Pastikan nama tabel adalah 'pemesanan'
+        // Pastikan nama tabel sesuai dengan yang Anda gunakan (pemesanan)
         Schema::create('pemesanan', function (Blueprint $table) {
             $table->id('id_pemesanan');
-            
-            // Foreign Keys (id_pengguna & id_layanan wajib)
+
+            // Foreign Keys
             $table->foreignId('id_pengguna')->constrained('user', 'id_pengguna')->onDelete('cascade');
             $table->foreignId('id_layanan')->constrained('layanan', 'id_layanan')->onDelete('restrict');
             
@@ -27,6 +27,8 @@ return new class extends Migration
             $table->date('tgl_pesan');
             $table->date('tgl_mulai');
             $table->string('lokasi_jemput');
+            $table->string('lokasi_tujuan');
+            $table->double('total_biaya', 15, 2);
             $table->string('status_pemesanan', 20);
             $table->float('total_biaya')->default(0); 
             
@@ -38,9 +40,9 @@ return new class extends Migration
             $table->string('foto_barang')->nullable(); 
             $table->integer('jumlah_orang')->nullable();
             $table->integer('lama_rental')->nullable();
-
-            // Kolom Tambahan
-            $table->string('catatan')->nullable(); 
+            
+            // Tambahkan timestamp (created_at, updated_at) karena seeder biasanya memerlukannya
+            $table->timestamps();
         });
     }
 

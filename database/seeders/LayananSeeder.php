@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use App\Models\Layanan;
 
 class LayananSeeder extends Seeder
 {
@@ -12,10 +13,18 @@ class LayananSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('layanan')->insert([
-            ['id_layanan' => 1, 'nama_layanan' => 'Rental Mobil'],
-            ['id_layanan' => 2, 'nama_layanan' => 'Angkut Barang'],
-            ['id_layanan' => 3, 'nama_layanan' => 'Angkut Sampah'],
-        ]);
+        $data = [
+            ['nama_layanan' => 'Angkut Barang'],
+            ['nama_layanan' => 'Angkut Sampah'],
+            ['nama_layanan' => 'Sewa Kendaraan'],
+        ];
+
+        foreach ($data as $item) {
+            // Menggunakan firstOrCreate untuk menghindari duplikasi data saat seeder dijalankan berulang kali
+            Layanan::firstOrCreate(
+                ['nama_layanan' => $item['nama_layanan']], 
+                $item
+            );
+        }
     }
 }
