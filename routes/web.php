@@ -11,7 +11,6 @@ use App\Http\Controllers\Admin\SupirController;
 use App\Http\Controllers\Admin\UlasanController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\Admin\PembayaranController;
-use App\Http\Controllers\PesananController;
 use App\Http\Controllers\PemesananController;
 
 /*
@@ -20,78 +19,67 @@ use App\Http\Controllers\PemesananController;
 |--------------------------------------------------------------------------
 */
 
-// Redirect root ke dashboard
+// 1. REDIRECT ROOT KE BERANDA
 Route::get('/', function () {
-    return redirect('/admin');
+    return redirect('/beranda');
 });
 
 // =====================================================
 // API ROUTES
 // =====================================================
 Route::prefix('api/admin')->group(function () {
-
     Route::get('/dashboard-stats', [DashboardController::class, 'getStats']);
 
-    // Armada
-    Route::apiResource('armada', ArmadaController::class)->parameters([
-        'armada' => 'id_armada'
-    ]);
+    // Layanan
+    Route::get('/layanan', [LayananController::class, 'index']);
 
-    // Supir
-    Route::apiResource('supir', SupirController::class)->parameters([
-        'supir' => 'id_supir'
-    ]);
+    // FIX: Pindahkan Pengguna ke sini agar bisa diakses via /api/admin/pengguna
+    Route::get('/pengguna', [PenggunaController::class, 'index']);
+    Route::delete('/pengguna/{id_pengguna}', [PenggunaController::class, 'destroy']);
 
-    // Ulasan
+    Route::apiResource('armada', ArmadaController::class)->parameters(['armada' => 'id_armada']);
+    Route::apiResource('supir', SupirController::class)->parameters(['supir' => 'id_supir']);
     Route::apiResource('ulasan', UlasanController::class)
         ->only(['index', 'show', 'update', 'destroy'])
         ->parameters(['ulasan' => 'id_ulasan']);
 
-    // Pembayaran
     Route::get('/pembayaran', [PembayaranController::class, 'index']);
     Route::get('/pembayaran/{id}', [PembayaranController::class, 'show']);
     Route::post('/pembayaran/{id}/verify', [PembayaranController::class, 'verify']);
     Route::get('/pembayaran/statistics/all', [PembayaranController::class, 'statistics']);
 
-    // Pemesanan
     Route::get('/pemesanan', [PemesananController::class, 'index']);
     Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
     Route::post('/pemesanan', [PemesananController::class, 'store']);
     Route::put('/pemesanan/{id}', [PemesananController::class, 'update']);
     Route::delete('/pemesanan/{id}', [PemesananController::class, 'destroy']);
-
-    // Verifikasi & Assign
     Route::put('/pemesanan/{id}/verifikasi', [PemesananController::class, 'verifikasi']);
     Route::put('/pemesanan/{id}/assign', [PemesananController::class, 'assignSupirArmada']);
 });
 
 // =====================================================
-// AUTH
+// AUTH ROUTES
 // =====================================================
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 // =====================================================
-// DATA ROUTES (Non-API, untuk admin panel)
+// FRONTEND ROUTES (REACT)
 // =====================================================
 
-// Layanan
-Route::get('/layanan', [LayananController::class, 'index']);
+// GROUP A: ADMIN & AUTH (Load view 'admin' -> resources/js/app.jsx)
+Route::get('/login', function () { return view('admin'); })->name('login');
+Route::get('/register', function () { return view('admin'); });
+Route::get('/forgot-password', function () { return view('admin'); });
+Route::get('/edit-profile', function () { return view('admin'); });
 
-// Pengguna
-Route::get('/pengguna', [PenggunaController::class, 'index']);
-Route::delete('/pengguna/{id_pengguna}', [PenggunaController::class, 'destroy']);
-
-// =====================================================
-// REACT FRONTEND
-// =====================================================
-
-// Catch-all non-API -> React
-Route::get('/{any?}', function () {
-    return view('app');
-})->where('any', '^(?!api).*$');
-
-// Route admin panel
+// Route Admin Panel (menangkap /admin dan /admin/...)
 Route::get('/admin/{any?}', function () {
     return view('admin');
 })->where('any', '.*')->name('admin.panel');
+
+
+// GROUP B: PUBLIC LANDING (Load view 'app' -> resources/js/main.jsx)
+Route::get('/{any?}', function () {
+    return view('app');
+})->where('any', '^(?!api).*$');

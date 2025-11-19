@@ -2,135 +2,123 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Pemesanan;
-use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\Controller;
+use App\Models\Armada;
+use App\Models\Supir;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PemesananController extends Controller
 {
-    /**
-     * Menerima dan menyimpan data pemesanan dari React.
-     */
-    public function store(Request $request)
+    public function index(Request $request)
     {
-        // PENTING: ID PENGGUNA di-mock karena belum ada sistem login.
-        // Ganti dengan: $userId = auth()->id(); jika sudah ada auth
-        $userId = 1; 
+        // Start Query dengan Eager Loading
+        $query = Pemesanan::with(['user', 'layanan', 'armada', 'supir']);
 
-        // 1. Definisikan Validasi
-        $rules = [
-            'layanan' => 'required|in:rental,barang,sampah',
-            'id_armada' => 'required|integer|exists:armada,id_armada', 
-            'tgl_mulai' => 'required|date|after_or_equal:today',
-            'lokasi_jemput' => 'required|string|max:255',
+        // 1. Handle Search (Cari berdasarkan Nama User atau ID Pemesanan)
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                // Cari di tabel pemesanan
+                $q->where('id_pemesanan', 'like', "%{$search}%")
+                  ->orWhere('lokasi_jemput', 'like', "%{$search}%")
+                  ->orWhere('lokasi_tujuan', 'like', "%{$search}%");
+                  
+                // Cari di tabel user (relasi)
+                $q->orWhereHas('user', function($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // 2. Handle Filter Layanan (Perbaikan Logic: Pakai whereHas)
+        if ($request->has('layanan') && !empty($request->layanan) && $request->layanan !== 'semua') {
+            $layananFilter = $request->layanan; 
             
-            // Aturan berdasarkan Layanan (Validasi bersyarat akan ditambahkan di bawah)
-            'lama_rental' => 'nullable|integer|min:1',
-            'opsi_supir' => 'nullable|in:with_driver,lepas_kunci',
-            'lokasi_tujuan' => 'nullable|string|max:255',
-            'est_berat_ton' => 'nullable|numeric|min:0.1',
-            'deskripsi_barang' => 'nullable|string|max:500',
-            'jenis_sampah' => 'nullable|string|max:100',
-            'perkiraan_volume' => 'nullable|string|max:100',
-            'catatan' => 'nullable|string|max:500',
-            'foto_barang' => 'nullable|file|image|max:5120', // File field
-            'foto_sampah' => 'nullable|file|image|max:5120', // File field
-        ];
-        
-        $validator = Validator::make($request->all(), $rules);
-
-        // Validasi Bersyarat (Contoh: jika layanan rental, maka lama_rental wajib)
-        $validator->sometimes(['lama_rental', 'catatan'], 'required', function ($input) {
-            return $input->layanan === 'rental';
-        });
-
-        // Validasi Bersyarat Angkut Barang
-        $validator->sometimes(['lokasi_tujuan', 'est_berat_ton', 'deskripsi_barang'], 'required', function ($input) {
-            return $input->layanan === 'barang';
-        });
-
-        // Validasi Bersyarat Angkut Sampah
-        $validator->sometimes(['jenis_sampah', 'perkiraan_volume'], 'required', function ($input) {
-            return $input->layanan === 'sampah';
-        });
-
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            // Cari di tabel relasi 'layanan', kolom 'nama_layanan'
+            $query->whereHas('layanan', function($q) use ($layananFilter) {
+                $q->where('nama_layanan', 'like', "%{$layananFilter}%");
+            });
         }
 
-        // 2. Tentukan ID Layanan
-        $layananId = match($request->layanan) {
-            'rental' => 1, 
-            'barang' => 2,
-            'sampah' => 3,
-            default => 1,
-        };
-
-        // 3. Siapkan Data Dasar
-        $data = $validator->validated();
-        $data['id_pengguna'] = $userId;
-        $data['id_layanan'] = $layananId;
-        $data['tgl_pesan'] = Carbon::now()->format('Y-m-d');
-        $data['status_pemesanan'] = 'pending_approval';
-        $data['total_biaya'] = 0; // Akan diupdate Admin nanti
-
-        // 4. Handle Upload File (Foto Barang/Sampah)
-        $fotoKey = ($request->layanan === 'sampah') ? 'foto_sampah' : 'foto_barang';
-        
-        if ($request->hasFile($fotoKey)) {
-            // Upload file ke storage/app/public/pemesanan_foto
-            $path = $request->file($fotoKey)->store('public/pemesanan_foto');
-            // Simpan URL publik di kolom 'foto_barang' (kolom di Model/Migrasi)
-            $data['foto_barang'] = Storage::url($path); 
-        } else {
-            $data['foto_barang'] = null; // Pastikan kolom NULL jika tidak ada file
+        // 3. Handle Filter Status
+        if ($request->has('status') && !empty($request->status) && $request->status !== 'semua') {
+            $query->where('status_pemesanan', $request->status);
         }
 
-        // 5. Atur Nilai Default untuk Kolom Optional (Mengatasi error jika field tidak dikirim React)
-        // Kita perlu pastikan semua kolom yang nullable di migrasi ada di payload $data
-        $data['tgl_selesai'] = $request->tgl_selesai ?? null;
-        $data['id_supir'] = $request->id_supir ?? null;
-        $data['jumlah_orang'] = $request->jumlah_orang ?? null;
-        
-        // Data Angkut Barang
-        $data['lokasi_tujuan'] = $request->lokasi_tujuan ?? null;
-        $data['deskripsi_barang'] = $request->deskripsi_barang ?? null;
-        $data['est_berat_ton'] = $request->est_berat_ton ?? null;
+        // Ambil data terbaru
+        $data = $query->latest()->get();
 
-        // Data Angkut Sampah (digunakan di field yang sama)
-        // Jika layanan sampah, kita salin isinya ke field deskripsi
-        if ($request->layanan === 'sampah') {
-            $data['deskripsi_barang'] = 'Jenis Sampah: ' . ($request->jenis_sampah ?? '') . ', Volume: ' . ($request->perkiraan_volume ?? '');
+        return response()->json($data);
+    }
+
+    public function show($id)
+    {
+        $pemesanan = Pemesanan::with(['user', 'layanan', 'armada', 'supir', 'pembayaran'])->find($id);
+
+        if (!$pemesanan) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
         }
-        
-        // Data Rental
-        $data['lama_rental'] = $request->lama_rental ?? null;
-        $data['catatan'] = $request->catatan ?? null;
-        
-        // Hapus field yang tidak ada di Models/Migrasi (misal: 'layanan', 'opsi_supir', 'foto_sampah', 'jenis_sampah', 'perkiraan_volume')
-        unset($data['layanan']);
-        unset($data['opsi_supir']);
-        unset($data['foto_sampah']);
-        unset($data['jenis_sampah']);
-        unset($data['perkiraan_volume']);
 
+        return response()->json($pemesanan);
+    }
 
-        // 6. Simpan Data ke Database
+    public function update(Request $request, $id)
+    {
+        $pemesanan = Pemesanan::find($id);
+        if (!$pemesanan) return response()->json(['message' => 'Not found'], 404);
+
+        $pemesanan->update($request->all());
+        return response()->json(['message' => 'Berhasil update', 'data' => $pemesanan]);
+    }
+
+    public function destroy($id)
+    {
+        $pemesanan = Pemesanan::find($id);
+        if (!$pemesanan) return response()->json(['message' => 'Not found'], 404);
+
+        $pemesanan->delete();
+        return response()->json(['message' => 'Berhasil dihapus']);
+    }
+
+    // Verifikasi Pemesanan
+    public function verifikasi(Request $request, $id)
+    {
+        $pemesanan = Pemesanan::find($id);
+        if (!$pemesanan) return response()->json(['message' => 'Not found'], 404);
+
+        $pemesanan->status_pemesanan = 'Menunggu Pembayaran'; 
+        $pemesanan->save();
+
+        return response()->json(['message' => 'Pemesanan diverifikasi', 'data' => $pemesanan]);
+    }
+
+    // Assign Supir & Armada
+    public function assignSupirArmada(Request $request, $id)
+    {
+        $request->validate([
+            'id_supir' => 'required|exists:supir,id_supir',
+            'id_armada' => 'required|exists:armada,id_armada',
+        ]);
+
+        $pemesanan = Pemesanan::find($id);
+        if (!$pemesanan) return response()->json(['message' => 'Not found'], 404);
+
+        DB::beginTransaction();
         try {
-            $pemesanan = Pemesanan::create($data);
+            $pemesanan->id_supir = $request->id_supir;
+            $pemesanan->id_armada = $request->id_armada;
+            $pemesanan->status_pemesanan = 'Diproses'; 
+            $pemesanan->save();
 
-            // 7. Respon Sukses
-            return response()->json([
-                'message' => 'Pemesanan berhasil dicatat. Tunggu konfirmasi Admin.',
-                'order_id' => $pemesanan->id_pemesanan,
-            ], 201);
+            Armada::where('id_armada', $request->id_armada)->update(['status_ketersediaan' => 'Digunakan']);
+            Supir::where('id_supir', $request->id_supir)->update(['status' => 'Tidak Tersedia']);
+
+            DB::commit();
+            return response()->json(['message' => 'Supir & Armada berhasil ditugaskan', 'data' => $pemesanan]);
         } catch (\Exception $e) {
-            // Log error
-            return response()->json(['error' => 'Gagal menyimpan pemesanan: ' . $e->getMessage()], 500);
+            DB::rollBack();
+            return response()->json(['message' => 'Gagal assign: ' . $e->getMessage()], 500);
         }
     }
 }
