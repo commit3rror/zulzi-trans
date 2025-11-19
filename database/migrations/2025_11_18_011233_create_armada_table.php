@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::create('armada', function (Blueprint $table) {
             $table->id('id_armada');
             $table->string('no_plat')->unique();
-            $table->string('nama_armada');
             $table->string('layanan'); 
             $table->string('jenis_kendaraan');
             $table->string('kapasitas');

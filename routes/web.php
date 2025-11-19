@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+
 // Import Controller
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ArmadaController;
@@ -48,6 +49,10 @@ Route::prefix('api/admin')->group(function () {
     Route::delete('/pengguna/{id_pengguna}', [PenggunaController::class, 'destroy']);
 });
 
+// Route Catch-all: Menyerahkan semua request URL ke React (kecuali API)
+Route::get('/{any?}', function () {
+    return view('app');
+})->where('any', '^(?!api).*$'); // Regex: Tangkap semua kecuali yang diawali 'api'
 
 // --- JALUR TAMPILAN (UI/React) ---
 // Route ini menangkap semua URL /admin/... dan menampilkan file blade

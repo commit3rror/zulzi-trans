@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models; // Pastikan namespace ini benar
+namespace App\Models; // <-- PERBAIKAN: Namespace harus App\Models
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -12,6 +12,7 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'user'; // Sesuaikan dengan nama tabel di database
+
     protected $primaryKey = 'id_pengguna';
 
     protected $fillable = [
@@ -33,5 +34,17 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public $timestamps = false; // Sesuai ERD (jika tidak pakai created_at/updated_at otomatis)
+    public $timestamps = false;
+
+    // --- RELASI ---
+    public function pemesanan()
+    {
+        return $this->hasMany(Pemesanan::class, 'id_pengguna', 'id_pengguna');
+    }
+
+    public function ulasan()
+    {
+        return $this->hasMany(Ulasan::class, 'id_pengguna', 'id_pengguna');
+    }
+   
 }

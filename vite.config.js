@@ -6,14 +6,20 @@ import path from 'path'
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/app.jsx', 'resources/css/app.css'], // Tambahkan CSS di sini juga agar aman
+            input: [
+                'resources/css/app.css', 
+                'resources/js/main.jsx'
+                'resources/js/app.jsx'
+            ],
+
             refresh: true,
         }),
         react(),
     ],
     resolve: {
         alias: {
-            '@': path.resolve(__dirname, 'resources/js'),
+            // Gunakan path.resolve agar mengarah tepat ke root project/resources/js
+            '@': path.resolve(__dirname, 'resources/js'), 
         },
     },
-})
+});
