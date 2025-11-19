@@ -2,13 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Ganti 'welcome' jadi 'app'
+// Route Catch-all: Menyerahkan semua request URL ke React (kecuali API)
 Route::get('/{any?}', function () {
-    return view('app'); // <-- Pastikan ini 'app', BUKAN 'welcome'
-})->where('any', '.*');
-
-
-// Admin routes (jika ada)
-Route::middleware(['auth'])->group(function () {
-    // Tambahkan route admin di sini
-});
+    return view('app');
+})->where('any', '^(?!api).*$'); // Regex: Tangkap semua kecuali yang diawali 'api'

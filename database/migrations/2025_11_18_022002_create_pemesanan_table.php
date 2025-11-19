@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Pastikan nama tabel sesuai dengan yang Anda gunakan (pemesanan)
         Schema::create('pemesanan', function (Blueprint $table) {
             $table->id('id_pemesanan');
             
@@ -26,7 +27,10 @@ return new class extends Migration
             $table->date('tgl_selesai');
             $table->string('lokasi_jemput');
             $table->string('lokasi_tujuan');
-            $table->float('total_biaya');
+
+            // PERBAIKAN: Ganti float ke decimal(15, 2) agar cukup untuk nominal juta/miliar
+            $table->decimal('total_biaya', 15, 2); 
+            
             $table->string('status_pemesanan', 20);
 
             // Kolom Opsional (nullable)
@@ -35,6 +39,9 @@ return new class extends Migration
             $table->string('foto_barang')->nullable();
             $table->integer('jumlah_orang')->nullable();
             $table->integer('lama_rental')->nullable();
+            
+            // Tambahkan timestamp (created_at, updated_at) karena seeder biasanya memerlukannya
+            $table->timestamps();
         });
     }
 
