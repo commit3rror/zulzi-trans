@@ -64,5 +64,4 @@ class User extends Authenticatable
     {
         return $this->role_pengguna === 'customer';
     }
-   
 }
