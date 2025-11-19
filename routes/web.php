@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 // Import Controller
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\ArmadaController;
 use App\Http\Controllers\Admin\LayananController;
 use App\Http\Controllers\Admin\SupirController;
@@ -42,6 +43,12 @@ Route::prefix('api/admin')->group(function () {
     Route::apiResource('ulasan', UlasanController::class)->only(['index', 'show', 'update', 'destroy'])->parameters([
         'ulasan' => 'id_ulasan'
     ]);
+});
+
+//Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::view('/{any?}', 'app')->where('any', '.*');
 
     // Route Layanan
     Route::get('/layanan', [LayananController::class, 'index']);

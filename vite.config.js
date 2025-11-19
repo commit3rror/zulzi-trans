@@ -14,12 +14,17 @@ export default defineConfig({
 
             refresh: true,
         }),
-        react(),
+        react(),  // ← HAPUS fastRefresh: false
     ],
     resolve: {
         alias: {
-            // Gunakan path.resolve agar mengarah tepat ke root project/resources/js
-            '@': path.resolve(__dirname, 'resources/js'), 
+            '@': path.resolve(__dirname, './resources/js'),
+        },
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+    },
+    server: {
+        hmr: {
+            host: 'localhost',
         },
     },
 });
