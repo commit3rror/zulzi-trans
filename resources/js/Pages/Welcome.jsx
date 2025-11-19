@@ -1,5 +1,4 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
 import GuestLayout from '@/layouts/GuestLayout';
 import { ArrowRight, Car, Shield, Clock, Star } from 'lucide-react';
 
