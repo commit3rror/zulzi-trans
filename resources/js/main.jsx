@@ -1,17 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '../css/app.css';
 
-// Impor CSS utama (Tailwind, dll)
-import '../css/app.css'; 
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-// Impor halaman yang mau kita tes
-import LandingPage from './Pages/public/LandingPage'; 
-// (Pastikan path ke LandingPage.jsx kamu sudah benar)
+// Import halaman
+import LandingPage from '@/Pages/public/LandingPage';
+import AboutPage from '@/Pages/AboutPage';
 
-// Ini adalah kode yang "menyalakan" React
-ReactDOM.createRoot(document.getElementById('root')).render(
+const root = ReactDOM.createRoot(document.getElementById('root'));
+
+root.render(
   <React.StrictMode>
-    {/* Untuk sekarang, kita tes tampilkan 1 halaman dulu */}
-    <LandingPage /> 
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
