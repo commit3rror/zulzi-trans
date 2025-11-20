@@ -20,7 +20,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'armada', label: 'Armada', icon: Truck },
         { id: 'pengguna', label: 'Pengguna', icon: Users },
-        { id: 'verifikasi', label: 'Verifikasi Pembayaran', icon: ClipboardList },
+        { id: 'pembayaran', label: 'Verifikasi Pembayaran', icon: ClipboardList },
         { id: 'pesanan', label: 'Pesanan & Jadwal', icon: CalendarCheck },
         { id: 'supir', label: 'Kelola Supir', icon: UserCheck },
         { id: 'ulasan', label: 'Kelola Ulasan', icon: Star },
