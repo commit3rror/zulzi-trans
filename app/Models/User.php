@@ -46,5 +46,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ulasan::class, 'id_pengguna', 'id_pengguna');
     }
-   
+
+    /**
+     * Relasi ke Pembayaran (Admin memverifikasi banyak Pembayaran)
+     */
+    public function pembayaranDiverifikasi()
+    {
+        return $this->hasMany(Pembayaran::class, 'id_admin', 'id_pengguna');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role_pengguna === 'admin';
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role_pengguna === 'customer';
+    }
 }

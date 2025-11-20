@@ -21,21 +21,29 @@ const ArmadaPage = ({ setHeaderAction }) => {
     const [errors, setErrors] = useState({});
     const [deleteConfirm, setDeleteConfirm] = useState(null);
 
+    // Menggunakan axios global yang sudah diset di bootstrap.js atau local instance
+    // Pastikan baseURL sesuai. Jika route ada di web.php (prefix 'api/admin'), 
+    // maka path relatif '/api/admin/armada' sudah benar.
     const api = axios.create({
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
     });
 
-    // UPDATE URL API: Tambahkan /api/ di depan
     const fetchArmada = () => {
         api.get(`/api/admin/armada?search=${search}`)
-            .then(res => setArmadaList(res.data))
-            .catch(err => console.error("Gagal fetch armada:", err));
+            .then(res => {
+                // PERBAIKAN ERROR: Pastikan data yang diterima adalah array sebelum di-set
+                const data = Array.isArray(res.data) ? res.data : [];
+                setArmadaList(data);
+            })
+            .catch(err => {
+                console.error("Gagal fetch armada:", err);
+                setArmadaList([]); // Set empty array on error to prevent .map crash
+            });
     };
 
-    // UPDATE URL API: Tambahkan /api/ di depan
     const fetchLayanan = () => {
-        api.get('/api/admin/layanan')
-            .then(res => setLayananList(res.data))
+        api.get('/api/admin/layanan') // Pastikan endpoint ini mengembalikan JSON array
+            .then(res => setLayananList(Array.isArray(res.data) ? res.data : []))
             .catch(err => console.error("Gagal fetch layanan:", err));
     };
 
@@ -60,7 +68,11 @@ const ArmadaPage = ({ setHeaderAction }) => {
         setModalMode(mode);
         setFormData(mode === 'add' ? { 
             status_ketersediaan: 'Tersedia',
-            layanan: '' 
+            layanan: '',
+            no_plat: '',
+            jenis_kendaraan: '',
+            kapasitas: '',
+            harga_sewa_per_hari: ''
         } : { ...data });
         setErrors({});
         setIsModalOpen(true);
@@ -80,8 +92,8 @@ const ArmadaPage = ({ setHeaderAction }) => {
         e.preventDefault();
         setErrors({});
 
-        // UPDATE URL API: Tambahkan /api/ di depan
         const url = modalMode === 'add' ? '/api/admin/armada' : `/api/admin/armada/${formData.id_armada}`;
+        // Gunakan POST untuk create, PUT untuk update
         const method = modalMode === 'add' ? 'post' : 'put';
 
         api[method](url, formData)
@@ -94,13 +106,12 @@ const ArmadaPage = ({ setHeaderAction }) => {
                     setErrors(err.response.data.errors);
                 } else {
                     console.error("Error simpan:", err);
-                    alert("Gagal menyimpan data.");
+                    alert("Gagal menyimpan data. Cek koneksi atau validasi server.");
                 }
             });
     };
 
     const handleDelete = (id) => {
-        // UPDATE URL API: Tambahkan /api/ di depan
         api.delete(`/api/admin/armada/${id}`)
             .then(() => {
                 fetchArmada();
@@ -132,7 +143,8 @@ const ArmadaPage = ({ setHeaderAction }) => {
                         </tr>
                     </thead>
                     <tbody className="text-sm text-slate-700 divide-y divide-slate-100">
-                        {armadaList.length > 0 ? armadaList.map((item) => (
+                        {/* PERBAIKAN: Cek armadaList ada dan memiliki panjang */}
+                        {armadaList && armadaList.length > 0 ? armadaList.map((item) => (
                             <tr key={item.id_armada} className="hover:bg-slate-50 transition-colors">
                                 <td className="py-3.5 px-4 font-medium text-slate-900">{item.no_plat}</td>
                                 <td className="py-3.5 px-4">
@@ -143,7 +155,7 @@ const ArmadaPage = ({ setHeaderAction }) => {
                                 <td className="py-3.5 px-4">{item.jenis_kendaraan}</td>
                                 <td className="py-3.5 px-4">{item.kapasitas}</td>
                                 <td className="py-3.5 px-4"><StatusBadge status={item.status_ketersediaan} /></td>
-                                <td className="py-3.5 px-4 text-right space-x-2">
+                                <td className="py-3.5 px-4 text-right space-x-2 flex justify-end">
                                     <ActionButton type="edit" onClick={() => openModal('edit', item)} />
                                     <ActionButton type="delete" onClick={() => setDeleteConfirm(item)} />
                                 </td>
@@ -155,10 +167,18 @@ const ArmadaPage = ({ setHeaderAction }) => {
                 </table>
             </div>
 
+            {/* MODAL */}
             <Modal isOpen={isModalOpen} onClose={closeModal} title={modalMode === 'add' ? 'Tambah Armada' : 'Edit Armada'}>
                 <form onSubmit={handleSave}>
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <FormInput label="Nomor Polisi" name="no_plat" value={formData.no_plat} onChange={handleFormChange} error={errors.no_plat?.[0]} placeholder="B 1234 XYZ" />
+                        <FormInput 
+                            label="Nomor Polisi" 
+                            name="no_plat" 
+                            value={formData.no_plat} 
+                            onChange={handleFormChange} 
+                            error={errors.no_plat?.[0]} 
+                            placeholder="B 1234 XYZ" 
+                        />
                         
                         <FormSelect 
                             label="Layanan" 
@@ -175,7 +195,12 @@ const ArmadaPage = ({ setHeaderAction }) => {
                                     </option>
                                 ))
                             ) : (
-                                <option value="" disabled>Data layanan kosong</option>
+                                <>
+                                    {/* Fallback jika layananList kosong */}
+                                    <option value="Rental">Rental</option>
+                                    <option value="Angkutan">Angkutan</option>
+                                    <option value="Sampah">Sampah</option>
+                                </>
                             )}
                         </FormSelect>
 
@@ -199,6 +224,7 @@ const ArmadaPage = ({ setHeaderAction }) => {
                 </form>
             </Modal>
 
+            {/* DELETE MODAL */}
             <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Konfirmasi Hapus">
                 <div className="p-6">
                     <p className="text-sm text-slate-600">Hapus armada <strong>{deleteConfirm?.no_plat}</strong>?</p>

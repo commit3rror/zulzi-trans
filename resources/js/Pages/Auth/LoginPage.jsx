@@ -4,7 +4,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { FormInput, Alert, LoadingButton } from '@/components/ReusableUI';
 import { CheckCircle } from 'lucide-react';
 
-
 const LoginPage = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
