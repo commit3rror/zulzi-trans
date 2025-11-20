@@ -31,4 +31,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // =====================================================
+    // NEW: GOOGLE OAUTH CONFIGURATION
+    // =====================================================
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        // Menggunakan APP_URL dari .env untuk otomatis mendapatkan domain yang benar
+        'redirect' => env('APP_URL').'/api/auth/google/callback',
+    ],
+
 ];

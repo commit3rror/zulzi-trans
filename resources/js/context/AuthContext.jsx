@@ -12,12 +12,12 @@ export function AuthProvider({ children }) {
         const initAuth = async () => {
             const token = localStorage.getItem('auth_token');
             const storedUser = localStorage.getItem('user');
-            
+
             if (token && storedUser) {
                 try {
                     // Opsional: Verifikasi token ke server
                     // const res = await authService.me();
-                    // setUser(res.data); 
+                    // setUser(res.data);
                     setUser(JSON.parse(storedUser));
                 } catch (error) {
                     console.error('Session invalid:', error);
@@ -37,7 +37,7 @@ export function AuthProvider({ children }) {
         setUser(response.data.user);
         return response;
     };
-    
+
     const register = async (userData) => {
         // authService akan melempar error jika gagal, yang akan ditangkap oleh RegisterPage
         const response = await authService.register(userData);
@@ -55,6 +55,13 @@ export function AuthProvider({ children }) {
         localStorage.setItem('user', JSON.stringify(updatedUser));
     };
 
+    // NEW: Fungsi untuk menyimpan token dan user secara manual dari OAuth callback
+    const setAuthData = (token, user) => {
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        setUser(user);
+    };
+
     const value = {
         user,
         loading,
@@ -63,6 +70,7 @@ export function AuthProvider({ children }) {
         logout,
         updateUser,
         isAuthenticated: !!user,
+        setAuthData,
     };
 
     return (

@@ -51,6 +51,8 @@ class User extends Authenticatable
         'password',
         'no_telepon',
         'tgl_daftar',
+        'google_id',
+        'email_verified_at',
     ];
 
     /**
