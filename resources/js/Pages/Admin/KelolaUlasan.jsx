@@ -217,7 +217,14 @@ const KelolaUlasan = ({ setHeaderAction }) => {
     const [error, setError] = useState(null);
     const [detailModal, setDetailModal] = useState({ isOpen: false, data: null });
 
-    const filterOptions = ['Semua', 'Rental', 'Angkutan', 'Sampah'];
+    // START MODIFICATION: New structured options for consistent labels
+    const filterButtons = [
+        { name: 'Semua', label: 'Semua' },
+        { name: 'Rental', label: 'Layanan Rental' },
+        { name: 'Angkutan', label: 'Layanan Angkutan' },
+        { name: 'Sampah', label: 'Layanan Sampah' },
+    ];
+    // END MODIFICATION
 
     // Ambil token CSRF untuk Axios POST/PUT/DELETE
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -320,7 +327,7 @@ const KelolaUlasan = ({ setHeaderAction }) => {
     // Handler untuk aksi Toggle Tampilkan (Di dalam tabel)
     const handleToggleDisplay = async (ulasan) => {
         try {
-             const payload = { 
+            const payload = { 
                 is_displayed: !ulasan.is_displayed, // Toggle status
                 _method: 'PUT'
             };
@@ -346,17 +353,21 @@ const KelolaUlasan = ({ setHeaderAction }) => {
                     placeholder="Cari ulasan berdasarkan nama atau komentar..."
                 />
                 
-                {/* Filter Tabs */}
-                <div className="flex space-x-2 p-1 bg-slate-50 rounded-lg border w-fit">
-                    {filterOptions.map(opt => (
+                {/* Filter Tabs - MODIFIED SECTION */}
+                {/* Removed extra padding and border on parent div, switched to underline style */}
+                <div className="flex space-x-4 border-b border-gray-200">
+                    {filterButtons.map(opt => (
                         <button
-                            key={opt}
-                            onClick={() => setFilter(opt)}
-                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors
-                                ${filter === opt ? 'bg-slate-800 text-white shadow-md' : 'text-slate-600 hover:bg-slate-200'}
+                            key={opt.name}
+                            onClick={() => setFilter(opt.name)}
+                            className={`
+                                py-2 px-0 text-sm font-medium transition-colors
+                                ${filter === opt.name
+                                    ? 'border-b-2 border-blue-600 text-blue-600'
+                                    : 'text-slate-600 hover:text-blue-600 hover:border-blue-300'}
                             `}
                         >
-                            {opt}
+                            {opt.label}
                         </button>
                     ))}
                 </div>
