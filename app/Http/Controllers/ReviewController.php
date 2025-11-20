@@ -12,15 +12,26 @@ class ReviewController extends Controller
 {
     public function getPublicReviews()
     {
-        $ulasan = Ulasan::with('pengguna') 
-                        ->latest('tgl_ulasan') 
-                        ->limit(5)            
-                        ->get();
+        try {
+            $ulasan = Ulasan::with('pengguna') 
+                            ->where('is_displayed', true)  // Filter hanya review yang ditampilkan
+                            ->latest('tgl_ulasan') 
+                            ->limit(5)            
+                            ->get();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $ulasan
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'data' => $ulasan,
+                'count' => $ulasan->count()
+            ]);
+        } catch (\Exception $e) {
+            // Jika kolom belum ada, return empty array
+            return response()->json([
+                'status' => 'success',
+                'data' => [],
+                'message' => 'Kolom is_displayed mungkin belum di-migrate. Jalankan: php artisan migrate'
+            ]);
+        }
     }
 
     public function getReviewTarget($id_pemesanan)

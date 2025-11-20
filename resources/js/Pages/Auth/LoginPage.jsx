@@ -115,7 +115,7 @@ const LoginPage = () => {
 
                         <LoadingButton 
                             type="submit" 
-                            loading={loading} 
+                            isLoading={loading} 
                             className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2"
                         >
                             LOGIN <span className="text-lg">➤</span>
