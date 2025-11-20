@@ -11,7 +11,8 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'user'; // Pastikan nama tabel sesuai migrasi (biasanya 'users' atau 'user')
+    protected $table = 'user'; // Sesuaikan dengan nama tabel di database
+
     protected $primaryKey = 'id_pengguna';
 
     protected $fillable = [
@@ -45,4 +46,5 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ulasan::class, 'id_pengguna', 'id_pengguna');
     }
+   
 }
