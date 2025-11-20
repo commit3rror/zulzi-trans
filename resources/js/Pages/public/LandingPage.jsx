@@ -2,8 +2,77 @@ import React, { useState, useEffect } from 'react';
 import { Truck, User, Star, Calendar, CheckCircle, Phone, Zap, Shield, Clock, Users } from 'lucide-react';
 import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
-import { getPublicServices } from '../../services/serviceService';
 import { getPublicReviews } from '../../services/reviewService';
+
+// Data Armada ditanam langsung di Front-end
+const ARMADA_DATA = [
+  {
+    id_layanan: 1,
+    nama_layanan: 'Angkut Barang',
+    armada: [
+      {
+        id_armada: 1,
+        no_plat: 'B 1001 ZUL',
+        jenis_kendaraan: 'Minibus',
+        kapasitas: '19 Orang',
+        harga_sewa_per_hari: 800000,
+        status_ketersediaan: 'Tersedia',
+      },
+      {
+        id_armada: 2,
+        no_plat: 'B 2002 TRANS',
+        jenis_kendaraan: 'Truk Box',
+        kapasitas: '4 Ton',
+        harga_sewa_per_hari: 1200000,
+        status_ketersediaan: 'Tersedia',
+      },
+    ]
+  },
+  {
+    id_layanan: 2,
+    nama_layanan: 'Angkut Sampah',
+    armada: [
+      {
+        id_armada: 3,
+        no_plat: 'B 3003 ZUL',
+        jenis_kendaraan: 'Avanza',
+        kapasitas: '7 Orang',
+        harga_sewa_per_hari: 450000,
+        status_ketersediaan: 'Tersedia',
+      },
+      {
+        id_armada: 4,
+        no_plat: 'B 4004 TRANSPORT',
+        jenis_kendaraan: 'Canter',
+        kapasitas: '3 Ton',
+        harga_sewa_per_hari: 600000,
+        status_ketersediaan: 'Tersedia',
+      },
+    ]
+  },
+  {
+    id_layanan: 3,
+    nama_layanan: 'Sewa Kendaraan',
+    armada: [
+      {
+        id_armada: 5,
+        no_plat: 'B 5005 RENTAL',
+        jenis_kendaraan: 'Innova',
+        kapasitas: '8 Orang',
+        harga_sewa_per_hari: 750000,
+        status_ketersediaan: 'Tersedia',
+      },
+      {
+        id_armada: 6,
+        no_plat: 'B 6006 ZULZI',
+        jenis_kendaraan: 'Elf',
+        kapasitas: '16 Orang',
+        harga_sewa_per_hari: 950000,
+        status_ketersediaan: 'Tersedia',
+      },
+    ]
+  },
+];
 
 export default function LandingPage(props) { 
   // props.auth biasanya dikirim otomatis oleh Laravel/Inertia middleware ke page component
@@ -12,38 +81,61 @@ export default function LandingPage(props) {
   const [services, setServices] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredService, setHoveredService] = useState(null);
   const [activeFeature, setActiveFeature] = useState(0);
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const [hoveredService, setHoveredService] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch data real dari API
-        const serviceResponse = await getPublicServices();
+        // Set data armada dari konstanta (tidak query DB)
+        setServices(ARMADA_DATA);
+
+        // Fetch reviews dari API
         const reviewResponse = await getPublicReviews();
-
-        const serviceData = serviceResponse.data.data || serviceResponse.data || [];
         const reviewData = reviewResponse.data.data || reviewResponse.data || [];
-
-        setServices(Array.isArray(serviceData) ? serviceData : []);
-        setReviews(Array.isArray(reviewData) ? reviewData : []);
+        
+        console.log("🎯 Review API Response:", reviewResponse);
+        console.log("📊 Review Data:", reviewData);
+        console.log("📈 Total Reviews:", Array.isArray(reviewData) ? reviewData.length : 0);
+        
+        // Backend sudah filter is_displayed, jadi langsung set
+        const reviews = Array.isArray(reviewData) ? reviewData : [];
+        setReviews(reviews);
+        
+        if (reviews.length === 0) {
+          console.warn("⚠️ Tidak ada review yang ditampilkan. Pastikan:");
+          console.warn("1. Migration sudah dijalankan: php artisan migrate");
+          console.warn("2. Ada data ulasan dengan is_displayed = true di admin");
+        }
       } catch (error) {
-        console.error("Gagal mengambil data landing page:", error);
+        console.error("❌ Gagal mengambil data landing page:", error);
+        setReviews([]);
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, []);
+  }, []); 
 
-  // Auto-rotate active feature every 5 seconds
+  // Auto-rotate features setiap 5 detik
   useEffect(() => {
-    const interval = setInterval(() => {
+    const featureTimer = setInterval(() => {
       setActiveFeature(prev => (prev + 1) % 4);
     }, 5000);
-    return () => clearInterval(interval);
-  }, []); 
+    return () => clearInterval(featureTimer);
+  }, []);
+
+  // Auto-rotate reviews carousel setiap 5 detik
+  useEffect(() => {
+    if (reviews.length > 0) {
+      const reviewTimer = setInterval(() => {
+        setCurrentReviewIndex(prev => (prev + 1) % Math.max(1, Math.ceil(reviews.length / 4)));
+      }, 5000);
+      return () => clearInterval(reviewTimer);
+    }
+  }, [reviews.length]);
 
   return (
     <div className="font-sans antialiased text-gray-800 bg-white min-h-screen flex flex-col">
@@ -220,47 +312,99 @@ export default function LandingPage(props) {
                 <p className="text-gray-500 text-lg">Ulasan asli dari pelanggan yang telah mempercayakan perjalanan mereka kepada Zulzi Trans</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {reviews.length > 0 ? reviews.map((review, idx) => (
-                    <div 
-                      key={review.id_ulasan || idx} 
-                      className="group bg-white p-10 rounded-2xl shadow-sm border border-gray-100 relative hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:border-[#00a3e0]/50"
-                    >
-                        {/* Quotation Mark */}
-                        <div className="absolute top-6 right-8 text-blue-100/50 group-hover:text-[#00a3e0]/20 transition-colors">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21L14.017 18C14.017 16.0548 15.0112 14.2085 16.5138 13.0269C16.0706 13.0677 15.5931 13.0769 15.0168 13.0769C11.9338 13.0769 9.79797 10.8852 9.79797 7.33829C9.79797 3.69649 12.3168 1 15.6821 1C18.7879 1 21.292 3.31832 21.292 6.94752C21.292 12.5892 18.4938 16.5798 14.017 21ZM5.19599 21L5.19599 18C5.19599 16.0548 6.19024 14.2085 7.69277 13.0269C7.24962 13.0677 6.77209 13.0769 6.1958 13.0769C3.11278 13.0769 0.976929 10.8852 0.976929 7.33829C0.976929 3.69649 3.49579 1 6.8611 1C9.96688 1 12.471 3.31832 12.471 6.94752C12.471 12.5892 9.67276 16.5798 5.19599 21Z" /></svg>
-                        </div>
-                        
-                        {/* User Info */}
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="w-14 h-14 bg-gradient-to-br from-[#003366] to-[#00a3e0] rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform">
-                                {review.pengguna?.nama?.charAt(0) || 'U'}
-                            </div>
-                            <div className="flex-grow">
-                                <h4 className="font-bold text-gray-900 text-lg group-hover:text-[#003366] transition-colors">{review.pengguna?.nama || 'Pengguna'}</h4>
-                                <div className="flex text-yellow-400 mt-2 gap-1">
-                                    {[...Array(5)].map((_, i) => (
+            {/* Carousel Reviews - 4 Card View */}
+            <div className="relative max-w-6xl mx-auto">
+              {reviews.length > 0 ? (
+                <div className="relative overflow-hidden">
+                  {/* Slide Container - Grid 4 Kolom */}
+                  <div className="flex transition-transform duration-500 ease-out" style={{
+                    transform: `translateX(-${currentReviewIndex * 100}%)`
+                  }}>
+                    {reviews.map((review, idx) => (
+                      <div key={review.id_ulasan || idx} className="w-full flex-shrink-0">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 px-2">
+                          {/* Show 4 cards at a time, cycling through reviews */}
+                          {[0, 1, 2, 3].map((offset) => {
+                            const reviewIdx = (idx + offset) % reviews.length;
+                            const currentReview = reviews[reviewIdx];
+                            return (
+                              <div key={`${idx}-${offset}`} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 relative">
+                                {/* Quotation Mark */}
+                                <div className="absolute top-4 right-6 text-blue-100/50">
+                                  <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21L14.017 18C14.017 16.0548 15.0112 14.2085 16.5138 13.0269C16.0706 13.0677 15.5931 13.0769 15.0168 13.0769C11.9338 13.0769 9.79797 10.8852 9.79797 7.33829C9.79797 3.69649 12.3168 1 15.6821 1C18.7879 1 21.292 3.31832 21.292 6.94752C21.292 12.5892 18.4938 16.5798 14.017 21ZM5.19599 21L5.19599 18C5.19599 16.0548 6.19024 14.2085 7.69277 13.0269C7.24962 13.0677 6.77209 13.0769 6.1958 13.0769C3.11278 13.0769 0.976929 10.8852 0.976929 7.33829C0.976929 3.69649 3.49579 1 6.8611 1C9.96688 1 12.471 3.31832 12.471 6.94752C12.471 12.5892 9.67276 16.5798 5.19599 21Z" /></svg>
+                                </div>
+                                
+                                {/* User Info */}
+                                <div className="flex items-center gap-3 mb-4">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-[#003366] to-[#00a3e0] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                                    {currentReview.pengguna?.nama?.charAt(0) || 'U'}
+                                  </div>
+                                  <div className="flex-grow">
+                                    <h4 className="font-bold text-gray-900 text-sm">{currentReview.pengguna?.nama || 'Pengguna'}</h4>
+                                    <div className="flex text-yellow-400 mt-1 gap-0.5">
+                                      {[...Array(5)].map((_, i) => (
                                         <Star 
                                           key={i} 
-                                          size={16} 
+                                          size={12} 
                                           fill="currentColor" 
-                                          className={i < (review.rating || 5) ? "text-yellow-400" : "text-gray-200"} 
+                                          className={i < (currentReview.rating || 5) ? "text-yellow-400" : "text-gray-200"} 
                                         />
-                                    ))}
+                                      ))}
+                                    </div>
+                                  </div>
                                 </div>
-                            </div>
+                                
+                                {/* Comment */}
+                                <p className="text-gray-700 italic leading-relaxed text-[13px] line-clamp-4">
+                                  "{currentReview.komentar}"
+                                </p>
+                              </div>
+                            );
+                          })}
                         </div>
-                        
-                        {/* Comment */}
-                        <p className="text-gray-700 italic leading-relaxed text-[15px] group-hover:text-gray-800 transition-colors">
-                            "{review.komentar}"
-                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Navigation Buttons */}
+                  <div className="flex justify-center items-center gap-4 mt-8">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => setCurrentReviewIndex(prev => (prev - 1 + reviews.length) % reviews.length)}
+                      className="p-3 rounded-full border border-[#00a3e0] text-[#003366] hover:bg-[#00a3e0] hover:text-white transition-all"
+                    >
+                      ← Sebelumnya
+                    </button>
+
+                    {/* Dots Indicator */}
+                    <div className="flex gap-2">
+                      {reviews.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentReviewIndex(idx)}
+                          className={`h-2 rounded-full transition-all ${
+                            currentReviewIndex === idx
+                              ? 'bg-[#00a3e0] w-8'
+                              : 'bg-gray-300 w-2 hover:bg-gray-400'
+                          }`}
+                        />
+                      ))}
                     </div>
-                )) : (
-                    <div className="col-span-3 text-center py-12">
-                        <p className="text-gray-500 text-lg">Belum ada ulasan dari pelanggan.</p>
-                    </div>
-                )}
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => setCurrentReviewIndex(prev => (prev + 1) % reviews.length)}
+                      className="p-3 rounded-full border border-[#00a3e0] text-[#003366] hover:bg-[#00a3e0] hover:text-white transition-all"
+                    >
+                      Selanjutnya →
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">Belum ada ulasan dari pelanggan.</p>
+                </div>
+              )}
             </div>
         </div>
       </section>
