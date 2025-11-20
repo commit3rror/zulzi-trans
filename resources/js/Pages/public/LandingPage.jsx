@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Truck, User, Star, Calendar, CheckCircle, Phone } from 'lucide-react';
-import Navbar from '../../components/Navbar';
-import Footer from '../../components/Footer';
+import Navbar from '../../Components/Navbar';
+import Footer from '../../Components/Footer';
 import { getPublicServices } from '../../services/serviceService';
 import { getPublicReviews } from '../../services/reviewService';
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\PemesananController; // <-- Import Controller
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,37 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin Only Routes
     Route::middleware('admin')->prefix('admin')->group(function () {
-        // Dashboard
-        // Route::get('/dashboard', [DashboardController::class, 'index']);
-        
-        // User Management
-        // Route::apiResource('users', AdminUserController::class);
-        
-        // Vehicle Management
-        // Route::apiResource('vehicles', AdminVehicleController::class);
-        
-        // Order Management
-        // Route::apiResource('orders', AdminOrderController::class);
-        
-        // Payment Management
-        // Route::apiResource('payments', AdminPaymentController::class);
-        
-        // Driver Management
-        // Route::apiResource('drivers', AdminDriverController::class);
-        
-        // Review Management
-        // Route::apiResource('reviews', AdminReviewController::class);
-        
-        // Service Management
-        // Route::apiResource('services', AdminServiceController::class);
     });
 
-    // Customer Routes
-    // Route::apiResource('orders', OrderController::class);
-    // Route::apiResource('payments', PaymentController::class);
-    // Route::apiResource('reviews', ReviewController::class);
-    // Route::get('/profile', [ProfileController::class, 'show']);
-    // Route::put('/profile', [ProfileController::class, 'update']);
 });
 // Route Public
 Route::get('/reviews/public', [ReviewController::class, 'getPublicReviews']); 

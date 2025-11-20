@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout.jsx';
-import DashboardPage from '@/Pages/DashboardPage.jsx';
-import ArmadaPage from '@/Pages/ArmadaPage.jsx';
-import PenggunaPage from '@/Pages/PenggunaPage.jsx';
-import PembayaranPage from '@/Pages/PembayaranPage.jsx';
-import PesananPage from '@/Pages/PesananPage.jsx';
-import KelolaSupir from '@/Pages/KelolaSupir.jsx';
-import KelolaUlasan from '@/Pages/KelolaUlasan.jsx';
+import DashboardPage from '@/Pages/Admin/DashboardPage.jsx';
+import ArmadaPage from '@/Pages/Admin/ArmadaPage.jsx';
+import PenggunaPage from '@/Pages/Admin/PenggunaPage.jsx';
+import PembayaranPage from '@/Pages/Admin/PembayaranPage.jsx';
+import PesananPage from '@/Pages/Admin/PesananPage.jsx';
+import KelolaSupir from '@/Pages/Admin/KelolaSupir.jsx';
+import KelolaUlasan from '@/Pages/Admin/KelolaUlasan.jsx';
 
 /**
  * Ini adalah komponen App utama yang bertindak sebagai router

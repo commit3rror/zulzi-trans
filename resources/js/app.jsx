@@ -3,16 +3,13 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext.jsx';
-import { createRoot } from 'react-dom/client';
-import { RouterProvider } from 'react-router-dom';
-import router from './router';
 
 // Import Pages
 import LoginPage from './Pages/Auth/LoginPage.jsx';
 import RegisterPage from './Pages/Auth/RegisterPage.jsx';
 import ForgotPasswordPage from './Pages/Auth/ForgotPasswordPage.jsx';
-import EditProfile from './Pages/Auth/EditProfile.jsx'; // <--- GANTI INI
-import AdminPanel from './Pages/AdminPanel.jsx';
+import EditProfile from './Pages/Auth/EditProfile.jsx';
+import AdminPanel from './Pages/Admin/AdminPanel.jsx';
 
 import '../css/app.css';
 
@@ -25,12 +22,13 @@ function App() {
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     
-                    {/* Rute baru untuk Edit Profile */}
                     <Route path="/edit-profile" element={<EditProfile />} />
                     
-                    <Route path="/admin" element={<AdminPanel />} />
+                    {/* FIX: Tambahkan '/*' agar sub-halaman (misal: /admin/armada) tetap tertangkap */}
+                    <Route path="/admin/*" element={<AdminPanel />} />
+                    
+                    {/* Default Redirect */}
                     <Route path="/" element={<Navigate to="/login" replace />} />
-                    {/* ... 404 handler ... */}
                 </Routes>
             </BrowserRouter>
         </AuthProvider>
