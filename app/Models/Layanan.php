@@ -33,4 +33,10 @@ class Layanan extends Model
     {
         return $this->hasMany(Pemesanan::class, 'id_layanan', 'id_layanan');
     }
+
+    public function armada()
+    {
+        return $this->hasMany(Armada::class, 'id_layanan', 'id_layanan');
+    }
+
 }

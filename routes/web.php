@@ -21,10 +21,7 @@ use App\Http\Controllers\PemesananController;
 
 // 1. REDIRECT ROOT KE BERANDA
 Route::get('/', function () {
-    // Karena kita sudah punya OAuthCallbackHandler di React yang menerima callback di path ini,
-    // kita akan membiarkan rute ini mengarah ke view utama atau ke handler, bukan redirect keras.
-    // Jika tidak ada parameter OAuth, app.jsx akan mengarahkan ke /beranda.
-    return view('app');
+    return redirect('/beranda');
 });
 
 // =====================================================
@@ -42,26 +39,26 @@ Route::prefix('api/admin')->group(function () {
 
     Route::apiResource('armada', ArmadaController::class)->parameters(['armada' => 'id_armada']);
     Route::apiResource('supir', SupirController::class)->parameters(['supir' => 'id_supir']);
-    Route::apiResource('ulasan', UlasanController::class)->parameters(['ulasan' => 'id_ulasan']);
-    Route::apiResource('pembayaran', PembayaranController::class)->parameters(['pembayaran' => 'id_pembayaran']);
+    Route::apiResource('ulasan', UlasanController::class)
+        ->only(['index', 'show', 'update', 'destroy'])
+        ->parameters(['ulasan' => 'id_ulasan']);
 
-    // Pemesanan
-    Route::get('/pemesanan', [PemesananController::class, 'indexAdmin']); // Admin view
+    Route::get('/pembayaran', [PembayaranController::class, 'index']);
+    Route::get('/pembayaran/{id}', [PembayaranController::class, 'show']);
+    Route::post('/pembayaran/{id}/verify', [PembayaranController::class, 'verify']);
+    Route::get('/pembayaran/statistics/all', [PembayaranController::class, 'statistics']);
+
+    Route::get('/pemesanan', [PemesananController::class, 'index']);
+    Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
+    Route::post('/pemesanan', [PemesananController::class, 'store']);
+    Route::put('/pemesanan/{id}', [PemesananController::class, 'update']);
+    Route::delete('/pemesanan/{id}', [PemesananController::class, 'destroy']);
     Route::put('/pemesanan/{id}/verifikasi', [PemesananController::class, 'verifikasi']);
     Route::put('/pemesanan/{id}/assign', [PemesananController::class, 'assignSupirArmada']);
 });
 
-// Rute untuk Customer (Non-Admin)
-Route::prefix('api/customer')->middleware('auth:sanctum')->group(function () {
-    Route::get('/pemesanan', [PemesananController::class, 'indexCustomer']); // Customer view
-    Route::post('/pemesanan', [PemesananController::class, 'store']);
-    Route::put('/pemesanan/{id}', [PemesananController::class, 'update']);
-    Route::delete('/pemesanan/{id}', [PemesananController::class, 'destroy']);
-});
-
-
 // =====================================================
-// AUTH ROUTES (Email/Password)
+// AUTH ROUTES
 // =====================================================
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');

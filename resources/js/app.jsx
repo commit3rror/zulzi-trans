@@ -8,8 +8,9 @@ import LoginPage from './Pages/Auth/LoginPage.jsx';
 import RegisterPage from './Pages/Auth/RegisterPage.jsx';
 import ForgotPasswordPage from './Pages/Auth/ForgotPasswordPage.jsx';
 import EditProfile from './Pages/Auth/EditProfile.jsx';
-import AdminPanel from './Pages/AdminPanel.jsx';
+
 import BerandaPage from './Pages/BerandaPage.jsx';
+import AdminPanel from './Pages/Admin/AdminPanel.jsx';
 
 import '../css/app.css';
 
