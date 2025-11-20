@@ -4,8 +4,8 @@ import { CheckCircle, Target, Users, Award } from 'lucide-react';
 // 1. IMPORT KOMPONEN NAVBAR & FOOTER
 // Pastikan path-nya sesuai dengan lokasi file kamu. 
 // Jika file ini ada di 'resources/js/Pages/', maka gunakan '../components/...'
-import Navbar from '../components/Navbar'; 
-import Footer from '../components/Footer';
+import Navbar from '../Components/Navbar'; 
+import Footer from '../Components/Footer';
 
 export default function AboutPage(props) {
   // Mengambil data auth dari props (dikirim dari Laravel/Inertia)
