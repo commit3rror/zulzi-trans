@@ -1,6 +1,6 @@
+// resources/js/service/api.js
 import axios from 'axios';
 
-// Base API Configuration
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
     headers: {
@@ -8,40 +8,21 @@ const api = axios.create({
         'Accept': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
     },
-    withCredentials: true,
+    withCredentials: true, // Wajib true untuk session/cookies
 });
 
-// Request Interceptor - Add token to headers
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-// Response Interceptor - Handle errors globally
+// Response Interceptor
 api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
+    (response) => response,
     (error) => {
         if (error.response) {
-            // Unauthorized - redirect to login
-            if (error.response.status === 401) {
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user');
-                window.location.href = '/login';
-            }
-            
-            // Forbidden
-            if (error.response.status === 403) {
-                console.error('Forbidden: You do not have permission to access this resource');
+            // 401 Unauthorized & 419 CSRF Token Mismatch -> Sesi habis
+            if (error.response.status === 401 || error.response.status === 419) {
+                // Cek apakah kita sudah di halaman login untuk menghindari loop
+                if (window.location.pathname !== '/login') {
+                    // Opsional: Redirect ke login atau clear state context
+                    // window.location.href = '/login';
+                }
             }
         }
         return Promise.reject(error);

@@ -1,31 +1,19 @@
-// resources/service/authService.js
+// resources/js/service/authService.js
 import api from './api';
-import axios from 'axios'; // Import axios murni untuk call ke luar baseURL api (csrf)
+import axios from 'axios';
 
 const authService = {
-    // Request CSRF Cookie (PENTING)
+    // Request CSRF Cookie sebelum POST request login/register
     getCsrfToken: async () => {
-        // Kita gunakan instance axios baru atau setting manual ke root URL (bukan /api)
-        await axios.get('http://localhost:8000/sanctum/csrf-cookie', {
-            withCredentials: true
+        await axios.get('/sanctum/csrf-cookie', {
+            baseURL: window.location.origin
         });
     },
 
     register: async (data) => {
         try {
-            // 1. Ambil CSRF Token dulu
             await authService.getCsrfToken();
-            
-            // 2. Hit endpoint register
             const response = await api.post('/auth/register', data);
-            
-            // HAPUS ATAU KOMENTARI BAGIAN INI AGAR TIDAK AUTO-LOGIN
-            /* if (response.data.success) {
-                localStorage.setItem('auth_token', response.data.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.data.user));
-            } 
-            */
-            
             return response.data;
         } catch (error) {
             throw error.response?.data || error;
@@ -35,14 +23,7 @@ const authService = {
     login: async (credentials) => {
         try {
             await authService.getCsrfToken();
-            
             const response = await api.post('/auth/login', credentials);
-            
-            if (response.data.success) {
-                localStorage.setItem('auth_token', response.data.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.data.user));
-            }
-            
             return response.data;
         } catch (error) {
             throw error.response?.data || error;
@@ -54,9 +35,6 @@ const authService = {
             await api.post('/auth/logout');
         } catch (error) {
             console.error('Logout error:', error);
-        } finally {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user');
         }
     },
 

@@ -11,21 +11,13 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str; // NEW: Untuk membuat password random
-use Laravel\Socialite\Facades\Socialite; // NEW: Import Socialite
+use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
+
 class AuthController extends Controller
 {
     /**
-     * Tampilkan form login (opsional untuk web)
-     */
-    public function showLoginForm()
-    {
-        return view('auth.login');
-
-    }
-
-    /**
-     * Register user baru (Customer)
+     * Register user baru (Customer) dengan Session
      */
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -39,14 +31,14 @@ class AuthController extends Controller
                 'tgl_daftar' => now(),
             ]);
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // Login otomatis menggunakan session setelah register
+            Auth::login($user);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Registrasi berhasil! Selamat datang di Zulzi Trans Express',
                 'data' => [
                     'user' => new UserResource($user),
-                    'token' => $token,
                 ],
             ], 201);
         } catch (\Exception $e) {
@@ -59,54 +51,49 @@ class AuthController extends Controller
     }
 
     /**
-     * Login user
+     * Login user dengan Session
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        // Cek kredensial
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        // Cek kredensial menggunakan Session Guard
+        if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+
+            // Regenerate session ID untuk mencegah session fixation attacks
+            $request->session()->regenerate();
+
             return response()->json([
-                'success' => false,
-                'message' => 'Email atau password salah',
-            ], 401);
+                'success' => true,
+                'message' => 'Login berhasil',
+                'data' => [
+                    'user' => new UserResource(Auth::user()),
+                ],
+            ], 200);
         }
 
-        $user = User::where('email', $request->email)->firstOrFail();
-        $token = $user->createToken('auth_token')->plainTextToken;
+        return response()->json([
+            'success' => false,
+            'message' => 'Email atau password salah',
+        ], 401);
+    }
+
+    /**
+     * Logout user (Hapus Session)
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json([
             'success' => true,
-            'message' => 'Login berhasil',
-            'data' => [
-                'user' => new UserResource($user),
-                'token' => $token,
-            ],
+            'message' => 'Logout berhasil',
         ], 200);
     }
 
     /**
-     * Logout user (hapus token saat ini)
-     */
-    public function logout(Request $request): JsonResponse
-    {
-        try {
-            $request->user()->currentAccessToken()->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Logout berhasil',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Logout gagal',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Ambil data user yang sedang login
+     * Ambil data user yang sedang login (Session Check)
      */
     public function me(Request $request): JsonResponse
     {
@@ -140,95 +127,56 @@ class AuthController extends Controller
         ], 200);
     }
 
-    /**
-     * Refresh token (opsional)
-     */
-    public function refreshToken(Request $request): JsonResponse
-    {
-        try {
-            $user = $request->user();
-            $request->user()->currentAccessToken()->delete();
-
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Token berhasil di-refresh',
-                'data' => [
-                    'token' => $token,
-                ],
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Refresh token gagal',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
     // =====================================================
-    // NEW: GOOGLE OAUTH METHODS
+    // GOOGLE OAUTH METHODS (SESSION BASED)
     // =====================================================
 
-    /**
-     * Redirect user to the Google authentication page.
-     */
     public function redirectToGoogle()
     {
-        // Menggunakan stateless() karena ini adalah otentikasi API/SPA
-        return Socialite::driver('google')->stateless()->redirect();
+        return Socialite::driver('google')->redirect();
     }
 
-    /**
-     * Handle the callback from Google.
-     * Logika: Cari berdasarkan google_id -> Cari berdasarkan email -> Buat user baru
-     */
     public function handleGoogleCallback()
     {
         try {
-            // Socialite akan memproses callback dari Google
             $googleUser = Socialite::driver('google')->user();
 
-            // 1. Cari atau buat user berdasarkan email Google
-            $user = User::firstOrCreate(
-                ['email' => $googleUser->getEmail()],
-                [
+            // Cari user berdasarkan email atau google_id
+            $user = User::where('email', $googleUser->getEmail())->first();
+
+            if ($user) {
+                // Jika user ada, update google_id jika belum ada
+                if (!$user->google_id) {
+                    $user->update(['google_id' => $googleUser->getId()]);
+                }
+            } else {
+                // Jika belum ada, buat user baru
+                $user = User::create([
                     'nama' => $googleUser->getName(),
-                    'role_pengguna' => 'customer', // Asumsi default role
-                    // Password diisi dengan random string (hanya jika user baru dibuat)
-                    'password' => Hash::make(Str::random(16)),
+                    'email' => $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'role_pengguna' => 'customer',
+                    'password' => Hash::make(Str::random(24)), // Password acak
                     'tgl_daftar' => now(),
-                    'email_verified_at' => now(), // Verifikasi email otomatis untuk Google
-                ]
-            );
+                    'email_verified_at' => now(),
+                    'no_telepon' => '', // Google tidak selalu return no hp
+                ]);
+            }
 
-            // 2. Berhasil login: Hapus token lama dan buat token Sanctum baru
-            $user->tokens()->delete();
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // Login User ke Session
+            Auth::login($user, true);
 
-            // 3. Persiapkan data user untuk frontend
-            $userData = [
-                'id_pengguna' => $user->id_pengguna,
-                'nama' => $user->nama,
-                'email' => $user->email,
-                'role_pengguna' => $user->role_pengguna, // Penting untuk redirect di FE
-            ];
+            // Redirect langsung ke halaman beranda React
+            // Karena session sudah tersimpan di browser, React akan otomatis mendeteksi user via endpoint /me
+            if ($user->isAdmin()) {
+                return redirect('/admin');
+            }
 
-            // 4. Arahkan kembali ke frontend di path utama ('/') dengan query string
-            // Frontend URL diset di app.jsx sebagai window.location.origin
-            $redirectUrl = env('APP_URL') . '/?auth_token=' . $token . '&user=' . urlencode(json_encode($userData));
-
-            return redirect($redirectUrl);
+            return redirect('/beranda');
 
         } catch (\Exception $e) {
-            // Log error
-            \Log::error('Google OAuth Error: ' . $e->getMessage());
-
-            // Arahkan kembali ke halaman login frontend dengan pesan error
-            $errorUrl = env('APP_URL') . '/login?error=' . urlencode('Gagal login dengan Google. Silakan coba lagi.');
-
-            return redirect($errorUrl);
+            \Log::error('Google Login Error: ' . $e->getMessage());
+            return redirect('/login?error=' . urlencode('Gagal login dengan Google.'));
         }
     }
 }
