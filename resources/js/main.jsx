@@ -9,6 +9,7 @@ import LandingPage from '@/Pages/public/LandingPage';
 import AboutPage from '@/Pages/AboutPage';
 import ReviewPage from '@/Pages/ReviewPage'; 
 import PemesananPage from '@/Pages/Pemesanan/Index';
+import ProfilePage from '@/Pages/ProfilePage';
 // import PembayaranPage from '@/Pages/PembayaranPage';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -28,6 +29,7 @@ root.render(
         <Route path="/about" element={<AboutPage />} /> 
         
         <Route path="/pemesanan" element={<PemesananPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         {/* <Route path="/pembayaran" element={<PembayaranPage />} /> */}
         
         <Route path="/review/:id" element={<ReviewPage />} />
