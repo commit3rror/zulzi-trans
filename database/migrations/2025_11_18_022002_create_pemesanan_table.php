@@ -28,12 +28,13 @@ return new class extends Migration
             
             // Lokasi
             $table->string('lokasi_jemput');
-
-            // WAJIB NULLABLE untuk SAMPAH & RENTAL
-            $table->string('lokasi_tujuan')->nullable();
-
+            $table->string('lokasi_tujuan'); // Pastikan hanya satu definisi
+            
             // Keuangan & Status
+            // ERROR sebelumnya terjadi karena baris ini ada dua kali. 
+            // Kita gunakan yang presisi tinggi (15 digit, 2 desimal).
             $table->double('total_biaya', 15, 2)->default(0);
+            
             $table->string('status_pemesanan', 20);
             
             // Detail Tambahan (Nullable karena tergantung jenis layanan)
@@ -42,14 +43,11 @@ return new class extends Migration
             $table->string('foto_barang')->nullable();
             $table->integer('jumlah_orang')->nullable();
             $table->integer('lama_rental')->nullable(); // Dalam hari
-
-            // Tambahan catatan (jika user isi catatan bebas)
-            $table->text('catatan')->nullable();
-
+            
             $table->timestamps();
-
-            // Foreign Key Constraint optional
-            // $table->foreign('id_pengguna')->references('id_pengguna')->on('pengguna')->onDelete('cascade');
+            
+            // Opsional: Foreign Key Constraints (Aktifkan jika tabel referensi sudah pasti dibuat sebelumnya)
+            // $table->foreign('id_pengguna')->references('id')->on('users')->onDelete('cascade');
             // $table->foreign('id_layanan')->references('id_layanan')->on('layanan')->onDelete('cascade');
         });
     }
