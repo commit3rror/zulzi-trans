@@ -3,55 +3,49 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use App\Models\Pemesanan;
 use App\Models\User;
 use App\Models\Armada;
 use App\Models\Layanan;
 use App\Models\Supir;
+use Faker\Factory as Faker;
 
 class PemesananSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Cari Customer
-        $user = User::where('email', 'budi@gmail.com')->first();
-        
-        // 2. Cari Armada berdasarkan NO PLAT (karena nama_armada tidak ada di DB Anda)
-        $armada = Armada::where('no_plat', 'B 7281 WDA')->first(); 
+        $faker = Faker::create();
 
-        // 3. Cari Layanan
-        $layanan = Layanan::where('nama_layanan', 'Sewa Kendaraan')->first();
-        
-        // 4. Cari Supir
-        $supir = Supir::first();
+        $users = User::all();
+        $armadas = Armada::all();
+        $layanans = Layanan::all();
+        $supirs = Supir::all();
 
-        // Pastikan data referensi ada sebelum insert
-        if ($user && $armada && $layanan && $supir) {
-            DB::table('pemesanan')->updateOrInsert(
-                [
-                    'id_pengguna' => $user->id_pengguna,
-                    'tgl_pesan' => Carbon::now()->subDays(5)->format('Y-m-d'),
-                ],
-                [
-                    'id_armada' => $armada->id_armada,
-                    'id_layanan' => $layanan->id_layanan,
-                    'id_supir' => $supir->id_supir,
-                    'tgl_mulai' => Carbon::now()->subDays(3),
-                    'tgl_selesai' => Carbon::now()->subDays(1),
-                    'lokasi_jemput' => 'Bandung',
-                    'lokasi_tujuan' => 'Surabaya',
-                    
-                    'total_biaya' => 2500000.0, // Format float
-                    
-                    'status_pemesanan' => 'Selesai',
-                    'deskripsi_barang' => null,
-                    'est_berat_ton' => null,
-                    'foto_barang' => null,
-                    'jumlah_orang' => 10,
-                    'lama_rental' => 3,
-                ]
-            );
+        if ($users->count() === 0 || $layanans->count() === 0) {
+            $this->command->warn("Seeder Pemesanan: Pastikan tabel User dan Layanan sudah ada data.");
+            return;
+        }
+
+        // Contoh membuat 20 data pemesanan
+        for ($i = 0; $i < 20; $i++) {
+            Pemesanan::create([
+                'id_pengguna' => $users->random()->id_pengguna,
+                'id_armada' => $armadas->isNotEmpty() ? $armadas->random()->id_armada : null,
+                'id_layanan' => $layanans->random()->id_layanan,
+                'id_supir' => $supirs->isNotEmpty() ? $supirs->random()->id_supir : null,
+                'tgl_pesan' => $faker->dateTimeBetween('-1 month', 'now')->format('Y-m-d'),
+                'tgl_mulai' => $faker->dateTimeBetween('now', '+1 month')->format('Y-m-d'),
+                'tgl_selesai' => $faker->dateTimeBetween('+1 month', '+2 month')->format('Y-m-d'),
+                'lokasi_jemput' => $faker->address,
+                'lokasi_tujuan' => $faker->address,
+                'total_biaya' => $faker->randomFloat(2, 500000, 5000000),
+                'status_pemesanan' => $faker->randomElement(['PENDING','CONFIRM','CANCEL']),
+                'deskripsi_barang' => $faker->optional()->sentence,
+                'est_berat_ton' => $faker->optional()->randomFloat(1, 0.1, 10),
+                'foto_barang' => $faker->optional()->imageUrl(200, 200, 'transport'),
+                'jumlah_orang' => $faker->optional()->numberBetween(1, 10),
+                'lama_rental' => $faker->optional()->numberBetween(1, 30),
+            ]);
         }
     }
 }

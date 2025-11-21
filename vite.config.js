@@ -7,7 +7,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/css/app.css', 
+                'resources/css/app.css',
                 'resources/js/main.jsx',
                 'resources/js/app.jsx'
             ],
@@ -25,6 +25,13 @@ export default defineConfig({
     server: {
         hmr: {
             host: 'localhost',
+        },
+        proxy: {
+            '/api': {
+                target: 'http://localhost:8000', // ganti dengan port Laravel
+                changeOrigin: true,
+                secure: false,
+            },
         },
     },
 });

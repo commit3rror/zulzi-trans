@@ -43,7 +43,7 @@ class PemesananController extends Controller
                 'pemesanan.est_berat_ton',
                 'pemesanan.lama_rental',
                 'supir.nama as nama_supir',
-                'armada.nama_armada',
+                'armada.jenis_kendaraan',
                 'layanan.nama_layanan'
             )
             ->where('layanan.nama_layanan', 'LIKE', '%' . $layananMap[$layanan] . '%');
@@ -55,7 +55,7 @@ class PemesananController extends Controller
                     ->orWhere('pemesanan.lokasi_tujuan', 'LIKE', "%{$search}%")
                     ->orWhere('pemesanan.lokasi_jemput', 'LIKE', "%{$search}%")
                     ->orWhere('supir.nama', 'LIKE', "%{$search}%")
-                    ->orWhere('armada.nama_armada', 'LIKE', "%{$search}%")
+                    ->orWhere('armada.jenis_kendaraan', 'LIKE', "%{$search}%")
                     ->orWhere(DB::raw("CONCAT('RNT-', LPAD(pemesanan.id_pemesanan, 3, '0'))"), 'LIKE', "%{$search}%");
             });
         }
@@ -92,7 +92,7 @@ class PemesananController extends Controller
                 'user.email',
                 'user.no_telepon',
                 'supir.nama as nama_supir',
-                'armada.nama_armada',
+                'armada.jenis_kendaraan',
                 'layanan.nama_layanan'
             )
             ->where('pemesanan.id_pemesanan', $id)

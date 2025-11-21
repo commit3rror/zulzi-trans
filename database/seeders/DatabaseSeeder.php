@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             ArmadaSeeder::class,
             SupirSeeder::class,
             PemesananSeeder::class,
+            PembayaranSeeder::class,
             UlasanSeeder::class,
         ]);
     }

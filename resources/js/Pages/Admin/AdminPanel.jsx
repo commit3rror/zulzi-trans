@@ -4,7 +4,7 @@ import DashboardPage from '@/Pages/Admin/DashboardPage.jsx';
 import ArmadaPage from '@/Pages/Admin/ArmadaPage.jsx';
 import PenggunaPage from '@/Pages/Admin/PenggunaPage.jsx';
 import PembayaranPage from '@/Pages/Admin/PembayaranPage.jsx';
-import PesananPage from '@/Pages/Admin/PesananPage.jsx';
+import PemesananPage from '@/Pages/Admin/PemesananPage.jsx';
 import KelolaSupir from '@/Pages/Admin/KelolaSupir.jsx';
 import KelolaUlasan from '@/Pages/Admin/KelolaUlasan.jsx';
 
@@ -45,7 +45,7 @@ const AdminPanel = () => {
             case 'pembayaran':
                 return <PembayaranPage {...props} />;
             case 'pesanan' :
-                return <PesananPage {...props} />;
+                return <PemesananPage {...props} />;
             case 'supir':
                 return <KelolaSupir {...props} />;
             case 'ulasan':

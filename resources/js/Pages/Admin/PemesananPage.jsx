@@ -102,7 +102,7 @@ const PemesananPage = ({ setHeaderAction }) => {
     return (
         <>
             {/* Search Bar */}
-            <div className="mb-6">
+            <div className="mb-6 relative z-0">
                 <SearchInput
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -131,19 +131,19 @@ const PemesananPage = ({ setHeaderAction }) => {
 
             {/* Table */}
             <div className="overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full table-left border-collapse text-xs">
                     <thead className="bg-slate-50 border-b border-slate-200">
                         <tr className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            <th className="py-4 px-4">ID</th>
-                            <th className="py-4 px-4">Pelanggan</th>
-                            <th className="py-4 px-4">Tujuan</th>
-                            <th className="py-4 px-4">Keberangkatan</th>
-                            <th className="py-4 px-4">Penumpang</th>
-                            <th className="py-4 px-4">Harga</th>
-                            <th className="py-4 px-4">Sopir</th>
-                            <th className="py-4 px-4">Armada</th>
-                            <th className="py-4 px-4">Status</th>
-                            <th className="py-4 px-4 text-center">Aksi</th>
+                            <th className="py-4 px-2 text-center">ID</th>
+                            <th className="py-4 px-2 text-center">Pelanggan</th>
+                            <th className="py-4 px-2 text-center">Tujuan</th>
+                            <th className="py-4 px-2 text-center">Keberangkatan</th>
+                            <th className="py-4 px-2 text-center">Penumpang</th>
+                            <th className="py-4 px-2 text-center">Harga</th>
+                            <th className="py-4 px-2 text-center">Sopir</th>
+                            <th className="py-4 px-2 text-center">Armada</th>
+                            <th className="py-4 px-2 text-center">Status</th>
+                            <th className="py-4 px-2 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="text-sm text-slate-700 divide-y divide-slate-100">
@@ -187,6 +187,7 @@ const PemesananPage = ({ setHeaderAction }) => {
                                                     Verifikasi
                                                 </button>
                                             ) : null}
+                                            <ActionButton type="edit2" onClick={() => setDetail(item)} />
                                             <ActionButton type="delete" onClick={() => setDeleteConfirm(item)} />
                                         </div>
                                     </td>
@@ -203,7 +204,7 @@ const PemesananPage = ({ setHeaderAction }) => {
             <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Hapus Pemesanan">
                 <div className="p-6">
                     <p className="text-sm text-slate-600">
-                        Anda yakin ingin menghapus pemesanan <strong>{deleteConfirm?.kode_pesanan}</strong>?
+                        Anda yakin ingin menghapus pemesanan dari <strong>{deleteConfirm?.nama_pelanggan}</strong>?
                     </p>
                 </div>
                 <div className="flex justify-end gap-3 p-5 bg-slate-50 border-t border-slate-100 rounded-b-xl">

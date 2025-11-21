@@ -40,7 +40,7 @@ Route::prefix('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     // Auth Routes
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -59,7 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 // Route Public
-Route::get('/reviews/public', [ReviewController::class, 'getPublicReviews']); 
+Route::get('/reviews/public', [ReviewController::class, 'getPublicReviews']);
 Route::get('/services', [ServiceController::class, 'index']);
 
 // Route Khusus Halaman Review

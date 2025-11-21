@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\SupirController;
 use App\Http\Controllers\Admin\UlasanController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\Admin\PembayaranController;
-use App\Http\Controllers\PemesananController;
+use App\Http\Controllers\Admin\PemesananController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +47,7 @@ Route::prefix('api/admin')->group(function () {
     Route::get('/pembayaran/{id}', [PembayaranController::class, 'show']);
     Route::post('/pembayaran/{id}/verify', [PembayaranController::class, 'verify']);
     Route::get('/pembayaran/statistics/all', [PembayaranController::class, 'statistics']);
+    Route::delete('/pembayaran/{id}', [PembayaranController::class, 'destroy']);
 
     Route::get('/pemesanan', [PemesananController::class, 'index']);
     Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
