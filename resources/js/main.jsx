@@ -29,7 +29,6 @@ root.render(
 
         <Route path="/pemesanan" element={<PemesananPage />} />
         {/* <Route path="/pembayaran" element={<PembayaranPage />} /> */}
-
         <Route path="/review/:id" element={<ReviewPage />} />
       </Routes>
     </BrowserRouter>
