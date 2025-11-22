@@ -62,11 +62,16 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/reviews/public', [ReviewController::class, 'getPublicReviews']); 
 Route::get('/services', [ServiceController::class, 'index']);
 
-// Route Khusus Halaman Review
-// Mengambil data pesanan untuk form review
+// Route Khusus Halaman Review (Public - buat fetch data)
 Route::get('/reviews/target/{id_pemesanan}', [ReviewController::class, 'getReviewTarget']);
-// Menyimpan review
-Route::post('/reviews', [ReviewController::class, 'store']);
+
+// Protected Review Routes (Authenticated)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/reviews', [ReviewController::class, 'store']); // Create review
+    Route::get('/ulasan/{id}', [ReviewController::class, 'show']); // Get single review
+    Route::delete('/ulasan/{id}', [ReviewController::class, 'destroy']); // Delete review
+    Route::get('/pemesanan/{id}', [PemesananController::class, 'show']); // Get order
+});
 
 Route::middleware('api')->group(function () {
     Route::get('/about', [AboutController::class, 'index']);

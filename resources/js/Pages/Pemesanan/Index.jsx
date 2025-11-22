@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MainLayout from '../../Layouts/MainLayout';
 import Stepper from '../../Components/Pemesanan/Stepper';
 import FormRental from './Partials/FormRental';
@@ -10,6 +10,32 @@ const PemesananPage = () => {
     const [step, setStep] = useState(1); // 1: Form Input, 2: Ringkasan Payment
     const [selectedService, setSelectedService] = useState(null);
     const [orderData, setOrderData] = useState(null); // Menyimpan data pesanan yang baru dibuat
+
+    // Parse service parameter dari URL
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const serviceParam = params.get('service');
+        
+        if (serviceParam) {
+            // Konversi URL parameter ke service ID
+            // 'angkut-barang' -> 'barang'
+            // 'sewa-kendaraan' -> 'rental'
+            // 'angkut-sampah' -> 'sampah'
+            let serviceId = null;
+            
+            if (serviceParam.includes('barang') && !serviceParam.includes('sampah')) {
+                serviceId = 'barang';
+            } else if (serviceParam.includes('sewa') || serviceParam.includes('kendaraan')) {
+                serviceId = 'rental';
+            } else if (serviceParam.includes('sampah')) {
+                serviceId = 'sampah';
+            }
+            
+            if (serviceId) {
+                setSelectedService(serviceId);
+            }
+        }
+    }, []);
 
     // Data tombol layanan
     const services = [

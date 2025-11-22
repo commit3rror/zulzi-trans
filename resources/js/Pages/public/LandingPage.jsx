@@ -4,76 +4,17 @@ import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
 import { getPublicServices } from '../../services/serviceService';
 import { getPublicReviews } from '../../services/reviewService';
-
-// Data Armada ditanam langsung di Front-end
-const ARMADA_DATA = [
-  {
-    id_layanan: 1,
-    nama_layanan: 'Angkut Barang',
-    armada: [
-      {
-        id_armada: 1,
-        no_plat: 'B 1001 ZUL',
-        jenis_kendaraan: 'Minibus',
-        kapasitas: '19 Orang',
-        harga_sewa_per_hari: 800000,
-        status_ketersediaan: 'Tersedia',
-      },
-      {
-        id_armada: 2,
-        no_plat: 'B 2002 TRANS',
-        jenis_kendaraan: 'Truk Box',
-        kapasitas: '4 Ton',
-        harga_sewa_per_hari: 1200000,
-        status_ketersediaan: 'Tersedia',
-      },
-    ]
-  },
-  {
-    id_layanan: 2,
-    nama_layanan: 'Angkut Sampah',
-    armada: [
-      {
-        id_armada: 3,
-        no_plat: 'B 3003 ZUL',
-        jenis_kendaraan: 'Avanza',
-        kapasitas: '7 Orang',
-        harga_sewa_per_hari: 450000,
-        status_ketersediaan: 'Tersedia',
-      },
-      {
-        id_armada: 4,
-        no_plat: 'B 4004 TRANSPORT',
-        jenis_kendaraan: 'Canter',
-        kapasitas: '3 Ton',
-        harga_sewa_per_hari: 600000,
-        status_ketersediaan: 'Tersedia',
-      },
-    ]
-  },
-  {
-    id_layanan: 3,
-    nama_layanan: 'Sewa Kendaraan',
-    armada: [
-      {
-        id_armada: 5,
-        no_plat: 'B 5005 RENTAL',
-        jenis_kendaraan: 'Innova',
-        kapasitas: '8 Orang',
-        harga_sewa_per_hari: 750000,
-        status_ketersediaan: 'Tersedia',
-      },
-      {
-        id_armada: 6,
-        no_plat: 'B 6006 ZULZI',
-        jenis_kendaraan: 'Elf',
-        kapasitas: '16 Orang',
-        harga_sewa_per_hari: 950000,
-        status_ketersediaan: 'Tersedia',
-      },
-    ]
-  },
-];
+import { getArmadaByCategory } from '../../services/armadaService';
+import { 
+    Zap, 
+    Shield, 
+    Clock, 
+    MapPin,   
+    Menu,
+    Users, 
+    X, 
+    ArrowRight 
+} from 'lucide-react';
 
 export default function LandingPage(props) { 
   // props.auth biasanya dikirim otomatis oleh Laravel/Inertia middleware ke page component
@@ -89,8 +30,36 @@ export default function LandingPage(props) {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Set data armada dari konstanta (tidak query DB)
-        setServices(ARMADA_DATA);
+        // Fetch armada dari database dan grup berdasarkan layanan
+        const armadaByCategory = await getArmadaByCategory();
+        
+        // Transform data untuk format yang sama dengan ARMADA_DATA
+        const serviceMapping = {
+          'Angkutan': { id_layanan: 1, nama_layanan: 'Angkut Barang' },
+          'Rental': { id_layanan: 3, nama_layanan: 'Sewa Kendaraan' },
+          'Sampah': { id_layanan: 2, nama_layanan: 'Angkut Sampah' },
+        };
+
+        const formattedServices = Object.entries(armadaByCategory).map(([key, armadaList]) => {
+          const mapping = serviceMapping[key];
+          return {
+            id_layanan: mapping.id_layanan,
+            nama_layanan: mapping.nama_layanan,
+            armada: armadaList.map(item => ({
+              id_armada: item.id_armada,
+              no_plat: item.no_plat,
+              jenis_kendaraan: item.jenis_kendaraan,
+              kapasitas: item.kapasitas,
+              harga_sewa_per_hari: item.harga_sewa_per_hari,
+              status_ketersediaan: item.status_ketersediaan,
+              gambar: item.gambar,
+              layanan: item.layanan,
+            }))
+          };
+        }).sort((a, b) => a.id_layanan - b.id_layanan);
+
+        console.log("🚗 Armada dari Database:", formattedServices);
+        setServices(formattedServices);
 
         // Fetch reviews dari API
         const reviewResponse = await getPublicReviews();
@@ -111,6 +80,8 @@ export default function LandingPage(props) {
         }
       } catch (error) {
         console.error("❌ Gagal mengambil data landing page:", error);
+        // Fallback jika API error
+        setServices([]);
         setReviews([]);
       } finally {
         setLoading(false);
@@ -269,7 +240,17 @@ export default function LandingPage(props) {
                             {/* Gambar Armada dengan Gradient Overlay */}
                             <div className="h-48 bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center relative overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#003366]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <Truck className="w-24 h-24 text-gray-300 group-hover:text-[#00a3e0] group-hover:scale-125 transition-all duration-500" />
+                                
+                                {item.gambar ? (
+                                    <img 
+                                        src={`/images/${item.gambar}`}
+                                        alt={item.jenis_kendaraan}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    />
+                                ) : (
+                                    <Truck className="w-24 h-24 text-gray-300 group-hover:text-[#00a3e0] group-hover:scale-125 transition-all duration-500" />
+                                )}
+                                
                                 <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm text-[#003366] text-xs font-extrabold px-4 py-2 rounded-lg shadow-md uppercase tracking-wider">
                                     {item.kapasitas}
                                 </div>
@@ -290,9 +271,12 @@ export default function LandingPage(props) {
                                         <span className="text-xs text-gray-400 font-medium">/hari</span>
                                     </div>
                                     
-                                    <button className="w-full bg-gradient-to-r from-[#003366] to-[#004d99] hover:from-[#002244] hover:to-[#003d7a] text-white text-sm font-bold py-4 rounded-xl transition-all uppercase tracking-wide transform hover:scale-105 shadow-md hover:shadow-lg active:scale-95">
+                                    <a
+                                        href={`/pemesanan?service=${encodeURIComponent(service.nama_layanan.toLowerCase().replace(/\s+/g, '-'))}`}
+                                        className="w-full bg-gradient-to-r from-[#003366] to-[#004d99] hover:from-[#002244] hover:to-[#003d7a] text-white text-sm font-bold py-4 rounded-xl transition-all uppercase tracking-wide transform hover:scale-105 shadow-md hover:shadow-lg active:scale-95 block text-center"
+                                    >
                                         Pesan Armada
-                                    </button>
+                                    </a>
                                 </div>
                             </div>
                         </div>

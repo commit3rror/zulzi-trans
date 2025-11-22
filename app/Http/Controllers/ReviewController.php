@@ -71,11 +71,10 @@ class ReviewController extends Controller
         $validator = Validator::make($request->all(), [
             'id_pemesanan' => 'required|exists:pemesanan,id_pemesanan',
             'id_armada' => 'required|exists:armada,id_armada',
-            'id_pengguna' => 'required|exists:user,id_pengguna',
             'rating_driver' => 'required|integer|min:1|max:5',
             'rating_kendaraan' => 'required|integer|min:1|max:5',
             'rating_pelayanan' => 'required|integer|min:1|max:5',
-            'komentar' => 'nullable|string|max:500',
+            'komentar' => 'required|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -83,8 +82,14 @@ class ReviewController extends Controller
         }
 
         try {
+            // Verify user owns this order
+            $pemesanan = Pemesanan::find($request->id_pemesanan);
+            if ($pemesanan->id_pengguna != auth()->id()) {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+            }
+
             $ulasan = Ulasan::create([
-                'id_pengguna' => $request->id_pengguna,
+                'id_pengguna' => auth()->id(),
                 'id_armada' => $request->id_armada,
                 'id_pemesanan' => $request->id_pemesanan,
                 'rating_driver' => $request->rating_driver,
@@ -102,6 +107,57 @@ class ReviewController extends Controller
 
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Gagal menyimpan ulasan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $ulasan = Ulasan::with(['pemesanan.armada', 'pengguna'])
+                ->find($id);
+
+            if (!$ulasan) {
+                return response()->json(['status' => 'error', 'message' => 'Ulasan tidak ditemukan'], 404);
+            }
+
+            // Verify user owns this review
+            if ($ulasan->id_pengguna != auth()->id()) {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $ulasan
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengambil ulasan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $ulasan = Ulasan::find($id);
+
+            if (!$ulasan) {
+                return response()->json(['status' => 'error', 'message' => 'Ulasan tidak ditemukan'], 404);
+            }
+
+            // Verify user owns this review
+            if ($ulasan->id_pengguna != auth()->id()) {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+            }
+
+            $ulasan->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ulasan berhasil dihapus!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal menghapus ulasan: ' . $e->getMessage()], 500);
         }
     }
 }
