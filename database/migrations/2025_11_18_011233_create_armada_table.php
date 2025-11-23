@@ -11,11 +11,11 @@ return new class extends Migration
         Schema::create('armada', function (Blueprint $table) {
             $table->id('id_armada');
             $table->string('no_plat')->unique();
-            $table->string('layanan'); 
+            $table->string('layanan')->nullable()->default('Angkutan'); 
             $table->string('jenis_kendaraan');
             $table->string('kapasitas');
             $table->decimal('harga_sewa_per_hari', 15, 2); 
-            $table->string('status_ketersediaan');
+            $table->string('status_ketersediaan')->nullable();
             $table->timestamps(); 
         });
     }

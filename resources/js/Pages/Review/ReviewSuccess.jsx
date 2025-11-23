@@ -1,27 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, MessageCircle, Truck, Heart, AlertCircle, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
 
 export default function ReviewSuccess() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // Get query params
+  const ulasanId = searchParams.get('ulasan_id'); // Get ?ulasan_id=1 from URL
   const [ulasan, setUlasan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Get ulasan dari URL params
-  const params = new URLSearchParams(window.location.search);
-  const ulasanId = params.get('ulasan_id');
-
   useEffect(() => {
-    // Check if user is logged in
+    // TEST MODE: No login required for demo
     const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
+    setIsLoggedIn(true); // TEST: Always allow
     
-    if (ulasanId && token) {
+    if (ulasanId) {
       fetchUlasan();
     } else {
       setLoading(false);
@@ -38,12 +36,16 @@ export default function ReviewSuccess() {
         },
         credentials: 'include'
       });
-      if (!response.ok) throw new Error('Ulasan tidak ditemukan');
+      if (!response.ok) {
+        setError('Ulasan tidak ditemukan');
+        setLoading(false);
+        return;
+      }
       const data = await response.json();
       setUlasan(data.data);
       setError(null);
     } catch (err) {
-      setError('Gagal memuat data ulasan');
+      setError('Gagal mengambil data ulasan. Coba lagi.');
       console.error(err);
     } finally {
       setLoading(false);

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Star, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
 
 export default function ReviewForm() {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get :id from /review/1
+  const pesananId = id; // Use URL param as pesanan_id
   const [pemesanan, setPemesanan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -14,9 +16,9 @@ export default function ReviewForm() {
   
   // Form state
   const [ratings, setRatings] = useState({
-    driver: 5,
-    kendaraan: 5,
-    pelayanan: 5
+    driver: 0,
+    kendaraan: 0,
+    pelayanan: 0
   });
   const [komentar, setKomentar] = useState('');
   const [hoveredRating, setHoveredRating] = useState({
@@ -25,16 +27,12 @@ export default function ReviewForm() {
     pelayanan: 0
   });
 
-  // Get pesananId dari URL
-  const params = new URLSearchParams(window.location.search);
-  const pesananId = params.get('pesanan_id');
-
   useEffect(() => {
-    // Check if user is logged in
+    // TEST MODE: No login required for demo
     const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
+    setIsLoggedIn(true); // TEST: Always allow
     
-    if (pesananId && token) {
+    if (pesananId) {
       fetchPemesanan();
     } else {
       setLoading(false);
@@ -44,12 +42,16 @@ export default function ReviewForm() {
   const fetchPemesanan = async () => {
     try {
       const response = await fetch(`/api/reviews/target/${pesananId}`);
-      if (!response.ok) throw new Error('Pemesanan tidak ditemukan');
+      if (!response.ok) {
+        setError('Pesanan tidak ditemukan');
+        setLoading(false);
+        return;
+      }
       const data = await response.json();
       setPemesanan(data.data);
       setError(null);
     } catch (err) {
-      setError('Gagal memuat data pemesanan');
+      setError('Gagal mengambil data pesanan. Coba lagi.');
       console.error(err);
     } finally {
       setLoading(false);

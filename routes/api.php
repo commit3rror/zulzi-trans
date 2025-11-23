@@ -65,13 +65,19 @@ Route::get('/services', [ServiceController::class, 'index']);
 // Route Khusus Halaman Review (Public - buat fetch data)
 Route::get('/reviews/target/{id_pemesanan}', [ReviewController::class, 'getReviewTarget']);
 
-// Protected Review Routes (Authenticated)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/reviews', [ReviewController::class, 'store']); // Create review
-    Route::get('/ulasan/{id}', [ReviewController::class, 'show']); // Get single review
-    Route::delete('/ulasan/{id}', [ReviewController::class, 'destroy']); // Delete review
-    Route::get('/pemesanan/{id}', [PemesananController::class, 'show']); // Get order
-});
+// TEST MODE: Public Review Routes (Uncomment auth:sanctum untuk production)
+Route::post('/reviews', [ReviewController::class, 'store']); // Create review
+Route::get('/ulasan/{id}', [ReviewController::class, 'show']); // Get single review
+Route::delete('/ulasan/{id}', [ReviewController::class, 'destroy']); // Delete review
+Route::get('/pemesanan/{id}', [PemesananController::class, 'show']); // Get order
+
+// PRODUCTION: Uncomment ini nanti saat integration
+// Route::middleware('auth:sanctum')->group(function () {
+//     Route::post('/reviews', [ReviewController::class, 'store']);
+//     Route::get('/ulasan/{id}', [ReviewController::class, 'show']);
+//     Route::delete('/ulasan/{id}', [ReviewController::class, 'destroy']);
+//     Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
+// });
 
 Route::middleware('api')->group(function () {
     Route::get('/about', [AboutController::class, 'index']);

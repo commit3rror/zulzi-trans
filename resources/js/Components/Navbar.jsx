@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Truck } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 const Navbar = ({ auth }) => {
     const location = useLocation();
@@ -24,23 +24,27 @@ const Navbar = ({ auth }) => {
     return (
         <nav 
             className={`fixed w-full top-0 z-50 transition-all duration-300 ${
-                isScrolled ? 'bg-white shadow-md py-3' : 'bg-white/95 backdrop-blur-sm py-4 border-b border-gray-100'
+                isScrolled ? 'bg-white shadow-md py-3' : 'bg-gradient-to-br from-[#f0f9ff] via-white to-blue-50 py-4 border-b border-[#00a3e0]/20'
             }`}
         >
             <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
                 
-                {/* --- LOGO BERBASIS KODE (Anti-Gagal Render) --- */}
+                {/* --- LOGO DENGAN GAMBAR --- */}
                 <Link to="/beranda" className="flex items-center gap-3 group no-underline">
-                    {/* Icon Container */}
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center text-white shadow-md transform group-hover:rotate-6 transition-transform duration-300">
-                        <Truck size={22} strokeWidth={2.5} />
+                    {/* Logo Image */}
+                    <div className="h-10 transform group-hover:scale-110 transition-transform duration-300">
+                        <img 
+                            src="/images/logozulzi.png" 
+                            alt="Zulzi Trans Logo" 
+                            className="h-full object-contain"
+                        />
                     </div>
                     {/* Text Container */}
-                    <div className="flex flex-col leading-none">
-                        <span className="text-xl font-extrabold text-blue-900 tracking-tight group-hover:text-blue-700 transition-colors">
+                    <div className="flex flex-col leading-none hidden sm:flex">
+                        <span className="text-lg font-extrabold text-blue-900 tracking-tight group-hover:text-blue-700 transition-colors">
                             ZULZI TRANS
                         </span>
-                        <span className="text-[10px] font-bold text-cyan-600 tracking-[0.15em] mt-0.5">
+                        <span className="text-[9px] font-bold text-cyan-600 tracking-[0.15em]">
                             CEPAT, AMAN, TERPERCAYA
                         </span>
                     </div>
