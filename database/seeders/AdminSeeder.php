@@ -11,7 +11,7 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'role_pengguna' => 'Admin',
+            'role_pengguna' => 'admin',
             'nama' => 'Administrator Zulzi Trans',
             'email' => 'admin@zulzitrans.com',
             'password' => Hash::make('admin123'),

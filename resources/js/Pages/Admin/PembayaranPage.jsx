@@ -17,18 +17,30 @@ const PembayaranPage = ({ setHeaderAction }) => {
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
     });
 
-    const fetchPayments = () => {
+    const fetchPayments = async () => {
         setIsLoading(true);
-        api.get(`/api/admin/pembayaran?search=${search}`)
-            .then(res => {
-                console.log('Payment data:', res.data); // Debug log
+        try {
+            const token = localStorage.getItem('auth_token');
+            const res = await axios.get(`/api/admin/pembayaran`, {
+                params: { search },
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            // Validasi array
+            if (Array.isArray(res.data)) {
                 setPayments(res.data);
-            })
-            .catch(err => {
-                console.error("Gagal mengambil data pembayaran:", err);
-                setPayments([]); // Set empty array on error
-            })
-            .finally(() => setIsLoading(false));
+            } else if (res.data.data && Array.isArray(res.data.data)) {
+                setPayments(res.data.data);
+            } else {
+                setPayments([]);
+                console.error('Payment data:', res.data);
+            }
+        } catch (err) {
+            console.error("Gagal mengambil data pembayaran:", err);
+            setPayments([]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -40,21 +52,24 @@ const PembayaranPage = ({ setHeaderAction }) => {
         return () => setHeaderAction(null);
     }, [setHeaderAction]);
 
-    const handleVerify = (id, action) => {
+    const handleVerify = async (id, action) => {
         if (!confirm(`Anda yakin ingin ${action === 'approve' ? 'menyetujui' : 'menolak'} pembayaran ini?`)) {
             return;
         }
 
-        api.post(`/api/admin/pembayaran/${id}/verify`, { action })
-            .then(() => {
-                alert(`Pembayaran berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}`);
-                setDetailModal(null);
-                fetchPayments(); // Refresh data
-            })
-            .catch(err => {
-                console.error("Gagal memverifikasi pembayaran:", err.response?.data || err.message);
-                alert("Gagal memverifikasi pembayaran. Cek console untuk detail.");
-            });
+        try {
+            const token = localStorage.getItem('auth_token');
+            await axios.post(`/api/admin/pembayaran/${id}/verify`, 
+                { action },
+                { headers: { 'Authorization': `Bearer ${token}` }}
+            );
+            alert(`Pembayaran berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}`);
+            setDetailModal(null);
+            fetchPayments();
+        } catch (err) {
+            console.error("Gagal memverifikasi pembayaran:", err.response?.data || err.message);
+            alert("Gagal memverifikasi pembayaran.");
+        }
     };
 
     const formatRupiah = (amount) => {

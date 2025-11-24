@@ -1,6 +1,7 @@
 // resources/js/router.jsx
 import React from 'react';
 import { createBrowserRouter } from 'react-router-dom';
+import OAuthCallback from './Pages/Auth/OAuthCallback';
 
 // Import Halaman
 import PemesananPage from './Pages/Pemesanan/Index';
@@ -14,6 +15,10 @@ const router = createBrowserRouter([
     {
         path: "/pemesanan",
         element: <PemesananPage />, // Ini halaman yang baru kita buat
+    },
+    {
+        path: '/auth/google/callback',
+        element: <OAuthCallback />
     },
     // Nanti tambah path lain disini (misal /login, /admin)
 ]);

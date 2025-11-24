@@ -6,7 +6,7 @@ const userService = {
     // Get user profile
     getProfile: async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('auth_token');
             
             if (!token) {
                 throw new Error('No authentication token found');
@@ -37,7 +37,7 @@ const userService = {
     // Update user profile
     updateProfile: async (profileData) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('auth_token');
             
             if (!token) {
                 throw new Error('No authentication token found');
@@ -69,7 +69,7 @@ const userService = {
     // Change password
     changePassword: async (passwordData) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('auth_token');
             
             if (!token) {
                 throw new Error('No authentication token found');
@@ -101,7 +101,7 @@ const userService = {
     // Upload profile picture
     uploadAvatar: async (file) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('auth_token');
             
             if (!token) {
                 throw new Error('No authentication token found');

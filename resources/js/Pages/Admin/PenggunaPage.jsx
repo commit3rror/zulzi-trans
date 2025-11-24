@@ -11,26 +11,47 @@ const PenggunaPage = ({ setHeaderAction }) => {
     const [search, setSearch] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const api = axios.create({
-        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
-    });
-
-    const fetchUsers = () => {
+    const fetchUsers = async () => {
         setIsLoading(true);
-        // UPDATE URL API: Tambahkan /api/ di depan
-        api.get(`/api/admin/pengguna?search=${search}`)
-            .then(res => {
-                setUsers(res.data);
-            })
-            .catch(err => {
-                console.error("Gagal mengambil data pengguna:", err);
-            })
-            .finally(() => setIsLoading(false));
+        setError(null);
+        
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await axios.get(`/api/admin/pengguna`, {
+                params: { search },
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            // Pastikan data adalah array
+            if (Array.isArray(response.data)) {
+                setUsers(response.data);
+            } else if (response.data.data && Array.isArray(response.data.data)) {
+                // Jika data di wrap dalam object {data: [...]}
+                setUsers(response.data.data);
+            } else {
+                setUsers([]);
+                console.error("API returned non-array data:", response.data);
+            }
+        } catch (err) {
+            console.error("Gagal mengambil data pengguna:", err);
+            setError("Gagal memuat data pengguna. Silakan coba lagi.");
+            setUsers([]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
-        fetchUsers();
+        // Debounce search
+        const timer = setTimeout(() => {
+            fetchUsers();
+        }, 300);
+        
+        return () => clearTimeout(timer);
     }, [search]);
 
     useEffect(() => {
@@ -38,17 +59,21 @@ const PenggunaPage = ({ setHeaderAction }) => {
         return () => setHeaderAction(null);
     }, [setHeaderAction]);
 
-    const handleDelete = (id) => {
-        // UPDATE URL API: Tambahkan /api/ di depan
-        api.delete(`/api/admin/pengguna/${id}`)
-            .then(() => {
-                fetchUsers(); 
-                setDeleteConfirm(null);
-            })
-            .catch(err => {
-                console.error("Gagal menghapus:", err);
-                alert("Gagal menghapus pengguna.");
+    const handleDelete = async (id) => {
+        try {
+            const token = localStorage.getItem('auth_token');
+            await axios.delete(`/api/admin/pengguna/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
+            
+            fetchUsers(); 
+            setDeleteConfirm(null);
+        } catch (err) {
+            console.error("Gagal menghapus:", err);
+            alert("Gagal menghapus pengguna.");
+        }
     };
 
     return (
@@ -60,6 +85,12 @@ const PenggunaPage = ({ setHeaderAction }) => {
                     placeholder="Cari pengguna (nama, email)..."
                 />
             </div>
+
+            {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+                    {error}
+                </div>
+            )}
 
             <div className="overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm">
                 <table className="w-full text-left border-collapse">
@@ -74,8 +105,13 @@ const PenggunaPage = ({ setHeaderAction }) => {
                     </thead>
                     <tbody className="text-sm text-slate-700 divide-y divide-slate-100">
                         {isLoading ? (
-                            <tr><td colSpan="5" className="text-center py-12 text-slate-400">Memuat data...</td></tr>
-                        ) : users.length > 0 ? (
+                            <tr>
+                                <td colSpan="5" className="text-center py-12">
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                                    <p className="mt-2 text-slate-400">Memuat data...</p>
+                                </td>
+                            </tr>
+                        ) : Array.isArray(users) && users.length > 0 ? (
                             users.map((user) => (
                                 <tr key={user.id_pengguna} className="hover:bg-slate-50 transition-colors">
                                     <td className="py-3.5 px-4 font-medium text-slate-900">{user.nama}</td>
@@ -83,7 +119,7 @@ const PenggunaPage = ({ setHeaderAction }) => {
                                     <td className="py-3.5 px-4 text-slate-600">{user.no_telepon}</td>
                                     <td className="py-3.5 px-4">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                            user.role_pengguna === 'Admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
+                                            user.role_pengguna === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
                                         }`}>
                                             {user.role_pengguna}
                                         </span>
@@ -94,7 +130,11 @@ const PenggunaPage = ({ setHeaderAction }) => {
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan="5" className="text-center py-12 text-slate-400 italic">Tidak ada data pengguna ditemukan.</td></tr>
+                            <tr>
+                                <td colSpan="5" className="text-center py-12 text-slate-400 italic">
+                                    Tidak ada data pengguna ditemukan.
+                                </td>
+                            </tr>
                         )}
                     </tbody>
                 </table>

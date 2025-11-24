@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'budi@example.com'], // kunci unik
             [
-                'role_pengguna' => 'Customer',
+                'role_pengguna' => 'customer',
                 'nama' => 'Budi Santoso',
                 'password' => Hash::make('password123'),
                 'no_telepon' => '081298765432',
@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'siti@example.com'],
             [
-                'role_pengguna' => 'Customer',
+                'role_pengguna' => 'customer',
                 'nama' => 'Siti Aminah',
                 'password' => Hash::make('password123'),
                 'no_telepon' => '081234567891',
