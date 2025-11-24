@@ -64,7 +64,6 @@ class UlasanSeeder extends Seeder
         $armada1 = Armada::firstOrCreate(
             ['no_plat' => 'B 1001 ZUL'],
             [
-                'nama_armada' => 'Isuzu Elf Long',
                 'jenis_kendaraan' => 'Minibus',
                 'kapasitas' => '19 Orang',
                 'harga_sewa_per_hari' => 800000.00,
@@ -135,7 +134,7 @@ class UlasanSeeder extends Seeder
                 'is_displayed' => true, 
                 'tgl_ulasan' => Carbon::parse('2025-10-12'), 
             ],
-            // Ulasan 2: Angkutan - Rating 5.0 (Belum Ditanggapi) -> Tes Filter Angkutan
+            // Ulasan 2: Angkutan - Rating 5.0 (Ditampilkan, Belum Ditanggapi) -> Tes Filter Angkutan
             [
                 'id_pengguna' => $customer2->id_pengguna,
                 'id_armada' => $armada1->id_armada,
@@ -145,20 +144,20 @@ class UlasanSeeder extends Seeder
                 'rating_pelayanan' => 5, 
                 'komentar' => 'Pengalaman terbaik menggunakan jasa angkutan Zulzi Trans! Cepat dan aman.',
                 'tanggapan_admin' => null, 
-                'is_displayed' => false, 
+                'is_displayed' => true, 
                 'tgl_ulasan' => Carbon::parse('2025-10-10'), 
             ],
-            // Ulasan 3: Sampah - Rating 5.0 (Belum Ditanggapi) -> Tes Filter Sampah
+            // Ulasan 3: Sampah - Rating 5.0 (Ditampilkan, Belum Ditanggapi) -> Tes Filter Sampah
             [
                 'id_pengguna' => $customer3->id_pengguna,
                 'id_armada' => $armada1->id_armada,
                 'id_pemesanan' => $pemesanan3->id_pemesanan,
                 'rating_driver' => 5, 
-                'rating_kendaraan' => 5, 
+                'rating_kendaraan' => 4, 
                 'rating_pelayanan' => 5, 
                 'komentar' => 'Layanan pengangkutan sampah sangat memuaskan!',
                 'tanggapan_admin' => null, 
-                'is_displayed' => false, 
+                'is_displayed' => true, 
                 'tgl_ulasan' => Carbon::parse('2025-10-05'), 
             ],
              // Ulasan 4: Angkutan - Rating Rendah (Tes Fungsi Delete)

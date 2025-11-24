@@ -35,12 +35,22 @@ const LoginPage = () => {
             // ⚡ Ambil role langsung dari response.user (sudah diperbaiki di AuthContext)
             const userRole = response.user?.role_pengguna;
             
-            console.log('User role setelah login:', userRole); // Untuk debugging
+            // 🐛 DEBUG: Log seluruh response untuk debugging
+            console.log('=== LOGIN DEBUG ===');
+            console.log('Response:', response);
+            console.log('User data:', response.user);
+            console.log('User role:', userRole);
+            console.log('Role type:', typeof userRole);
+            console.log('==================');
             
-            // ⚡ NAVIGATE TANPA DELAY - State sudah ter-update di AuthContext
-            if (userRole === 'admin') {
+            // ⚡ NAVIGATE BERDASARKAN ROLE - Normalize ke lowercase untuk safety
+            const normalizedRole = userRole?.toLowerCase();
+            
+            if (normalizedRole === 'admin') {
+                console.log('✅ Redirecting to /admin');
                 navigate('/admin', { replace: true });
             } else {
+                console.log('✅ Redirecting to /beranda');
                 navigate('/beranda', { replace: true }); 
             }
             

@@ -13,6 +13,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PesananController;
 use App\Http\Controllers\Admin\SupirController;
+use App\Http\Controllers\Admin\UlasanController;
+use App\Http\Controllers\Admin\ArmadaController;
+use App\Http\Controllers\Admin\PembayaranController;
+use App\Http\Controllers\Admin\LayananController;
 use App\Http\Controllers\PenggunaController;
 
 /*
@@ -110,21 +114,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/supir/{id}', [SupirController::class, 'update']);
         Route::delete('/supir/{id}', [SupirController::class, 'destroy']);
         
-        // Pesanan Management (jika ada)
-        // Route::get('/pesanan', [PesananController::class, 'index']);
-        // Route::get('/pesanan/{id}', [PesananController::class, 'show']);
-        // Route::put('/pesanan/{id}/status', [PesananController::class, 'updateStatus']);
+        // Pesanan Management
+        Route::get('/pesanan', [PesananController::class, 'index']);
+        Route::get('/pesanan/{id}', [PesananController::class, 'show']);
+        Route::put('/pesanan/{id}/status', [PesananController::class, 'updateStatus']);
         
-        // Armada Management (jika ada)
-        // Route::resource('armada', ArmadaController::class);
+        // Armada Management
+        Route::get('/armada', [ArmadaController::class, 'index']);
+        Route::post('/armada', [ArmadaController::class, 'store']);
+        Route::get('/armada/{id}', [ArmadaController::class, 'show']);
+        Route::put('/armada/{id}', [ArmadaController::class, 'update']);
+        Route::delete('/armada/{id}', [ArmadaController::class, 'destroy']);
         
-        // Pembayaran Management (jika ada)
-        // Route::get('/pembayaran', [PembayaranController::class, 'index']);
-        // Route::put('/pembayaran/{id}/verify', [PembayaranController::class, 'verify']);
+        // Layanan Management
+        Route::get('/layanan', [LayananController::class, 'index']);
         
-        // Ulasan Management (jika ada)
-        // Route::get('/ulasan', [UlasanController::class, 'index']);
-        // Route::delete('/ulasan/{id}', [UlasanController::class, 'destroy']);
+        // Pembayaran Management
+        Route::get('/pembayaran', [PembayaranController::class, 'index']);
+        Route::put('/pembayaran/{id}/verify', [PembayaranController::class, 'verify']);
+        
+        // Ulasan Management
+        Route::get('/ulasan', [UlasanController::class, 'index']);
+        Route::get('/ulasan/{id}', [UlasanController::class, 'show']);
+        Route::put('/ulasan/{id}', [UlasanController::class, 'update']);
+        Route::delete('/ulasan/{id}', [UlasanController::class, 'destroy']);
     });
 
 });
