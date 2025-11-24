@@ -50,6 +50,9 @@ Route::post('/pemesanan', [PemesananController::class, 'store']);
 // Route untuk Refresh Status (Cek status pesanan berdasarkan ID)
 Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
 
+// Route untuk mendapatkan history pemesanan user (Login Required)
+Route::middleware('auth:sanctum')->get('/user/pemesanan', [PemesananController::class, 'getUserOrders']);
+
 // Route untuk Upload Bukti Pembayaran
 Route::post('/pembayaran', [PembayaranController::class, 'store']);
 // --- TAMBAHAN PENTING (SELESAI) ---

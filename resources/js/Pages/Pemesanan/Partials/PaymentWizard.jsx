@@ -10,10 +10,15 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
         nama_pengirim: '',
         bank_pengirim: '',
         jenis_pembayaran: 'DP', // Default DP sesuai gambar
-        bukti_transfer: null
+        bukti_transfer: null,
+        metode_bayar: 'BCA' // Default BCA
     });
     const [preview, setPreview] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    
+    // State untuk screen methods (dipindahkan ke atas agar tidak melanggar Rules of Hooks)
+    const [selectedMethod, setSelectedMethod] = useState('BCA');
+    const [copied, setCopied] = useState(false);
 
     // --- LOGIKA STATUS & HARGA ---
     const status = orderData.status_pemesanan; // 'Menunggu', 'Dikonfirmasi', 'Menunggu Verifikasi', 'Pembayaran Ditolak', 'Selesai'
@@ -28,17 +33,34 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
 
     // --- EFEK OTOMATIS GANTI LAYAR BERDASARKAN STATUS ---
     useEffect(() => {
-        if (status === 'Menunggu Verifikasi') {
+        // Jika status berubah jadi 'Menunggu Verifikasi', otomatis pindah ke layar sukses
+        if (status === 'Menunggu Verifikasi' || status === 'Selesai' || status === 'Lunas') {
             setScreen('success');
-        } else if (status === 'Pembayaran Ditolak') {
-            setScreen('invoice'); // Balik ke invoice tapi dengan alert merah
-        } else if (status === 'Selesai' || status === 'Lunas') {
-            setScreen('success');
+        } 
+        // Jika status 'Pembayaran Ditolak', user harus melihat invoice lagi (untuk melihat alert merah)
+        else if (status === 'Pembayaran Ditolak') {
+            setScreen('invoice');
+        }
+        // Jika status 'Dikonfirmasi', tetap di invoice agar user bisa klik "Lanjut Bayar"
+        else if (status === 'Dikonfirmasi') {
+            setScreen('invoice');
         }
     }, [status]);
 
     // --- SCREEN 1: INVOICE / STATUS ---
     if (screen === 'invoice') {
+        // Debug: Log status untuk memastikan valuenya
+        console.log('Current Status:', status);
+        console.log('Order Data:', orderData);
+        
+        // Tentukan apakah tombol bayar harus muncul
+        const showPayButton = status === 'Dikonfirmasi' || status === 'Pembayaran Ditolak';
+        const showDiscussButton = status === 'Menunggu';
+        const showVerifyMessage = status === 'Menunggu Verifikasi';
+        
+        console.log('Show Pay Button:', showPayButton);
+        console.log('Show Discuss Button:', showDiscussButton);
+
         return (
             <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden max-w-4xl mx-auto animate-fade-in-up">
                 {/* HEADER STATUS DINAMIS */}
@@ -123,15 +145,13 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                             </div>
                         </div>
 
-                        {/* LOGIKA TOMBOL BERDASARKAN STATUS */}
+                        {/* LOGIKA TOMBOL */}
                         <div className="mt-6 space-y-3">
                             
-                            {/* KONDISI 1: SUDAH DIKONFIRMASI ATAU DITOLAK (BISA BAYAR) */}
-                            {(status === 'Dikonfirmasi' || status === 'Pembayaran Ditolak') && (
+                            {/* 1. TOMBOL LANJUT BAYAR (Muncul jika Dikonfirmasi/Ditolak) */}
+                            {showPayButton && (
                                 <button 
                                     onClick={() => {
-                                        // Jika ditolak, langsung ke upload ulang (skip pilih metode jika mau, tapi amannya ke methods dulu atau upload)
-                                        // Sesuai request "mengisi ulang lagi", kita arahkan ke form upload langsung jika ditolak agar cepat
                                         if(status === 'Pembayaran Ditolak') setScreen('upload');
                                         else setScreen('methods');
                                     }}
@@ -142,27 +162,25 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                                 </button>
                             )}
 
-                            {/* KONDISI 2: MENUNGGU VERIFIKASI (SUDAH UPLOAD) */}
-                            {status === 'Menunggu Verifikasi' && (
+                            {/* 2. PESAN MENUNGGU VERIFIKASI */}
+                            {showVerifyMessage && (
                                 <div className="bg-yellow-100 text-yellow-800 p-3 rounded-lg text-center text-sm font-bold animate-pulse">
                                     Sedang diverifikasi Admin...
                                 </div>
                             )}
 
-                            {/* KONDISI 3: MENUNGGU (AWAL) */}
-                            {status === 'Menunggu' && (
-                                <>
-                                    <button 
-                                        onClick={() => window.open(waLink, '_blank')}
-                                        className="w-full bg-green-500 text-white py-3 rounded-xl font-bold shadow-md hover:bg-green-600 transition flex justify-center items-center gap-2"
-                                    >
-                                        <MessageCircle size={20} />
-                                        Diskusi Harga via WhatsApp
-                                    </button>
-                                </>
+                            {/* 3. TOMBOL DISKUSI WA (Muncul jika Menunggu) */}
+                            {showDiscussButton && (
+                                <button 
+                                    onClick={() => window.open(waLink, '_blank')}
+                                    className="w-full bg-green-500 text-white py-3 rounded-xl font-bold shadow-md hover:bg-green-600 transition flex justify-center items-center gap-2"
+                                >
+                                    <MessageCircle size={20} />
+                                    Diskusi Harga via WhatsApp
+                                </button>
                             )}
 
-                            {/* TOMBOL REFRESH SELALU ADA */}
+                            {/* 4. TOMBOL REFRESH (Selalu muncul) */}
                             <button 
                                 onClick={refreshOrder}
                                 className="w-full bg-white border border-blue-200 text-blue-600 py-2 rounded-xl font-medium text-sm hover:bg-blue-50 flex justify-center items-center gap-2"
@@ -179,48 +197,147 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
 
     // --- SCREEN 2: METODE PEMBAYARAN ---
     if (screen === 'methods') {
+        const rekening_bca = '1234567890';
+
+        const handleCopyRekening = () => {
+            navigator.clipboard.writeText(rekening_bca);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        };
+
         return (
-            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 max-w-3xl mx-auto p-8 animate-fade-in-up">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Pilih Metode Pembayaran</h3>
+            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 max-w-4xl mx-auto p-8 animate-fade-in-up">
+                <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">Pilih Metode Pembayaran</h3>
+                <p className="text-gray-500 text-center mb-8 text-sm">Pilih salah satu metode di bawah untuk melanjutkan</p>
                 
-                <div className="space-y-4 mb-8">
-                    <div className="border rounded-2xl p-5 flex items-center justify-between hover:border-blue-500 transition cursor-pointer group bg-white hover:shadow-md">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-xs">BCA</div>
-                            <div>
-                                <p className="font-bold text-gray-800">Transfer Bank BCA</p>
-                                <p className="text-sm text-gray-500">123-456-7890 a.n Zulzi Trans</p>
-                            </div>
+                {/* TAB SELECTOR */}
+                <div className="flex gap-4 mb-6">
+                    <button 
+                        onClick={() => setSelectedMethod('BCA')}
+                        className={`flex-1 py-4 rounded-xl font-bold transition border-2 ${
+                            selectedMethod === 'BCA' 
+                            ? 'bg-blue-50 border-blue-500 text-blue-700' 
+                            : 'bg-white border-gray-200 text-gray-500 hover:border-blue-300'
+                        }`}
+                    >
+                        <div className="flex items-center justify-center gap-2">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-xs">BCA</div>
+                            Transfer Bank
                         </div>
-                        <Copy size={18} className="text-gray-400 group-hover:text-blue-500"/>
-                    </div>
-                    
-                    <div className="border rounded-2xl p-5 flex items-center justify-between hover:border-blue-500 transition cursor-pointer group bg-white hover:shadow-md">
-                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-bold text-xs">QRIS</div>
-                            <div>
-                                <p className="font-bold text-gray-800">Scan QRIS</p>
-                                <p className="text-sm text-gray-500">OVO, GoPay, Dana, LinkAja</p>
-                            </div>
+                    </button>
+                    <button 
+                        onClick={() => setSelectedMethod('QRIS')}
+                        className={`flex-1 py-4 rounded-xl font-bold transition border-2 ${
+                            selectedMethod === 'QRIS' 
+                            ? 'bg-green-50 border-green-500 text-green-700' 
+                            : 'bg-white border-gray-200 text-gray-500 hover:border-green-300'
+                        }`}
+                    >
+                        <div className="flex items-center justify-center gap-2">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-xs">QR</div>
+                            Scan QRIS
                         </div>
-                        <Copy size={18} className="text-gray-400 group-hover:text-blue-500"/>
-                    </div>
+                    </button>
                 </div>
 
+                {/* KONTEN METODE PEMBAYARAN */}
+                <div className="bg-gray-50 rounded-2xl p-6 mb-6 min-h-[300px] border border-gray-100">
+                    {selectedMethod === 'BCA' && (
+                        <div className="space-y-6 animate-fade-in-up">
+                            <div className="text-center">
+                                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span className="text-blue-700 font-extrabold text-2xl">BCA</span>
+                                </div>
+                                <h4 className="font-bold text-gray-800 text-lg mb-2">Transfer ke Rekening BCA</h4>
+                                <p className="text-sm text-gray-500">Silakan transfer ke nomor rekening di bawah</p>
+                            </div>
+
+                            <div className="bg-white rounded-xl p-5 border-2 border-blue-200">
+                                <p className="text-xs text-gray-500 mb-1 text-center">Nomor Rekening</p>
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-2xl font-mono font-bold text-blue-800 tracking-wider">{rekening_bca}</span>
+                                    <button 
+                                        onClick={handleCopyRekening}
+                                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                                    >
+                                        {copied ? <CheckCircle size={16}/> : <Copy size={16}/>}
+                                        {copied ? 'Tersalin!' : 'Salin'}
+                                    </button>
+                                </div>
+                                <p className="text-sm text-gray-600 mt-3 text-center">a.n <span className="font-bold">PT Zulzi Trans Indonesia</span></p>
+                            </div>
+
+                            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                                <p className="text-xs font-bold text-blue-900 mb-2">💡 Cara Transfer:</p>
+                                <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
+                                    <li>Buka aplikasi mobile banking atau ATM</li>
+                                    <li>Pilih menu Transfer ke BCA</li>
+                                    <li>Masukkan nomor rekening di atas</li>
+                                    <li>Masukkan nominal: <span className="font-bold">{formatRupiah(nominalBayar)}</span></li>
+                                    <li>Screenshot bukti transfer untuk diupload</li>
+                                </ol>
+                            </div>
+                        </div>
+                    )}
+
+                    {selectedMethod === 'QRIS' && (
+                        <div className="space-y-6 animate-fade-in-up">
+                            <div className="text-center">
+                                <h4 className="font-bold text-gray-800 text-lg mb-2">Scan QR Code</h4>
+                                <p className="text-sm text-gray-500">Gunakan aplikasi e-wallet Anda untuk scan</p>
+                            </div>
+
+                            {/* QR CODE IMAGE */}
+                            <div className="flex justify-center">
+                                <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-green-200">
+                                    {/* Placeholder QR - Ganti dengan gambar QR asli */}
+                                    <div className="w-64 h-64 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200">
+                                        <div className="text-center">
+                                            <div className="text-6xl mb-2">📱</div>
+                                            <p className="text-sm text-gray-500 font-medium">QR Code QRIS</p>
+                                            <p className="text-xs text-gray-400 mt-1">Zulzi Trans</p>
+                                        </div>
+                                        {/* TODO: Ganti dengan <img src="/images/qris-code.png" /> */}
+                                    </div>
+                                    <p className="text-center mt-4 text-xs text-gray-600">Nominal: <span className="font-bold text-green-700">{formatRupiah(nominalBayar)}</span></p>
+                                </div>
+                            </div>
+
+                            <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+                                <p className="text-xs font-bold text-green-900 mb-2">✅ Aplikasi yang Didukung:</p>
+                                <div className="flex gap-3 flex-wrap justify-center">
+                                    <span className="bg-white px-3 py-1 rounded-full text-xs font-medium text-gray-700 border">GoPay</span>
+                                    <span className="bg-white px-3 py-1 rounded-full text-xs font-medium text-gray-700 border">OVO</span>
+                                    <span className="bg-white px-3 py-1 rounded-full text-xs font-medium text-gray-700 border">DANA</span>
+                                    <span className="bg-white px-3 py-1 rounded-full text-xs font-medium text-gray-700 border">LinkAja</span>
+                                    <span className="bg-white px-3 py-1 rounded-full text-xs font-medium text-gray-700 border">ShopeePay</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* BUTTON ACTIONS */}
                 <div className="flex gap-4">
-                    <button onClick={() => setScreen('invoice')} className="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition">Kembali</button>
+                    <button onClick={() => setScreen('invoice')} className="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition border border-gray-200">
+                        Kembali
+                    </button>
                     <button 
-                        onClick={() => setScreen('upload')}
-                        className="flex-[2] bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 shadow-lg"
+                        onClick={() => {
+                            setForm({...form, metode_bayar: selectedMethod});
+                            setScreen('upload');
+                        }}
+                        className="flex-[2] bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 shadow-lg transition flex items-center justify-center gap-2"
                     >
-                        Lengkapi Pembayaran
+                        Lanjut Upload Bukti
+                        <ChevronRight size={18}/>
                     </button>
                 </div>
             </div>
         );
     }
 
-    // --- SCREEN 3: KONFIRMASI / UPLOAD (SESUAI GAMBAR) ---
+    // --- SCREEN 3: KONFIRMASI / UPLOAD ---
     if (screen === 'upload') {
         const handleSubmit = async (e) => {
             e.preventDefault();
@@ -234,12 +351,11 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
             data.append('bank_pengirim', form.bank_pengirim);
             data.append('jenis_pembayaran', form.jenis_pembayaran);
             data.append('bukti_transfer', form.bukti_transfer);
-            // Kirim metode bayar default jika user skip halaman method (kasus ditolak)
-            data.append('metode_bayar', 'BCA'); 
+            data.append('metode_bayar', form.metode_bayar); // Kirim metode yang dipilih (BCA/QRIS) 
 
             try {
                 await axios.post('/api/pembayaran', data);
-                refreshOrder(); // Refresh data agar status berubah di parent
+                refreshOrder(); 
                 setScreen('success'); 
             } catch (err) {
                 console.error(err);
@@ -256,7 +372,6 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     
-                    {/* BOX BIRU MUDA (Jenis Pembayaran & Total) - Sesuai Gambar */}
                     <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
                         <label className="block text-sm font-bold text-blue-900 mb-3">Jenis Pembayaran</label>
                         <div className="flex gap-6 mb-6">
@@ -290,7 +405,6 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                         </div>
                     </div>
 
-                    {/* INPUT PENGIRIM (Grid 2 Kolom) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label className="block text-sm font-bold text-gray-800 mb-2">Nama Pengirim</label>
@@ -316,7 +430,6 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                         </div>
                     </div>
                     
-                    {/* UPLOAD FOTO */}
                     <div>
                         <label className="block text-sm font-bold text-gray-800 mb-2">Upload Bukti Transfer</label>
                         <div className={`border-2 border-dashed rounded-xl p-4 text-center relative transition-all h-48 flex flex-col items-center justify-center ${preview ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}>
@@ -355,7 +468,6 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                         </div>
                     </div>
 
-                    {/* FOOTER BUTTONS */}
                     <div className="flex justify-between items-center pt-2">
                         <button 
                             type="button" 
@@ -406,7 +518,6 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                     </>
                 ) : (
                     <>
-                        {/* JIKA SUDAH LUNAS / SELESAI */}
                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle className="text-green-600 w-10 h-10" />
                         </div>

@@ -9,7 +9,7 @@ import LandingPage from '@/Pages/public/LandingPage';
 import AboutPage from '@/Pages/AboutPage';
 import ReviewPage from '@/Pages/ReviewPage'; 
 import PemesananPage from '@/Pages/Pemesanan/Index';
-import ProfilePage from '@/Pages/ProfilePage';
+import ProfilePage from '@/Pages/Profile/ProfilePage';
 // import PembayaranPage from '@/Pages/PembayaranPage';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

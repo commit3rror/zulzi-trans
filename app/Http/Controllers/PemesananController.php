@@ -132,4 +132,27 @@ class PemesananController extends Controller
         $armada = DB::table('armada')->where('status_ketersediaan', 'Tersedia')->get();
         return response()->json($armada);
     }
+
+    /**
+     * 4. GET USER ORDERS: Ambil semua pemesanan milik user yang login
+     */
+    public function getUserOrders(Request $request)
+    {
+        $userId = auth()->id();
+
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Ambil semua pesanan user dengan relasi layanan, armada, pembayaran
+        $orders = Pemesanan::with(['layanan', 'armada', 'pembayaran'])
+            ->where('id_pengguna', $userId)
+            ->orderBy('tgl_pesan', 'desc')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $orders
+        ]);
+    }
 }
