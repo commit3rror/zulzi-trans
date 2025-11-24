@@ -1,37 +1,118 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import '../css/app.css';
+import OAuthCallback from './Pages/Auth/OAuthCallback';
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
+
+// Import hooks
+import { useAuth } from '@/hooks/useAuth'; // 👈 PENAMBAHAN KRUSIAL UNTUK MEMPERBAIKI ERROR
+
+// Import AuthProvider & AdminRouteGuard
+import { AuthProvider } from '@/context/AuthContext'; 
+import AdminRouteGuard from '@/Components/AdminRouteGuard.jsx';
 
 // Import halaman Public
 import LandingPage from '@/Pages/public/LandingPage';
 import AboutPage from '@/Pages/AboutPage';
 import ReviewPage from '@/Pages/ReviewPage'; 
 import PemesananPage from '@/Pages/Pemesanan/Index';
-// import PembayaranPage from '@/Pages/PembayaranPage';
+
+// Import halaman Auth
+import LoginPage from '@/Pages/Auth/LoginPage.jsx';
+import RegisterPage from '@/Pages/Auth/RegisterPage.jsx';
+import ForgotPasswordPage from '@/Pages/Auth/ForgotPasswordPage.jsx';
+import EditProfile from '@/Pages/Auth/EditProfile.jsx';
+
+// Import halaman Admin
+import AdminPanel from '@/Pages/Admin/AdminPanel.jsx';
+
+// Wrapper untuk menangkap token Google OAuth
+const LandingPageWithAuth = () => {
+    // ⚡ CATATAN: Karena Anda telah memodifikasi AuthController untuk menggunakan SESSION, 
+    // logika pengambilan token di sini TIDAK AKAN BERJALAN,
+    // tetapi komponen ini tetap harus berfungsi setelah impor useAuth.
+    
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const { updateUser } = useAuth();
+
+    useEffect(() => {
+        const token = searchParams.get('token');
+        const userDataEncoded = searchParams.get('user');
+        
+        if (token) {
+            try {
+                // Simpan token
+                localStorage.setItem('auth_token', token);
+                
+                // Decode dan simpan user data
+                if (userDataEncoded) {
+                    const userData = JSON.parse(decodeURIComponent(userDataEncoded));
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    updateUser(userData);
+                }
+                
+                // PERBAIKAN: Import dari path yang benar
+                import('@/services/api').then(({ default: api }) => {
+                    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                });
+                
+                // Redirect dan reload
+                navigate('/beranda', { replace: true });
+                setTimeout(() => window.location.reload(), 100);
+                
+            } catch (error) {
+                console.error('Error processing OAuth callback:', error);
+            }
+        }
+    }, [searchParams, navigate, updateUser]);
+
+    return <LandingPage />;
+};
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        {/* Route Utama: /beranda */}
-        <Route path="/beranda" element={<LandingPage />} />
-        
-        {/* Jika user akses root '/' via navigasi internal React, redirect ke beranda */}
-        <Route path="/" element={<Navigate to="/beranda" replace />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* ===================================== */}
+          {/* ROUTE PUBLIC (Tanpa Login)           */}
+          {/* ===================================== */}
+          <Route path="/" element={<Navigate to="/beranda" replace />} />
+          <Route path="/beranda" element={<LandingPageWithAuth />} />
+          <Route path="/tentang-kami" element={<AboutPage />} /> 
+          <Route path="/about" element={<AboutPage />} /> 
+          <Route path="/pemesanan" element={<PemesananPage />} />
+          <Route path="/review/:id" element={<ReviewPage />} />
 
-        {/* Halaman Public Lainnya */}
-        <Route path="/tentang-kami" element={<AboutPage />} /> 
-        <Route path="/about" element={<AboutPage />} /> 
-        
-        <Route path="/pemesanan" element={<PemesananPage />} />
-        {/* <Route path="/pembayaran" element={<PembayaranPage />} /> */}
-        
-        <Route path="/review/:id" element={<ReviewPage />} />
-      </Routes>
-    </BrowserRouter>
+          {/* ===================================== */}
+          {/* ROUTE AUTH (Login, Register, dsb)    */}
+          {/* ===================================== */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/auth/callback" element={<OAuthCallback />} />
+
+          {/* ===================================== */}
+          {/* ROUTE USER (Harus Login)             */}\
+          {/* ===================================== */}
+          <Route 
+            path="/edit-profile" 
+            element={<AdminRouteGuard element={<EditProfile />} isAdminOnly={false} />} 
+          />
+          
+          {/* ===================================== */}
+          {/* ROUTE ADMIN (Admin Only)             */}
+          {/* ===================================== */}
+          <Route 
+            path="/admin/*" 
+            element={<AdminRouteGuard element={<AdminPanel />} isAdminOnly={true} />} 
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   </React.StrictMode>
 );
