@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/services/api';
 import {
     PrimaryButton,
     ActionButton,
@@ -21,15 +21,8 @@ const ArmadaPage = ({ setHeaderAction }) => {
     const [errors, setErrors] = useState({});
     const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-    // Menggunakan axios global yang sudah diset di bootstrap.js atau local instance
-    // Pastikan baseURL sesuai. Jika route ada di web.php (prefix 'api/admin'), 
-    // maka path relatif '/api/admin/armada' sudah benar.
-    const api = axios.create({
-        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
-    });
-
     const fetchArmada = () => {
-        api.get(`/api/admin/armada?search=${search}`)
+        api.get(`/admin/armada?search=${search}`)
             .then(res => {
                 // PERBAIKAN ERROR: Pastikan data yang diterima adalah array sebelum di-set
                 const data = Array.isArray(res.data) ? res.data : [];
@@ -42,7 +35,7 @@ const ArmadaPage = ({ setHeaderAction }) => {
     };
 
     const fetchLayanan = () => {
-        api.get('/api/admin/layanan') // Pastikan endpoint ini mengembalikan JSON array
+        api.get('/admin/layanan')
             .then(res => setLayananList(Array.isArray(res.data) ? res.data : []))
             .catch(err => console.error("Gagal fetch layanan:", err));
     };
@@ -92,7 +85,7 @@ const ArmadaPage = ({ setHeaderAction }) => {
         e.preventDefault();
         setErrors({});
 
-        const url = modalMode === 'add' ? '/api/admin/armada' : `/api/admin/armada/${formData.id_armada}`;
+        const url = modalMode === 'add' ? '/admin/armada' : `/admin/armada/${formData.id_armada}`;
         // Gunakan POST untuk create, PUT untuk update
         const method = modalMode === 'add' ? 'post' : 'put';
 
@@ -112,7 +105,7 @@ const ArmadaPage = ({ setHeaderAction }) => {
     };
 
     const handleDelete = (id) => {
-        api.delete(`/api/admin/armada/${id}`)
+        api.delete(`/admin/armada/${id}`)
             .then(() => {
                 fetchArmada();
                 setDeleteConfirm(null);

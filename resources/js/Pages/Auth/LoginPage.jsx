@@ -1,3 +1,4 @@
+// resources/js/Pages/Auth/LoginPage.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -12,7 +13,6 @@ const LoginPage = () => {
     const [errors, setErrors] = useState({});
     const [alert, setAlert] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [rememberMe, setRememberMe] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -27,13 +27,40 @@ const LoginPage = () => {
         setErrors({});
 
         try {
-            await login(formData);
+            // ⚡ Response sekarang langsung return user data
+            const response = await login(formData);
+            
             setAlert({ type: 'success', message: 'Login berhasil!' });
-            setTimeout(() => navigate('/beranda'), 1000); // Arahkan ke dashboard
+            
+            // ⚡ Ambil role langsung dari response.user (sudah diperbaiki di AuthContext)
+            const userRole = response.user?.role_pengguna;
+            
+            // 🐛 DEBUG: Log seluruh response untuk debugging
+            console.log('=== LOGIN DEBUG ===');
+            console.log('Response:', response);
+            console.log('User data:', response.user);
+            console.log('User role:', userRole);
+            console.log('Role type:', typeof userRole);
+            console.log('==================');
+            
+            // ⚡ NAVIGATE BERDASARKAN ROLE - Normalize ke lowercase untuk safety
+            const normalizedRole = userRole?.toLowerCase();
+            
+            if (normalizedRole === 'admin') {
+                console.log('✅ Redirecting to /admin');
+                navigate('/admin', { replace: true });
+            } else {
+                console.log('✅ Redirecting to /beranda');
+                navigate('/beranda', { replace: true }); 
+            }
+            
         } catch (err) {
             console.error('Login error:', err);
             if (err.errors) setErrors(err.errors);
-            setAlert({ type: 'error', message: err.message || 'Email atau password salah!' });
+            setAlert({ 
+                type: 'error', 
+                message: err.message || 'Email atau password salah!' 
+            });
         } finally {
             setLoading(false);
         }
@@ -41,10 +68,8 @@ const LoginPage = () => {
 
     return (
         <div className="min-h-screen flex bg-neutral-white font-sans">
-            {/* Bagian Kiri - Form Login */}
             <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-24 py-12 bg-white">
                 <div className="max-w-md mx-auto w-full">
-                    {/* Header Teks */}
                     <div className="mb-10">
                         <h1 className="text-4xl font-extrabold text-primary-dark mb-3">
                             Selamat Datang <br /> Kembali !
@@ -54,19 +79,18 @@ const LoginPage = () => {
                         </p>
                     </div>
 
-                    {/* Tombol Google (Visual Only) */}
-                    <button 
-                        type="button"
-                        className="w-full flex items-center justify-center gap-3 bg-[#5CBCE2] hover:bg-[#4aa8cc] text-white font-bold py-3 px-4 rounded-lg transition-all shadow-sm mb-6"
-                    >
-                        <span className="bg-white p-1 rounded-full">
-                             {/* Ikon G sederhana */}
-                            <svg className="w-4 h-4 text-[#5CBCE2]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
-                            </svg>
-                        </span>
-                        Continue with Google
-                    </button>
+                    {/* TOMBOL GOOGLE OAUTH - Gunakan APP_URL */}
+                <a 
+                    href={`${import.meta.env.VITE_APP_URL || 'http://localhost:8000'}/auth/google`}
+                    className="w-full flex items-center justify-center gap-3 bg-[#5CBCE2] hover:bg-[#4aa8cc] text-white font-bold py-3 px-4 rounded-lg transition-all shadow-sm mb-6"
+                >
+                    <span className="bg-white p-1 rounded-full">
+                        <svg className="w-4 h-4 text-[#5CBCE2]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
+                        </svg>
+                    </span>
+                    Continue with Google
+                </a>
 
                     <div className="relative flex py-2 items-center mb-6">
                         <div className="flex-grow border-t border-gray-200"></div>
@@ -88,7 +112,6 @@ const LoginPage = () => {
                             error={errors.email}
                             placeholder="Masukkan email"
                             required
-                            // Custom styling untuk input agar sesuai UI
                             className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                         />
 
@@ -136,21 +159,19 @@ const LoginPage = () => {
                 </div>
             </div>
 
-            {/* Bagian Kanan - Branding Banner (Sesuai Gambar Login.png) */}
-            <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary to-primary-dark items-center justify-center text-white p-12 relative overflow-hidden">
-                 {/* Dekorasi Background Circle Soft */}
-                 <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-white opacity-10 rounded-full blur-3xl"></div>
-                 <div className="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-white opacity-10 rounded-full blur-3xl"></div>
+            {/* Bagian Kanan - Hero Section */}
+            <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary to-primary-dark items-center justify-center text-white p-12 relative overflow-hidden">
+                 <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-white opacity-10 rounded-full blur-3xl"></div>
+                 <div className="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-white opacity-10 rounded-full blur-3xl"></div>
 
-                <div className="text-center max-w-lg z-10">
-                    <h2 className="text-5xl font-extrabold mb-6 leading-tight text-white">
-                        Perjalanan Dimulai <br/> dari Sini
-                    </h2>
-                    <p className="text-lg text-blue-50 mb-10 font-light leading-relaxed">
-                        Nikmati kemudahan booking transportasi dari layanan Zulzi Trans!
-                    </p>
+                 <div className="text-center max-w-lg z-10">
+                     <h2 className="text-5xl font-extrabold mb-6 leading-tight text-white">
+                         Perjalanan Dimulai <br/> dari Sini
+                     </h2>
+                     <p className="text-lg text-blue-50 mb-10 font-light leading-relaxed">
+                         Nikmati kemudahan booking transportasi dari layanan Zulzi Trans!
+                     </p>
 
-                    {/* Feature List */}
                     <div className="space-y-4 text-left inline-block">
                         <div className="flex items-center gap-4">
                             <CheckCircle className="w-6 h-6 text-white" />

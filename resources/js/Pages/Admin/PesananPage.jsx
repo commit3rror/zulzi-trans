@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/services/api';
 import {
     ActionButton,
     SearchInput,
@@ -13,21 +13,29 @@ const PemesananPage = ({ setHeaderAction }) => {
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const api = axios.create({
-        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
-    });
-
-    const fetchPemesanan = () => {
-        setIsLoading(true);
-        api.get(`/api/admin/pemesanan?search=${search}&layanan=${activeTab}`)
-            .then(res => {
-                setPemesanan(res.data);
-            })
-            .catch(err => {
-                console.error("Gagal mengambil data pemesanan:", err);
-            })
-            .finally(() => setIsLoading(false));
-    };
+    const fetchPemesanan = async () => {
+    setIsLoading(true);
+    try {
+        const res = await api.get('/admin/pesanan', {
+            params: { search, layanan: activeTab }
+        });
+        
+        // Validasi array
+        if (Array.isArray(res.data)) {
+            setPemesanan(res.data);
+        } else if (res.data.data && Array.isArray(res.data.data)) {
+            setPemesanan(res.data.data);
+        } else {
+            setPemesanan([]);
+            console.error("API returned non-array:", res.data);
+        }
+    } catch (err) {
+        console.error("Gagal mengambil data pemesanan:", err);
+        setPemesanan([]);
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     useEffect(() => {
         fetchPemesanan();
@@ -38,27 +46,25 @@ const PemesananPage = ({ setHeaderAction }) => {
         return () => setHeaderAction(null);
     }, [setHeaderAction]);
 
-    const handleDelete = (id) => {
-        api.delete(`/api/admin/pemesanan/${id}`)
-            .then(() => {
-                fetchPemesanan();
-                setDeleteConfirm(null);
-            })
-            .catch(err => {
-                console.error("Gagal menghapus:", err);
-                alert("Gagal menghapus pemesanan.");
-            });
+    const handleDelete = async (id) => {
+        try {
+            await api.delete(`/admin/pesanan/${id}`);
+            fetchPemesanan();
+            setDeleteConfirm(null);
+        } catch (err) {
+            console.error("Gagal menghapus:", err);
+            alert("Gagal menghapus pemesanan.");
+        }
     };
 
-    const handleVerifikasi = (id) => {
-        api.put(`/api/admin/pemesanan/${id}/verifikasi`)
-            .then(() => {
-                fetchPemesanan();
-            })
-            .catch(err => {
-                console.error("Gagal verifikasi:", err);
-                alert("Gagal verifikasi pemesanan.");
-            });
+    const handleVerifikasi = async (id) => {
+        try {
+            await api.put(`/admin/pesanan/${id}/status`, { status: 'Diverifikasi' });
+            fetchPemesanan();
+        } catch (err) {
+            console.error("Gagal verifikasi:", err);
+            alert("Gagal verifikasi pemesanan.");
+        }
     };
 
     const formatCurrency = (amount) => {
