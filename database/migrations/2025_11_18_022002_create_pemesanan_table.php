@@ -18,6 +18,8 @@ return new class extends Migration
             // Foreign Keys
             $table->unsignedBigInteger('id_pengguna');
             $table->unsignedBigInteger('id_layanan');
+            
+            // PENTING: Ini harus nullable agar bisa menggunakan sistem Dispatcher
             $table->unsignedBigInteger('id_armada')->nullable();
             $table->unsignedBigInteger('id_supir')->nullable();
             
@@ -28,27 +30,21 @@ return new class extends Migration
             
             // Lokasi
             $table->string('lokasi_jemput');
-            $table->string('lokasi_tujuan'); // Pastikan hanya satu definisi
+            $table->string('lokasi_tujuan')->nullable(); 
             
             // Keuangan & Status
-            // ERROR sebelumnya terjadi karena baris ini ada dua kali. 
-            // Kita gunakan yang presisi tinggi (15 digit, 2 desimal).
             $table->double('total_biaya', 15, 2)->default(0);
+            $table->string('status_pemesanan', 20)->default('Menunggu');
             
-            $table->string('status_pemesanan', 20);
-            
-            // Detail Tambahan (Nullable karena tergantung jenis layanan)
-            $table->string('deskripsi_barang')->nullable();
+            // Detail Tambahan
+            // Kita ubah jadi text agar muat menampung preferensi user yang panjang
+            $table->text('deskripsi_barang')->nullable(); 
             $table->double('est_berat_ton', 8, 2)->nullable();
             $table->string('foto_barang')->nullable();
             $table->integer('jumlah_orang')->nullable();
-            $table->integer('lama_rental')->nullable(); // Dalam hari
+            $table->integer('lama_rental')->nullable();
             
             $table->timestamps();
-            
-            // Opsional: Foreign Key Constraints (Aktifkan jika tabel referensi sudah pasti dibuat sebelumnya)
-            // $table->foreign('id_pengguna')->references('id')->on('users')->onDelete('cascade');
-            // $table->foreign('id_layanan')->references('id_layanan')->on('layanan')->onDelete('cascade');
         });
     }
 

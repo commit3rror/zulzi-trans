@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pembayaran', function (Blueprint $table) {
-            $table->id('id_pembayaran'); // bigint unsigned auto increment
+            $table->id('id_pembayaran'); // Primary Key
 
             // Foreign Keys
             $table->foreignId('id_pemesanan')
@@ -20,16 +20,21 @@ return new class extends Migration
                   ->onDelete('cascade');
 
             $table->foreignId('id_admin')
-                  ->nullable()
+                  ->nullable() // Boleh kosong (sebelum diverifikasi)
                   ->constrained('user', 'id_pengguna')
                   ->onDelete('set null');
 
             // Detail Pembayaran
             $table->date('tgl_bayar');
-            $table->double('jumlah_bayar', 15, 2); // sesuai SQL dump
-            $table->enum('metode_bayar', ['BCA', 'QRIS']); // pilihan BCA atau QRIS
-            $table->enum('jenis_pembayaran', ['DP', 'LUNAS']); // pilihan DP atau LUNAS
+            $table->double('jumlah_bayar', 15, 2);
+            
+            // PERUBAHAN: Menggunakan STRING agar fleksibel menampung info bank pengirim
+            $table->string('metode_bayar'); 
+            $table->string('jenis_pembayaran'); 
+            
             $table->string('bukti_transfer', 255)->nullable();
+            
+            // Tidak menggunakan $table->timestamps() karena di model kamu dimatikan
         });
     }
 

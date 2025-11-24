@@ -24,8 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pemesanan', function (Blueprint $table) {
-            // Mengubah kembali, meskipun mungkin berbeda dari aslinya
-            $table->float('total_biaya')->change();
+            // Mengubah kembali ke double(15, 2)
+            $table->double('total_biaya', 15, 2)->change();
         });
     }
 };
