@@ -12,9 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('user', function (Blueprint $table) {
-            // HANYA menambahkan kolom foto_profil (alamat dihapus)
-            // Letakkan setelah no_telepon
-            $table->string('foto_profil')->nullable()->after('no_telepon');
+            //
         });
     }
 
@@ -24,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('user', function (Blueprint $table) {
-            $table->dropColumn(['foto_profil']);
+            //
         });
     }
 };
