@@ -1,14 +1,14 @@
 import React from 'react';
-import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, UserPen } from 'lucide-react';
 
 // ==================== FORM COMPONENTS ====================
 
 /**
  * FormInput - Input teks standar
  */
-export const FormInput = ({ 
-    label, name, value, onChange, error, type = 'text', placeholder = '', 
-    disabled = false, required = false, ...props 
+export const FormInput = ({
+    label, name, value, onChange, error, type = 'text', placeholder = '',
+    disabled = false, required = false, ...props
 }) => {
     return (
         <div className="space-y-2 w-full">
@@ -38,9 +38,9 @@ export const FormInput = ({
 /**
  * FormSelect - Dropdown menu standar
  */
-export const FormSelect = ({ 
-    label, name, value, onChange, error, children, 
-    disabled = false, required = false 
+export const FormSelect = ({
+    label, name, value, onChange, error, children,
+    disabled = false, required = false
 }) => {
     return (
         <div className="space-y-2 w-full">
@@ -69,9 +69,9 @@ export const FormSelect = ({
 /**
  * FormTextarea - Textarea standar
  */
-export const FormTextarea = ({ 
-    label, name, value, onChange, error, placeholder = '', 
-    rows = 4, disabled = false, required = false 
+export const FormTextarea = ({
+    label, name, value, onChange, error, placeholder = '',
+    rows = 4, disabled = false, required = false
 }) => {
     return (
         <div className="space-y-2 w-full">
@@ -173,14 +173,15 @@ export const LoadingButton = ({ isLoading, children, loadingText = 'Memproses...
 export const ActionButton = ({ type, onClick, title }) => {
     const config = {
         edit: { icon: Edit2, className: 'text-blue-600 hover:text-blue-800 hover:bg-blue-50', title: title || 'Edit' },
-        delete: { icon: Trash2, className: 'text-red-600 hover:text-red-800 hover:bg-red-50', title: title || 'Hapus' }
+        delete: { icon: Trash2, className: 'text-red-600 hover:text-red-800 hover:bg-red-50', title: title || 'Hapus' },
+        edit2: { icon: UserPen, className: 'text-black-600 hover:text-red-800 hover:bg-red-50', title: title || 'Edit2'}
     };
     const { icon: Icon, className, title: btnTitle } = config[type];
 
     return (
         <button onClick={onClick} title={btnTitle} className={`p-2 rounded-lg transition-all duration-200 ${className}`}>
             <Icon className="w-5 h-5" />
-        </button> 
+        </button>
     );
 };
 
@@ -230,11 +231,11 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
             {/* Backdrop: Menggunakan opacity Tailwind yang benar */}
-            <div 
+            <div
                 className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             />
-            
+
             {/* Modal Container */}
             <div className="flex min-h-full items-center justify-center p-4">
                 <div className={`relative bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} transform transition-all z-10`}>
@@ -245,7 +246,7 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
                             <X className="w-6 h-6" />
                         </button>
                     </div>
-                    
+
                     {/* Content */}
                     {children}
                 </div>

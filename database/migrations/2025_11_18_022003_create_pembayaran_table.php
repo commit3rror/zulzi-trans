@@ -30,6 +30,10 @@ return new class extends Migration
             $table->enum('metode_bayar', ['BCA', 'QRIS']); // pilihan BCA atau QRIS
             $table->enum('jenis_pembayaran', ['DP', 'LUNAS']); // pilihan DP atau LUNAS
             $table->string('bukti_transfer', 255)->nullable();
+
+            //status pembayaran
+            $table->enum('status', ['Menunggu', 'Terverifikasi', 'Ditolak'])
+                  ->default('Menunggu');
         });
     }
 
@@ -39,5 +43,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('pembayaran');
+
+        Schema::table('pembayaran', function (Blueprint $table) {
+            $table->dropColumn('status');
+        });
     }
 };

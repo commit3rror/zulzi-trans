@@ -3,7 +3,10 @@ import axios from 'axios';
 import {
     ActionButton,
     SearchInput,
-    Modal
+    Modal,
+    FormInput,
+    FormSelect,
+    FormTextarea,
 } from '@/Components/ReusableUI';
 
 const PemesananPage = ({ setHeaderAction }) => {
@@ -13,9 +16,26 @@ const PemesananPage = ({ setHeaderAction }) => {
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const api = axios.create({
-        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
+    // Modal Edit
+    const [editItem, setEditItem] = useState(null);
+    const [supirList, setSupirList] = useState([]);
+    const [armadaList, setArmadaList] = useState([]);
+    const [formData, setFormData] = useState({
+        id_supir: '',
+        id_armada: '',
+        total_biaya: '',
+        catatan: ''
     });
+
+    const api = axios.create({
+    baseURL: '/',
+    withCredentials: true,
+    headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    },
+});
 
     const fetchPemesanan = () => {
         setIsLoading(true);
@@ -29,14 +49,78 @@ const PemesananPage = ({ setHeaderAction }) => {
             .finally(() => setIsLoading(false));
     };
 
+    // --- Fetch Data Pendukung (Supir & Armada) ---
+    const fetchDependencies = () => {
+        // Mengambil data supir untuk dropdown
+        api.get('/api/admin/supir')
+            .then(res => setSupirList(Array.isArray(res.data) ? res.data : res.data.data || []))
+            .catch(err => console.error("Gagal ambil supir", err));
+
+        // Mengambil data armada untuk dropdown
+        api.get('/api/admin/armada')
+            .then(res => setArmadaList(Array.isArray(res.data) ? res.data : res.data.data || []))
+            .catch(err => console.error("Gagal ambil armada", err));
+    };
+
     useEffect(() => {
         fetchPemesanan();
+        fetchDependencies();
     }, [search, activeTab]);
 
     useEffect(() => {
         setHeaderAction(null);
         return () => setHeaderAction(null);
     }, [setHeaderAction]);
+
+    // Membuka Modal Edit/Verifikasi
+    const handleEditClick = (item) => {
+        // Simpan data item yang akan diedit, termasuk harga lama
+        setEditItem({
+            ...item,
+            harga_lama: item.total_biaya // simpan harga lama khusus item ini
+        });
+
+        setFormData({
+            id_supir: item.id_supir || '',
+            id_armada: item.id_armada || '',
+            total_biaya: item.total_biaya || 0,
+            catatan: item.deskripsi_barang || ''
+        });
+    };
+
+    const handleUpdateSubmit = () => {
+        if (!editItem) return;
+
+        const payload = {
+            id_supir: formData.id_supir,
+            id_armada: formData.id_armada,
+            total_biaya: Number(formData.total_biaya),
+            deskripsi_barang: formData.catatan,
+            status_pemesanan: 'Dikonfirmasi'
+        };
+
+        api.put(`/api/admin/pemesanan/${editItem.id_pemesanan}`, payload)
+            .then(() => {
+                setPemesanan(prev =>
+                    prev.map(p =>
+                        p.id_pemesanan === editItem.id_pemesanan
+                            ? {
+                                ...p,
+                                total_biaya: payload.total_biaya,  // harga baru
+                                harga_lama: editItem.total_biaya   // harga lama
+                            }
+                            : p
+                    )
+                );
+
+                setEditItem(null); // tutup modal
+            })
+            .catch(err => {
+                console.error("Gagal update:", err);
+                alert("Gagal memperbarui pemesanan.");
+            });
+    };
+
 
     const handleDelete = (id) => {
         api.delete(`/api/admin/pemesanan/${id}`)
@@ -47,17 +131,6 @@ const PemesananPage = ({ setHeaderAction }) => {
             .catch(err => {
                 console.error("Gagal menghapus:", err);
                 alert("Gagal menghapus pemesanan.");
-            });
-    };
-
-    const handleVerifikasi = (id) => {
-        api.put(`/api/admin/pemesanan/${id}/verifikasi`)
-            .then(() => {
-                fetchPemesanan();
-            })
-            .catch(err => {
-                console.error("Gagal verifikasi:", err);
-                alert("Gagal verifikasi pemesanan.");
             });
     };
 
@@ -83,7 +156,8 @@ const PemesananPage = ({ setHeaderAction }) => {
             'Dikonfirmasi': { bg: 'bg-blue-100', text: 'text-blue-800' },
             'Berlangsung': { bg: 'bg-purple-100', text: 'text-purple-800' },
             'Selesai': { bg: 'bg-green-100', text: 'text-green-800' },
-            'Dibatalkan': { bg: 'bg-red-100', text: 'text-red-800' }
+            'Dibatalkan': { bg: 'bg-red-100', text: 'text-red-800' },
+            'Pembayaran Ditolak': { bg: 'bg-red-100', text: 'text-red-800'}
         };
         const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800' };
         return (
@@ -138,7 +212,7 @@ const PemesananPage = ({ setHeaderAction }) => {
                             <th className="py-4 px-2 text-center">Pelanggan</th>
                             <th className="py-4 px-2 text-center">Tujuan</th>
                             <th className="py-4 px-2 text-center">Keberangkatan</th>
-                            <th className="py-4 px-2 text-center">Penumpang</th>
+                            <th className="py-4 px-2 text-center">{activeTab === 'rental' ? 'Penumpang' : 'Muatan'}</th>
                             <th className="py-4 px-2 text-center">Harga</th>
                             <th className="py-4 px-2 text-center">Sopir</th>
                             <th className="py-4 px-2 text-center">Armada</th>
@@ -158,36 +232,35 @@ const PemesananPage = ({ setHeaderAction }) => {
                                     <td className="py-3.5 px-4 text-slate-600">{formatDate(item.tgl_mulai)}</td>
                                     <td className="py-3.5 px-4 text-slate-600">
                                         {activeTab === 'rental' ? `${item.jumlah_orang} orang` :
-                                         activeTab === 'angkutan' ? `${item.est_berat_ton} ton` : '-'}
+                                         activeTab === 'angkutan' ? `${item.est_berat_ton} ton` :
+                                         activeTab === 'sampah' ? `${item.est_berat_ton} ton` : '-'}
                                     </td>
                                     <td className="py-3.5 px-4 text-slate-600">
-                                        {item.harga_diskon ? (
+                                        {item.harga_lama && item.harga_lama !== item.total_biaya ? (
                                             <div className="flex flex-col">
+                                                {/* Harga lama dicoret */}
                                                 <span className="line-through text-xs text-slate-400">
-                                                    {formatCurrency(item.total_biaya)}
+                                                    {formatCurrency(item.harga_lama)}
                                                 </span>
+                                                {/* Harga baru */}
                                                 <span className="font-medium text-green-600">
-                                                    {formatCurrency(item.harga_diskon)}
+                                                    {formatCurrency(item.total_biaya)}
                                                 </span>
                                             </div>
                                         ) : (
                                             formatCurrency(item.total_biaya)
                                         )}
                                     </td>
+
+
                                     <td className="py-3.5 px-4 text-slate-600">{item.nama_supir || '-'}</td>
-                                    <td className="py-3.5 px-4 text-slate-600">{item.nama_armada || '-'}</td>
+                                    <td className="py-3.5 px-4 text-slate-600">{item.jenis_kendaraan || '-'}</td>
                                     <td className="py-3.5 px-4">{getStatusBadge(item.status_pemesanan)}</td>
                                     <td className="py-3.5 px-4 text-center">
                                         <div className="flex items-center justify-center gap-2">
                                             {item.status_pemesanan === 'Menunggu' || item.status_pemesanan === 'Dikonfirmasi' ? (
-                                                <button
-                                                    onClick={() => handleVerifikasi(item.id_pemesanan)}
-                                                    className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
-                                                >
-                                                    Verifikasi
-                                                </button>
+                                                <ActionButton type="edit2" onClick={() => handleEditClick(item)} />
                                             ) : null}
-                                            <ActionButton type="edit2" onClick={() => setDetail(item)} />
                                             <ActionButton type="delete" onClick={() => setDeleteConfirm(item)} />
                                         </div>
                                     </td>
@@ -199,6 +272,106 @@ const PemesananPage = ({ setHeaderAction }) => {
                     </tbody>
                 </table>
             </div>
+
+            {/* --- MODAL 1: KONFIRMASI / EDIT PESANAN --- */}
+            <Modal isOpen={!!editItem} onClose={() => setEditItem(null)} title="Konfirmasi Pesanan">
+                {editItem && (
+                    <div className="text-slate-700">
+                        {/* Header Info Pesanan */}
+                            <div className="space-y-3 mb-6 mt-2">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400">Pesanan:</span>
+                                    <span className="font-medium text-slate-700">{editItem.kode_pesanan}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400">Pelanggan:</span>
+                                    <span className="font-medium text-slate-700">{editItem.nama_pelanggan}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400">Tujuan:</span>
+                                    <span className="font-medium text-slate-700">{editItem.lokasi_tujuan}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400">Tanggal:</span>
+                                    <span className="font-medium text-slate-700">{formatDate(editItem.tgl_mulai)}</span>
+                                </div>
+                            </div>
+
+                        {/* Form Body */}
+                        <div className="space-y-4 px-2 pb-2">
+                            <FormSelect
+                                label="Sopir"
+                                name="id_supir"
+                                value={formData.id_supir}
+                                onChange={(e) => setFormData({...formData, id_supir: e.target.value})}
+                            >
+                                <option value="">-- Pilih Supir --</option>
+                                {supirList.map(supir => (
+                                    <option key={supir.id_supir} value={supir.id_supir}>
+                                        {supir.nama_lengkap}
+                                    </option>
+                                ))}
+                            </FormSelect>
+
+                            <FormSelect
+                                label="Armada"
+                                name="id_armada"
+                                value={formData.id_armada}
+                                onChange={(e) => setFormData({...formData, id_armada: e.target.value})}
+                            >
+                                <option value="">-- Pilih Armada --</option>
+                                {armadaList.map(armada => (
+                                    <option key={armada.id_armada} value={armada.id_armada}>
+                                        {armada.jenis_kendaraan} - {armada.no_plat}
+                                    </option>
+                                ))}
+                            </FormSelect>
+
+                            {/* Harga Info & Edit */}
+                            <div className="flex justify-between items-center py-2 border-t border-dashed border-gray-200 mt-2">
+                                <span className="text-sm text-slate-500">Harga Awal:</span>
+                                <span className="text-sm font-medium text-slate-800">{formatCurrency(editItem.total_biaya)}</span>
+                            </div>
+
+                            <FormInput
+                                label="Harga Setelah Negosiasi"
+                                name="total_biaya"
+                                type="number"
+                                value={formData.total_biaya}
+                                onChange={(e) => setFormData({...formData, total_biaya: e.target.value})}
+                                placeholder="Masukkan harga deal"
+                            />
+
+                            <FormTextarea
+                                label="Catatan (Opsional)"
+                                name="catatan"
+                                value={formData.catatan}
+                                onChange={(e) => setFormData({...formData, catatan: e.target.value})}
+                                placeholder="Hasil musyawarah dengan klien..."
+                                rows={3}
+                            />
+                        </div>
+
+                        {/* Footer Action */}
+                        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                            <button
+                                type="button"
+                                onClick={() => setEditItem(null)}
+                                className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleUpdateSubmit}
+                                className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-200"
+                            >
+                                Verifikasi
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Hapus Pemesanan">

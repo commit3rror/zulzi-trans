@@ -13,49 +13,49 @@ class PembayaranController extends Controller
      * Menampilkan daftar pembayaran dengan pencarian
      */
     public function index(Request $request)
-    {
-        $search = $request->input('search', '');
+{
+    $search = $request->input('search', '');
 
-        $query = DB::table('pembayaran')
-            ->join('pemesanan', 'pembayaran.id_pemesanan', '=', 'pemesanan.id_pemesanan')
-            ->join('user', 'pemesanan.id_pengguna', '=', 'user.id_pengguna')
-            ->select(
-                'pembayaran.id_pembayaran',
-                'pembayaran.id_pemesanan',
-                'user.nama as nama',
-                'pembayaran.jumlah_bayar',
-                'pembayaran.tgl_bayar',
-                'pembayaran.metode_bayar',
-                'pembayaran.jenis_pembayaran',
-                'pembayaran.bukti_transfer',
-                'pembayaran.id_admin'
-            );
+    $query = DB::table('pembayaran')
+        ->join('pemesanan', 'pembayaran.id_pemesanan', '=', 'pemesanan.id_pemesanan')
+        ->join('user', 'pemesanan.id_pengguna', '=', 'user.id_pengguna')
+        ->select(
+            'pembayaran.id_pembayaran',
+            'pembayaran.id_pemesanan',
+            'user.nama as nama',
+            'pembayaran.jumlah_bayar',
+            'pembayaran.tgl_bayar',
+            'pembayaran.metode_bayar',
+            'pembayaran.jenis_pembayaran',
+            'pembayaran.bukti_transfer',
+            'pembayaran.id_admin',
+            'pembayaran.status'   // <-- WAJIB TAMBAH INI
+        );
 
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('pembayaran.id_pemesanan', 'like', "%{$search}%")
-                  ->orWhere('user.nama', 'like', "%{$search}%")
-                  ->orWhere('pembayaran.metode_bayar', 'like', "%{$search}%")
-                  ->orWhere('pembayaran.jenis_pembayaran', 'like', "%{$search}%");
-            });
-        }
-
-        $pembayaran = $query->orderBy('pembayaran.tgl_bayar', 'desc')->get();
-
-        // Tambahkan informasi tambahan seperti rekening tujuan dan waktu transfer
-        $pembayaran = $pembayaran->map(function($item) {
-            // Ambil data rekening tujuan dari metode bayar
-            $rekening = $this->getRekeningTujuan($item->metode_bayar);
-            $item->rekening_tujuan = $rekening;
-
-            // Format waktu transfer (misalnya dari bukti transfer atau data lain)
-            $item->waktu_transfer = $this->getWaktuTransfer($item->tgl_bayar);
-
-            return $item;
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->where('pembayaran.id_pemesanan', 'like', "%{$search}%")
+              ->orWhere('user.nama', 'like', "%{$search}%")
+              ->orWhere('pembayaran.metode_bayar', 'like', "%{$search}%")
+              ->orWhere('pembayaran.jenis_pembayaran', 'like', "%{$search}%");
         });
-
-        return response()->json($pembayaran);
     }
+
+    $pembayaran = $query->orderBy('pembayaran.id_pemesanan', 'asc')->get();
+
+    // Tambahkan informasi tambahan seperti rekening tujuan dan waktu transfer
+    $pembayaran = $pembayaran->map(function($item) {
+
+        $item->rekening_tujuan = $this->getRekeningTujuan($item->metode_bayar);
+
+        $item->waktu_transfer = $this->getWaktuTransfer($item->tgl_bayar);
+
+        return $item;
+    });
+
+    return response()->json($pembayaran);
+}
+
 
     /**
      * Menampilkan detail pembayaran
@@ -94,52 +94,69 @@ class PembayaranController extends Controller
      * Verifikasi pembayaran (approve/reject)
      */
     public function verify(Request $request, $id)
-    {
-        $request->validate([
-            'action' => 'required|in:approve,reject'
+{
+    $request->validate([
+        'action' => 'required|in:approve,reject'
+    ]);
+
+    $adminId = Auth::id();
+
+    // Ambil pembayaran
+    $pembayaran = DB::table('pembayaran')->where('id_pembayaran', $id)->first();
+
+    if (!$pembayaran) {
+        return response()->json(['message' => 'Pembayaran tidak ditemukan'], 404);
+    }
+
+    // Tentukan status baru pembayaran
+    $newStatus = $request->action === 'approve'
+        ? 'Terverifikasi'
+        : 'Ditolak';
+
+    // Update pembayaran: id_admin + status
+    DB::table('pembayaran')
+        ->where('id_pembayaran', $id)
+        ->update([
+            'id_admin' => $adminId,
+            'status' => $newStatus
         ]);
 
-        $adminId = Auth::id(); // ID admin yang melakukan verifikasi
+    // Update status pemesanan terkait
+    $newOrderStatus = $request->action === 'approve'
+        ? 'Diproses'
+        : 'Pembayaran Ditolak';
 
-        // Update id_admin pada pembayaran
-        $updated = DB::table('pembayaran')
-            ->where('id_pembayaran', $id)
-            ->update([
-                'id_admin' => $adminId
-            ]);
+    DB::table('pemesanan')
+        ->where('id_pemesanan', $pembayaran->id_pemesanan)
+        ->update([
+            'status_pemesanan' => $newOrderStatus
+        ]);
 
-        if (!$updated) {
-            return response()->json(['message' => 'Pembayaran tidak ditemukan'], 404);
-        }
+    return response()->json([
+        'message' => 'Status pembayaran diperbarui',
+        'status' => $newStatus,
+        'order_status' => $newOrderStatus
+    ]);
+}
 
-        // Ambil data pembayaran
+
+    // FUNGSI DELETE YANG HILANG SEBELUMNYA
+    public function destroy($id)
+    {
         $pembayaran = DB::table('pembayaran')->where('id_pembayaran', $id)->first();
 
-        if ($request->action === 'approve') {
-            // Jika disetujui, update status pemesanan menjadi "Diproses" atau status lain yang sesuai
-            DB::table('pemesanan')
-                ->where('id_pemesanan', $pembayaran->id_pemesanan)
-                ->update([
-                    'status_pemesanan' => 'Diproses'
-                ]);
-
-            return response()->json([
-                'message' => 'Pembayaran berhasil disetujui',
-                'action' => 'approve'
-            ]);
-        } else {
-            // Jika ditolak, bisa tambahkan log atau update status pemesanan jika diperlukan
-            DB::table('pemesanan')
-                ->where('id_pemesanan', $pembayaran->id_pemesanan)
-                ->update([
-                    'status_pemesanan' => 'Pembayaran Ditolak'
-                ]);
-
-            return response()->json([
-                'message' => 'Pembayaran ditolak',
-                'action' => 'reject'
-            ]);
+        if (!$pembayaran) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
         }
+
+        // Hapus file bukti transfer jika ada
+        if ($pembayaran->bukti_transfer && file_exists(storage_path('app/public/' . $pembayaran->bukti_transfer))) {
+            unlink(storage_path('app/public/' . $pembayaran->bukti_transfer));
+        }
+
+        DB::table('pembayaran')->where('id_pembayaran', $id)->delete();
+
+        return response()->json(['message' => 'Pembayaran berhasil dihapus']);
     }
 
     /**

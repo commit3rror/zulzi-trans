@@ -26,26 +26,57 @@ class PemesananSeeder extends Seeder
             return;
         }
 
-        // Contoh membuat 20 data pemesanan
-        for ($i = 0; $i < 20; $i++) {
-            Pemesanan::create([
-                'id_pengguna' => $users->random()->id_pengguna,
-                'id_armada' => $armadas->isNotEmpty() ? $armadas->random()->id_armada : null,
-                'id_layanan' => $layanans->random()->id_layanan,
-                'id_supir' => $supirs->isNotEmpty() ? $supirs->random()->id_supir : null,
-                'tgl_pesan' => $faker->dateTimeBetween('-1 month', 'now')->format('Y-m-d'),
-                'tgl_mulai' => $faker->dateTimeBetween('now', '+1 month')->format('Y-m-d'),
-                'tgl_selesai' => $faker->dateTimeBetween('+1 month', '+2 month')->format('Y-m-d'),
-                'lokasi_jemput' => $faker->address,
-                'lokasi_tujuan' => $faker->address,
-                'total_biaya' => $faker->randomFloat(2, 500000, 5000000),
-                'status_pemesanan' => $faker->randomElement(['PENDING','CONFIRM','CANCEL']),
-                'deskripsi_barang' => $faker->optional()->sentence,
-                'est_berat_ton' => $faker->optional()->randomFloat(1, 0.1, 10),
-                'foto_barang' => $faker->optional()->imageUrl(200, 200, 'transport'),
-                'jumlah_orang' => $faker->optional()->numberBetween(1, 10),
-                'lama_rental' => $faker->optional()->numberBetween(1, 30),
-            ]);
+        // Buat masing-masing 2 data untuk id_layanan 1, 2, dan 3
+foreach ([1, 2, 3] as $layananId) {
+    for ($i = 0; $i < 2; $i++) {
+
+        // Data umum
+        $data = [
+            'id_pengguna'        => $users->random()->id_pengguna,
+            'id_layanan'         => $layananId,
+            'tgl_pesan'          => $faker->dateTimeBetween('-1 month', 'now')->format('Y-m-d'),
+            'tgl_mulai'          => $faker->dateTimeBetween('now', '+1 month')->format('Y-m-d'),
+            'tgl_selesai'        => $faker->dateTimeBetween('+1 month', '+2 month')->format('Y-m-d'),
+            'lokasi_jemput'      => $faker->address,
+            'lokasi_tujuan'      => $faker->address,
+            'status_pemesanan'   => 'Menunggu',
+        ];
+
+        // Layanan 1 & 2 → sama formatnya
+        if (in_array($layananId, [1, 2])) {
+            $data += [
+                'total_biaya'      => $faker->randomFloat(2, 300000, 3000000),
+                'deskripsi_barang' => $faker->sentence,
+                'est_berat_ton'    => $faker->randomFloat(1, 0.1, 5),
+                'foto_barang'      => $faker->imageUrl(200, 200, 'cargo'),
+
+                // sisanya NULL
+                'jumlah_orang'     => null,
+                'lama_rental'      => null,
+                'id_armada'        => null,
+                'id_supir'         => null,
+            ];
         }
+
+        // Layanan 3 → khusus rental
+        if ($layananId == 3) {
+            $data += [
+                'jumlah_orang'     => $faker->numberBetween(1, 10),
+                'lama_rental'      => $faker->numberBetween(1, 14),
+                'total_biaya'      => $faker->randomFloat(2, 500000, 5000000),
+
+                // sisanya NULL
+                'deskripsi_barang' => null,
+                'est_berat_ton'    => null,
+                'foto_barang'      => null,
+                'id_armada'        => null,
+                'id_supir'         => null,
+            ];
+        }
+
+        Pemesanan::create($data);
+    }
+}
+
     }
 }

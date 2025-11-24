@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Pemesanan;
 
 class PemesananController extends Controller
 {
@@ -18,9 +19,9 @@ class PemesananController extends Controller
 
         // Mapping layanan ke nama layanan di database
         $layananMap = [
-            'rental' => 'Rental',
-            'angkutan' => 'Angkutan',
-            'sampah' => 'Sampah'
+            'angkutan' => 'Angkut Barang',  // layanan 1
+            'sampah' => 'Angkut Sampah',    // layanan 2
+            'rental' => 'Sewa Kendaraan'    // layanan 3
         ];
 
         $query = DB::table('pemesanan')
@@ -141,33 +142,36 @@ class PemesananController extends Controller
      * Mengupdate pemesanan
      */
     public function update(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'id_armada' => 'nullable|exists:armada,id_armada',
-            'id_supir' => 'nullable|exists:supir,id_supir',
-            'tgl_mulai' => 'sometimes|date',
-            'tgl_selesai' => 'sometimes|date|after_or_equal:tgl_mulai',
-            'lokasi_jemput' => 'sometimes|string|max:255',
-            'lokasi_tujuan' => 'sometimes|string|max:255',
-            'total_biaya' => 'sometimes|numeric|min:0',
-            'status_pemesanan' => 'sometimes|string|max:20',
-            'deskripsi_barang' => 'nullable|string',
-            'est_berat_ton' => 'nullable|numeric',
-            'foto_barang' => 'nullable|string',
-            'jumlah_orang' => 'nullable|integer',
-            'lama_rental' => 'nullable|integer',
-        ]);
+{
+    $validated = $request->validate([
+        'id_armada' => 'nullable|exists:armada,id_armada',
+        'id_supir' => 'nullable|exists:supir,id_supir',
+        'tgl_mulai' => 'sometimes|date',
+        'tgl_selesai' => 'sometimes|date|after_or_equal:tgl_mulai',
+        'lokasi_jemput' => 'sometimes|string|max:255',
+        'lokasi_tujuan' => 'sometimes|string|max:255',
+        'total_biaya' => 'sometimes|numeric|min:0',
+        'status_pemesanan' => 'sometimes|string|max:20',
+        'deskripsi_barang' => 'nullable|string',
+        'est_berat_ton' => 'nullable|numeric',
+        'foto_barang' => 'nullable|string',
+        'jumlah_orang' => 'nullable|integer',
+        'lama_rental' => 'nullable|integer',
+    ]);
 
-        $affected = DB::table('pemesanan')
-            ->where('id_pemesanan', $id)
-            ->update($validated);
-
-        if ($affected === 0) {
-            return response()->json(['message' => 'Pemesanan tidak ditemukan'], 404);
-        }
-
-        return response()->json(['message' => 'Pemesanan berhasil diupdate']);
+    $pemesanan = Pemesanan::findOrFail($id); // <-- ambil model dulu
+    if (!$pemesanan) {
+        return response()->json(['message' => 'Pemesanan tidak ditemukan'], 404);
     }
+
+    $pemesanan->fill($validated);
+    $pemesanan->save();
+
+    return response()->json([
+        'message' => 'Pemesanan berhasil diupdate',
+        'data' => $pemesanan
+    ]);
+}
 
     /**
      * Verifikasi pemesanan (ubah status)

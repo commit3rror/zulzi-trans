@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import {
     ActionButton,
@@ -11,16 +11,34 @@ const PembayaranPage = ({ setHeaderAction }) => {
     const [search, setSearch] = useState('');
     const [detailModal, setDetailModal] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [paymentStatuses, setPaymentStatuses] = useState({});
     const [deleteConfirm, setDeleteConfirm] = useState(null)
 
-    const api = axios.create({
-    baseURL: '/',
-    withCredentials: true,
-    headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-    }
-});
+    // Konfigurasi Axios yang Aman
+    const api = useMemo(() => {
+        const instance = axios.create({
+            baseURL: '/', // Sesuaikan jika ada prefix
+            withCredentials: true,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                'Accept': 'application/json', // PENTING: Mencegah redirect ke login page saat error, memaksa response JSON
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Interceptor untuk menangani error 419 (Token Expired) secara otomatis reload
+        instance.interceptors.response.use(
+            response => response,
+            error => {
+                if (error.response && error.response.status === 419) {
+                    alert('Sesi Anda telah berakhir. Halaman akan dimuat ulang.');
+                    window.location.reload();
+                }
+                return Promise.reject(error);
+            }
+        );
+
+        return instance;
+    }, []);
 
     const fetchPayments = () => {
         setIsLoading(true);
@@ -58,10 +76,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
     const handleVerify = (id, action) => {
         api.post(`/api/admin/pembayaran/${id}/verify`, { action })
             .then(() => {
-                setPaymentStatuses(prev => ({
-                    ...prev,
-                    [id]: action === 'approve' ? 'Terverifikasi' : 'Ditolak'
-                }));
+                fetchPayments(); // refresh daftar pembayaran untuk mengambil status terbaru
                 setDetailModal(null);
                 alert(`Pembayaran berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}`);
             })
@@ -86,15 +101,15 @@ const PembayaranPage = ({ setHeaderAction }) => {
         return new Date(dateString).toLocaleDateString('id-ID', options);
     };
 
-    const getStatusBadge = (id) => {
-        const status = paymentStatuses[id] || 'Menunggu';
-        const statusConfig = {
-            'Menunggu': 'bg-yellow-100 text-yellow-800',
-            'Terverifikasi': 'bg-green-100 text-green-800',
-            'Ditolak': 'bg-red-100 text-red-800'
-        };
-        return statusConfig[status];
+    const getStatusBadge = (status) => {
+    const statusConfig = {
+        'Menunggu': 'bg-yellow-100 text-yellow-800',
+        'Terverifikasi': 'bg-green-100 text-green-800',
+        'Ditolak': 'bg-red-100 text-red-800'
     };
+    return statusConfig[status] || 'bg-gray-100 text-gray-800';
+};
+
 
     return (
         <>
@@ -131,8 +146,8 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                     <td className="py-3.5 px-4 text-center text-slate-600">{formatDate(payment.tgl_bayar)}</td>
                                     <td className="py-3.5 px-4 text-center text-slate-600">{payment.metode_bayar}</td>
                                     <td className="py-3.5 px-4 text-center">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(payment.id_pembayaran)}`}>
-                                            {paymentStatuses[payment.id_pembayaran] || 'Menunggu'}
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(payment.status)}`}>
+                                            {payment.status}
                                         </span>
 
                                     </td>
@@ -167,7 +182,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
                 {detailModal && (
                     <>
                         <div className="p-6">
-                            <div className="grid grid-cols-2 gap-6 mb-6">
+                            <div className="grid grid-cols-2 gap-6 mb-6 mx-auto w-[80%]">
                                 <div>
                                     <p className="text-xs text-slate-500 mb-1">ID Pesanan</p>
                                     <p className="text-sm font-semibold text-slate-900">{detailModal.id_pemesanan}</p>
@@ -198,12 +213,12 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500 mb-1">Status</p>
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(detailModal.id_pembayaran)}`}>
-                                        {paymentStatuses[detailModal.id_pembayaran] || 'Menunggu'}
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(detailModal.status)}`}>
+                                        {detailModal.status}
                                     </span>
                                 </div>
                             </div>
-                    
+
                             <div className="mt-6">
                                 <p className="text-xs text-slate-500 mb-3">Bukti Pembayaran</p>
                                 <div className="bg-black rounded-lg overflow-hidden">

@@ -20,18 +20,5 @@ export default defineConfig({
         alias: {
             '@': path.resolve(__dirname, './resources/js'),
         },
-        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
-    },
-    server: {
-        hmr: {
-            host: 'localhost',
-        },
-        proxy: {
-            '/api': {
-                target: 'http://localhost:8000', // ganti dengan port Laravel
-                changeOrigin: true,
-                secure: false,
-            },
-        },
     },
 });
