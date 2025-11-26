@@ -113,7 +113,7 @@ const PemesananPage = () => {
             </div>
             
             {/* Indikator Step (Stepper) */}
-            <Stepper currentStep={step} />
+            <Stepper currentStep={step} orderData={orderData} />
             
             {/* Konten Utama */}
             <div className="mb-20">
