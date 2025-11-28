@@ -166,7 +166,7 @@ export default function AboutPage(props) {
                     
                     <div className="flex flex-col md:flex-row justify-center gap-5">
                         <button 
-                            onClick={() => window.open('https://wa.me/628123456789')} 
+                            onClick={() => window.open('https://wa.me/628158822394')} 
                             className="group/btn inline-flex items-center justify-center gap-3 px-12 py-5 bg-gradient-to-br from-[#5eb3ff] via-[#4caaff] to-[#3d9cff] hover:from-[#7ac2ff] hover:via-[#66b8ff] hover:to-[#5aabff] text-white font-bold rounded-2xl text-lg shadow-2xl hover:shadow-3xl transition-all transform hover:-translate-y-2 active:scale-95"
                         >
                             <Phone size={22} className="group-hover/btn:rotate-12 transition-transform" />
