@@ -14,11 +14,13 @@ Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
 // ✅ BARU: Rute bernama untuk Reset Password (Diperlukan oleh Laravel Mailer)
-// Ini mengarahkan Laravel ke halaman React Router: /password/reset/{token}
-Route::get('/password/reset/{token}', function () {
-    return view('app');
-})->name('password.reset'); // <--- INI ADALAH PERBAIKAN KRUSIAL
-
+Route::get('/reset-password/{token}', function ($token) {
+    // Ambil FRONTEND_URL dari .env
+    $frontendUrl = env('APP_URL', 'http://localhost:8000'); 
+    
+    // Redirect ke halaman reset password di frontend
+    return redirect($frontendUrl . '/reset-password?token=' . $token . '&email=' . request('email'));
+})->name('password.reset');
 /*
 |--------------------------------------------------------------------------
 | Catch-all Route untuk React Router

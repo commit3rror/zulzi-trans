@@ -75,50 +75,51 @@ const LandingPageWithAuth = () => {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
-  <React.StrictMode>
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* ===================================== */}
-          {/* ROUTE PUBLIC (Tanpa Login)           */}
-          {/* ===================================== */}
-          <Route path="/" element={<Navigate to="/beranda" replace />} />
-          <Route path="/beranda" element={<LandingPageWithAuth />} />
-          <Route path="/tentang-kami" element={<AboutPage />} /> 
-          <Route path="/about" element={<AboutPage />} /> 
-          <Route 
-              path="/pemesanan" 
-              // Menerapkan AdminRouteGuard dengan isAdminOnly=false (hanya butuh login)
-              element={<AdminRouteGuard element={<PemesananPage />} isAdminOnly={false} />} 
-          />
-          <Route path="/review/:id" element={<ReviewPage />} />
+    <React.StrictMode>
+        <AuthProvider>
+            <BrowserRouter>
+                <Routes>
+                    {/* ===================================== */}
+                    {/* ROUTE PUBLIC (Tanpa Login)           */}
+                    {/* ===================================== */}
+                    <Route path="/" element={<Navigate to="/beranda" replace />} />
+                    <Route path="/beranda" element={<LandingPageWithAuth />} />
+                    <Route path="/tentang-kami" element={<AboutPage />} /> 
+                    <Route path="/about" element={<AboutPage />} /> 
+                    <Route 
+                        path="/pemesanan" 
+                        // Menerapkan AdminRouteGuard dengan isAdminOnly=false (hanya butuh login)
+                        element={<AdminRouteGuard element={<PemesananPage />} isAdminOnly={false} />} 
+                    />
+                    <Route path="/review/:id" element={<ReviewPage />} />
 
-          {/* ===================================== */}
-          {/* ROUTE AUTH (Login, Register, dsb)    */}
-          {/* ===================================== */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/auth/callback" element={<OAuthCallback />} />
-          <Route path="/password/reset/:token" element={<ResetPasswordPage />} /> 
+                    {/* ===================================== */}
+                    {/* ROUTE AUTH (Login, Register, dsb)    */}
+                    {/* ===================================== */}
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/auth/callback" element={<OAuthCallback />} />
+                    {/* ✅ PERBAIKAN: Mengubah path agar sesuai dengan redirect Laravel yang menggunakan query params */}
+                    <Route path="/reset-password" element={<ResetPasswordPage />} /> 
 
-          {/* ===================================== */}
-          {/* ROUTE USER (Harus Login)             */}\
-          {/* ===================================== */}
-          <Route 
-            path="/edit-profile" 
-            element={<AdminRouteGuard element={<EditProfile />} isAdminOnly={false} />} 
-          />
-          
-          {/* ===================================== */}
-          {/* ROUTE ADMIN (Admin Only)             */}
-          {/* ===================================== */}
-          <Route 
-            path="/admin/*" 
-            element={<AdminRouteGuard element={<AdminPanel />} isAdminOnly={true} />} 
-          />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-  </React.StrictMode>
+                    {/* ===================================== */}
+                    {/* ROUTE USER (Harus Login)             */}\
+                    {/* ===================================== */}
+                    <Route 
+                        path="/edit-profile" 
+                        element={<AdminRouteGuard element={<EditProfile />} isAdminOnly={false} />} 
+                    />
+                    
+                    {/* ===================================== */}
+                    {/* ROUTE ADMIN (Admin Only)             */}
+                    {/* ===================================== */}
+                    <Route 
+                        path="/admin/*" 
+                        element={<AdminRouteGuard element={<AdminPanel />} isAdminOnly={true} />} 
+                    />
+                </Routes>
+            </BrowserRouter>
+        </AuthProvider>
+    </React.StrictMode>
 );
