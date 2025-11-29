@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, User, Star, Calendar, CheckCircle, Phone } from 'lucide-react';
+import { Truck, User, Star, Calendar, CheckCircle, Phone, Zap, Shield, Clock, Users } from 'lucide-react';
 import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
 import { getPublicServices } from '../../services/serviceService';
@@ -89,8 +89,25 @@ export default function LandingPage(props) {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Set data armada dari konstanta (tidak query DB)
-        setServices(ARMADA_DATA);
+        // ⚡ FETCH SERVICES & ARMADA FROM API (BUKAN HARDCODED!)
+        const serviceResponse = await getPublicServices();
+        const serviceData = serviceResponse.data.data || serviceResponse.data || [];
+        
+        console.log("🚗 Service API Response:", serviceResponse);
+        console.log("📊 Service Data:", serviceData);
+        console.log("📈 Total Services:", Array.isArray(serviceData) ? serviceData.length : 0);
+        
+        // Filter layanan yang memiliki armada
+        const servicesWithArmada = Array.isArray(serviceData) 
+          ? serviceData.filter(service => service.armada && service.armada.length > 0)
+          : [];
+        
+        setServices(servicesWithArmada);
+        
+        if (servicesWithArmada.length === 0) {
+          console.warn("⚠️ Tidak ada layanan dengan armada. Fallback ke data hardcoded.");
+          setServices(ARMADA_DATA); // Fallback ke hardcoded jika API gagal
+        }
 
         // Fetch reviews dari API
         const reviewResponse = await getPublicReviews();
@@ -112,6 +129,7 @@ export default function LandingPage(props) {
       } catch (error) {
         console.error("❌ Gagal mengambil data landing page:", error);
         setReviews([]);
+        setServices(ARMADA_DATA); // Fallback ke hardcoded jika error
       } finally {
         setLoading(false);
       }

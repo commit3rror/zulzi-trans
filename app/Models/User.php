@@ -22,11 +22,14 @@ class User extends Authenticatable
         'password',
         'no_telepon',
         'tgl_daftar',
+        'google_id',
+        'avatar',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'google_id',
     ];
 
     protected $casts = [
