@@ -40,22 +40,22 @@ class PemesananController extends Controller
             default => 1,
         };
 
-        // Logic Deskripsi (Gabungkan request user jadi satu string)
+        // Logic Deskripsi (Info spesifik per layanan)
         $deskripsi = "";
         if ($request->layanan === 'rental') {
-            $mobil = $request->preferensi_armada ?? 'Tidak ada preferensi';
-            $deskripsi = "Layanan Rental Mobil. Request Unit: {$mobil}.";
+            $jumlah = $request->jumlah_orang ?? '-';
+            $durasi = $request->lama_rental ?? '-';
+            $deskripsi = "Jumlah Penumpang: {$jumlah} orang, Durasi: {$durasi} hari";
         } 
         elseif ($request->layanan === 'barang') {
             $barang = $request->deskripsi_barang ?? '-';
-            $truk = $request->preferensi_armada ?? 'Standar';
-            $deskripsi = "Angkut Barang: {$barang}. Request Truk: {$truk}.";
+            $berat = $request->est_berat_ton ?? '-';
+            $deskripsi = "Detail Barang: {$barang}, Estimasi Berat: {$berat} ton";
         } 
         elseif ($request->layanan === 'sampah') {
             $jenis = $request->jenis_sampah ?? '-';
             $volume = $request->perkiraan_volume ?? '-';
-            $truk = $request->preferensi_armada ?? 'Sesuai Volume';
-            $deskripsi = "Sampah: {$jenis}, Volume: {$volume}. Request Truk: {$truk}.";
+            $deskripsi = "Jenis: {$jenis}, Volume: {$volume}";
         }
 
         // Siapkan Data
@@ -111,8 +111,8 @@ class PemesananController extends Controller
      */
     public function show($id)
     {
-        // Ambil data pesanan beserta detail Armada (jika sudah dipilih admin)
-        $pemesanan = Pemesanan::with(['layanan', 'armada'])->find($id);
+        // Ambil data pesanan beserta detail Armada dan Supir (jika sudah dipilih admin)
+        $pemesanan = Pemesanan::with(['layanan', 'armada', 'supir'])->find($id);
 
         if (!$pemesanan) {
             return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
@@ -147,8 +147,8 @@ class PemesananController extends Controller
         // Debug: Log user ID
         \Log::info('🔍 Fetching orders for user ID: ' . $userId);
 
-        // Ambil semua pesanan user dengan relasi layanan, armada, pembayaran
-        $orders = Pemesanan::with(['layanan', 'armada', 'pembayaran'])
+        // Ambil semua pesanan user dengan relasi layanan, armada, supir, pembayaran
+        $orders = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran'])
             ->where('id_pengguna', $userId)
             ->orderBy('tgl_pesan', 'desc')
             ->get();

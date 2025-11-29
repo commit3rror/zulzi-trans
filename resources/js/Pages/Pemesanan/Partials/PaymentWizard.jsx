@@ -120,6 +120,29 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                                 </div>
                             )}
                         </div>
+
+                        {/* TAMBAHAN: Informasi Supir */}
+                        <div>
+                            <h4 className="font-bold text-gray-800 mb-3">Supir</h4>
+                            {orderData.supir ? (
+                                <div className="bg-gray-50 p-4 rounded-xl text-sm border border-gray-100">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold">
+                                            {orderData.supir.nama.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-800">{orderData.supir.nama}</p>
+                                            <p className="text-xs text-gray-500">{orderData.supir.no_telepon}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center text-gray-400 text-sm italic bg-gray-50">
+                                    <User className="mx-auto mb-1 opacity-20" size={20}/>
+                                    Supir akan ditentukan oleh Admin.
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* KANAN: INVOICE & AKSI */}

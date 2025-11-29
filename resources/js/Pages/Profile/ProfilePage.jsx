@@ -475,6 +475,31 @@ const ProfilePage = () => {
                                 </div>
                             )}
 
+                            {/* Supir */}
+                            {selectedOrder.supir && (
+                                <div className="border border-gray-200 rounded-xl p-4">
+                                    <p className="text-xs text-gray-500 mb-3">Supir</p>
+                                    <div className="flex gap-4 items-center">
+                                        <div className="w-16 h-16 bg-[#003366] rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                                            {selectedOrder.supir.nama_supir?.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-800">{selectedOrder.supir.nama_supir}</p>
+                                            <p className="text-sm text-gray-600">{selectedOrder.supir.no_hp}</p>
+                                            {selectedOrder.supir.status_ketersediaan && (
+                                                <span className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${
+                                                    selectedOrder.supir.status_ketersediaan === 'Tersedia' 
+                                                        ? 'bg-green-100 text-green-700' 
+                                                        : 'bg-gray-100 text-gray-600'
+                                                }`}>
+                                                    {selectedOrder.supir.status_ketersediaan}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Deskripsi */}
                             {selectedOrder.deskripsi_barang && (
                                 <div className="bg-gray-50 p-4 rounded-xl">

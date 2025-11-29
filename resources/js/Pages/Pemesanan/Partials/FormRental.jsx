@@ -6,11 +6,9 @@ const FormRental = ({ onBack, onSuccess }) => {
     // State untuk menampung semua input form
     const [formData, setFormData] = useState({
         layanan: 'rental',
-        id_armada: '',
+        jumlah_orang: 1, // GANTI: dari id_armada jadi jumlah_orang
         tgl_mulai: '',
         lama_rental: 1,
-        opsi_supir: 'with_driver',
-        catatan: '',
         lokasi_jemput: 'Cengkareng, Jakarta Barat',
     });
 
@@ -45,17 +43,13 @@ const FormRental = ({ onBack, onSuccess }) => {
             // Siapkan data untuk dikirim ke Backend
             const data = new FormData();
             data.append('layanan', formData.layanan);
-            data.append('id_armada', formData.id_armada ?? '');
+            data.append('jumlah_orang', formData.jumlah_orang); // GANTI: Kirim jumlah_orang
             data.append('tgl_mulai', formData.tgl_mulai);
-            data.append('lama_rental', formData.lama_rental ?? '');
-            data.append('opsi_supir', formData.opsi_supir ?? '');
-            data.append('catatan', formData.catatan ?? '');
-            data.append('lokasi_jemput', formData.lokasi_jemput ?? '');
+            data.append('lama_rental', formData.lama_rental);
+            data.append('lokasi_jemput', formData.lokasi_jemput);
             
-            // Isi nilai default untuk field yang tidak dipakai di form ini (agar validasi backend aman)
+            // Isi nilai default untuk field yang tidak dipakai
             data.append('lokasi_tujuan', '-');
-            data.append('deskripsi_barang', '-');
-            data.append('est_berat_ton', 0);
 
             // Kirim ke API
             const response = await axios.post('/api/pemesanan', data, {
@@ -115,27 +109,25 @@ const FormRental = ({ onBack, onSuccess }) => {
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     
-                    {/* --- BAGIAN UTAMA: PILIH ARMADA (KEMBALI KE HARDCODE) --- */}
+                    {/* Jumlah Orang */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Pilih Armada</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Jumlah Orang</label>
                         <div className="relative">
-                            <Truck className="absolute left-3 top-3 text-gray-400" size={20} />
-                            <select
-                                name="id_armada"
-                                value={formData.id_armada}
+                            <User className="absolute left-3 top-3 text-gray-400" size={20} />
+                            <input
+                                type="number"
+                                name="jumlah_orang"
+                                min="1"
+                                max="20"
+                                value={formData.jumlah_orang}
                                 onChange={handleChange}
-                                className={inputStyle('id_armada') + ' bg-gray-50'}
-                            >
-                                <option value="">Pilih jenis mobil...</option>
-                                {/* ID ini HARUS sesuai dengan ID di database (hasil seeding) */}
-                                <option value="1">Large (4 Seat)</option>
-                                <option value="2">Extra Large (6 Seat)</option>
-                            </select>
+                                className={inputStyle('jumlah_orang')}
+                                placeholder="Masukkan jumlah penumpang"
+                            />
                         </div>
-                        {/* Menampilkan pesan error jika user lupa pilih */}
-                        {errors.id_armada && <p className="text-red-500 text-xs mt-1">{errors.id_armada[0]}</p>}
+                        {errors.jumlah_orang && <p className="text-red-500 text-xs mt-1">{errors.jumlah_orang[0]}</p>}
+                        <p className="text-xs text-gray-500 mt-1">Jumlah penumpang yang akan menggunakan kendaraan</p>
                     </div>
-                    {/* ------------------------------------------------------- */}
 
                     {/* Tanggal & Durasi */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -171,52 +163,18 @@ const FormRental = ({ onBack, onSuccess }) => {
                         </div>
                     </div>
 
-                    {/* Opsi Supir & Lokasi */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Layanan Supir</label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-3 text-gray-400" size={20} />
-                                <select
-                                    name="opsi_supir"
-                                    value={formData.opsi_supir}
-                                    onChange={handleChange}
-                                    className={inputStyle('opsi_supir') + ' bg-white'}
-                                >
-                                    <option value="with_driver">Dengan Supir</option>
-                                    <option value="lepas_kunci">Lepas Kunci</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Lokasi Jemput</label>
-                            <input
-                                type="text"
-                                name="lokasi_jemput"
-                                value={formData.lokasi_jemput}
-                                onChange={handleChange}
-                                className={inputStyle('lokasi_jemput')}
-                                placeholder="Alamat lengkap..."
-                            />
-                            {errors.lokasi_jemput && <p className="text-red-500 text-xs mt-1">{errors.lokasi_jemput[0]}</p>}
-                        </div>
-                    </div>
-
-                    {/* Catatan */}
+                    {/* Lokasi Jemput */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Catatan Tambahan</label>
-                        <div className="relative">
-                            <FileText className="absolute left-3 top-3 text-gray-400" size={20} />
-                            <textarea
-                                rows="3"
-                                name="catatan"
-                                value={formData.catatan}
-                                onChange={handleChange}
-                                className={inputStyle('catatan')}
-                                placeholder="Contoh: Jemput di lobby hotel..."
-                            ></textarea>
-                        </div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Lokasi Jemput</label>
+                        <input
+                            type="text"
+                            name="lokasi_jemput"
+                            value={formData.lokasi_jemput}
+                            onChange={handleChange}
+                            className={inputStyle('lokasi_jemput')}
+                            placeholder="Alamat lengkap..."
+                        />
+                        {errors.lokasi_jemput && <p className="text-red-500 text-xs mt-1">{errors.lokasi_jemput[0]}</p>}
                     </div>
 
                     {/* Tombol Submit */}
