@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Truck, User, Star, Calendar, CheckCircle, Phone, Zap, Shield, Clock, Users } from 'lucide-react';
 import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
 import { getPublicServices } from '../../services/serviceService';
 import { getPublicReviews } from '../../services/reviewService';
+import { Alert } from '@/Components/ReusableUI'; // <-- IMPORT ALERT COMPONENT
 
 // Data Armada ditanam langsung di Front-end
 const ARMADA_DATA = [
@@ -76,7 +77,6 @@ const ARMADA_DATA = [
 ];
 
 export default function LandingPage(props) { 
-  // props.auth biasanya dikirim otomatis oleh Laravel/Inertia middleware ke page component
   const auth = props.auth || {}; 
 
   const [services, setServices] = useState([]);
@@ -85,6 +85,10 @@ export default function LandingPage(props) {
   const [activeFeature, setActiveFeature] = useState(0);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [hoveredService, setHoveredService] = useState(null);
+
+  // ✅ STATE BARU untuk Alert OAuth
+  const [oauthAlert, setOauthAlert] = useState(null); 
+  const isInitialLoad = useRef(true); 
 
   useEffect(() => {
     async function fetchData() {
@@ -96,19 +100,9 @@ export default function LandingPage(props) {
         const reviewResponse = await getPublicReviews();
         const reviewData = reviewResponse.data.data || reviewResponse.data || [];
         
-        console.log("🎯 Review API Response:", reviewResponse);
-        console.log("📊 Review Data:", reviewData);
-        console.log("📈 Total Reviews:", Array.isArray(reviewData) ? reviewData.length : 0);
-        
-        // Backend sudah filter is_displayed, jadi langsung set
         const reviews = Array.isArray(reviewData) ? reviewData : [];
         setReviews(reviews);
         
-        if (reviews.length === 0) {
-          console.warn("⚠️ Tidak ada review yang ditampilkan. Pastikan:");
-          console.warn("1. Migration sudah dijalankan: php artisan migrate");
-          console.warn("2. Ada data ulasan dengan is_displayed = true di admin");
-        }
       } catch (error) {
         console.error("❌ Gagal mengambil data landing page:", error);
         setReviews([]);
@@ -137,12 +131,49 @@ export default function LandingPage(props) {
       return () => clearInterval(reviewTimer);
     }
   }, [reviews.length]);
+  
+  // ============================================================
+  // ✅ LOGIC BARU: Cek dan Tampilkan Notifikasi OAuth
+  // ============================================================
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      const storedAlert = localStorage.getItem('oauth_alert');
+      if (storedAlert) {
+        try {
+          const alertData = JSON.parse(storedAlert);
+          setOauthAlert(alertData);
+          
+          // Set timer untuk menghilangkan alert setelah 5 detik
+          setTimeout(() => setOauthAlert(null), 5000);
+          
+        } catch (e) {
+          console.error("Failed to parse OAuth alert:", e);
+        }
+        // Pastikan alert dihapus dari storage setelah dibaca
+        localStorage.removeItem('oauth_alert');
+      }
+      isInitialLoad.current = false;
+    }
+  }, []); 
+  // ============================================================
 
   return (
     <div className="font-sans antialiased text-gray-800 bg-white min-h-screen flex flex-col">
       
       {/* Panggil Navbar Reusable */}
       <Navbar auth={auth} />
+
+      {/* --- NOTIFIKASI OAUTH DI ATAS HERO --- */}
+      {oauthAlert && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md p-4 animate-fade-in-up">
+            <Alert 
+                type={oauthAlert.type} 
+                message={oauthAlert.message} 
+                onClose={() => setOauthAlert(null)} 
+            />
+        </div>
+      )}
+      {/* --- END NOTIFIKASI --- */}
 
       {/* --- HERO SECTION --- */}
       <section className="relative bg-gradient-to-br from-[#f0f9ff] via-white to-blue-50 pt-40 pb-40 overflow-hidden">

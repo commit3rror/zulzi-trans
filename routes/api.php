@@ -38,6 +38,8 @@ Route::get('/health', function () {
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
 /*
@@ -53,8 +55,6 @@ Route::get('/about', [AboutController::class, 'index']);
 Route::get('/reviews/target/{id_pemesanan}', [ReviewController::class, 'getReviewTarget']);
 Route::post('/reviews', [ReviewController::class, 'store']);
 
-// Route Pemesanan
-Route::post('/pemesanan', [PemesananController::class, 'store']);
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +83,21 @@ Route::middleware('auth:sanctum')->group(function () {
         // Catatan: Jika Anda juga memiliki route password atau avatar, pastikan mereka ada di sini.
         // Route::post('/change-password', [ProfileController::class, 'changePassword']); 
     });
+
+    // Profile Routes
+    Route::prefix('user/profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'show']); 
+        Route::put('/', [ProfileController::class, 'update']); 
+    });
+
+    // User Routes
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    
+    // PENTING: Pindahkan Route Pemesanan ke dalam grup ini
+    // Memastikan Pemesanan hanya bisa dibuat jika user sudah login.
+    Route::post('/pemesanan', [PemesananController::class, 'store']);
 
     // User Routes
     Route::get('/user', function (Request $request) {

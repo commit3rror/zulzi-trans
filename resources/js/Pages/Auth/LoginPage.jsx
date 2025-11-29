@@ -27,22 +27,21 @@ const LoginPage = () => {
         setErrors({});
 
         try {
-            // ⚡ Response sekarang langsung return user data
             const response = await login(formData);
             
+            // 1. Set notifikasi sukses
             setAlert({ type: 'success', message: 'Login berhasil!' });
             
-            // ⚡ Ambil role langsung dari response.user (sudah diperbaiki di AuthContext)
             const userRole = response.user?.role_pengguna;
             
-            console.log('User role setelah login:', userRole); // Untuk debugging
-            
-            // ⚡ NAVIGATE TANPA DELAY - State sudah ter-update di AuthContext
-            if (userRole === 'admin') {
-                navigate('/admin', { replace: true });
-            } else {
-                navigate('/beranda', { replace: true }); 
-            }
+            // 2. TUNDA NAVIGASI agar notifikasi terlihat
+            setTimeout(() => {
+                if (userRole === 'admin') {
+                    navigate('/admin', { replace: true });
+                } else {
+                    navigate('/beranda', { replace: true }); 
+                }
+            }, 1500);
             
         } catch (err) {
             console.error('Login error:', err);

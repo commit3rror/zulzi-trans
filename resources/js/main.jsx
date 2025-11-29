@@ -6,7 +6,7 @@ import OAuthCallback from './Pages/Auth/OAuthCallback';
 import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 
 // Import hooks
-import { useAuth } from '@/hooks/useAuth'; // 👈 PENAMBAHAN KRUSIAL UNTUK MEMPERBAIKI ERROR
+import { useAuth } from '@/hooks/useAuth';
 
 // Import AuthProvider & AdminRouteGuard
 import { AuthProvider } from '@/context/AuthContext'; 
@@ -23,6 +23,7 @@ import LoginPage from '@/Pages/Auth/LoginPage.jsx';
 import RegisterPage from '@/Pages/Auth/RegisterPage.jsx';
 import ForgotPasswordPage from '@/Pages/Auth/ForgotPasswordPage.jsx';
 import EditProfile from '@/Pages/Auth/EditProfile.jsx';
+import ResetPasswordPage from './Pages/Auth/ResetPasswordPage.jsx';
 
 // Import halaman Admin
 import AdminPanel from '@/Pages/Admin/AdminPanel.jsx';
@@ -85,7 +86,11 @@ root.render(
           <Route path="/beranda" element={<LandingPageWithAuth />} />
           <Route path="/tentang-kami" element={<AboutPage />} /> 
           <Route path="/about" element={<AboutPage />} /> 
-          <Route path="/pemesanan" element={<PemesananPage />} />
+          <Route 
+              path="/pemesanan" 
+              // Menerapkan AdminRouteGuard dengan isAdminOnly=false (hanya butuh login)
+              element={<AdminRouteGuard element={<PemesananPage />} isAdminOnly={false} />} 
+          />
           <Route path="/review/:id" element={<ReviewPage />} />
 
           {/* ===================================== */}
@@ -95,6 +100,7 @@ root.render(
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/auth/callback" element={<OAuthCallback />} />
+          <Route path="/password/reset/:token" element={<ResetPasswordPage />} /> 
 
           {/* ===================================== */}
           {/* ROUTE USER (Harus Login)             */}\
