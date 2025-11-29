@@ -6,7 +6,6 @@ use App\Models\Ulasan;
 use App\Models\User;
 use App\Models\Armada;
 use App\Models\Layanan;
-use App\Models\Pemesanan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
@@ -15,6 +14,9 @@ class UlasanSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * 
+     * Seeder ini membuat test data untuk ulasan tanpa bergantung pada database pemesanan
+     * (karena pemesanan masih dikerjakan oleh tim lain)
      */
     public function run(): void
     {
@@ -24,163 +26,146 @@ class UlasanSeeder extends Seeder
             [
                 'role_pengguna' => 'Customer',
                 'nama' => 'Andi Wijaya',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('password123'),
                 'no_telepon' => '081111111111',
                 'tgl_daftar' => Carbon::now(),
                 'email_verified_at' => Carbon::now(),
             ]
         );
+        
         $customer2 = User::firstOrCreate(
             ['email' => 'siti.nurhaliza@mail.com'],
             [
                 'role_pengguna' => 'Customer',
                 'nama' => 'Siti Nurhaliza',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('password123'),
                 'no_telepon' => '081222222222',
                 'tgl_daftar' => Carbon::now(),
                 'email_verified_at' => Carbon::now(),
             ]
         );
+        
         $customer3 = User::firstOrCreate(
             ['email' => 'dewi.lestari@mail.com'],
             [
                 'role_pengguna' => 'Customer',
                 'nama' => 'Dewi Lestari',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('password123'),
                 'no_telepon' => '081333333333',
                 'tgl_daftar' => Carbon::now(),
                 'email_verified_at' => Carbon::now(),
             ]
         );
 
-
-        // 2. PASTIKAN DATA LAYANAN ADA (PENTING UNTUK FILTER)
-        $layananRental = Layanan::firstOrCreate(['nama_layanan' => 'Rental']);
-        $layananAngkutan = Layanan::firstOrCreate(['nama_layanan' => 'Angkutan']);
-        $layananSampah = Layanan::firstOrCreate(['nama_layanan' => 'Sampah']);
-
-
-        // 3. PASTIKAN DATA ARMADA ADA (minimal satu untuk relasi)
+        // 2. PASTIKAN DATA ARMADA ADA (untuk relasi)
         $armada1 = Armada::firstOrCreate(
             ['no_plat' => 'B 1001 ZUL'],
             [
-                'jenis_kendaraan' => 'Minibus',
+                'jenis_kendaraan' => 'Isuzu Elf Long',
                 'kapasitas' => '19 Orang',
                 'harga_sewa_per_hari' => 800000.00,
-                'status_ketersediaan' => 'Tersedia',
-                'layanan' => 'Rental',
+                'gambar' => 'elf-long.jpg',
             ]
         );
 
-        // 4. BUAT DATA PEMESANAN (ORDERS) UNTUK RELASI ULASAN
-        // Order 1: Rental - Untuk Andi Wijaya (Rating 5.0, Ditampilkan & Ditanggapi)
-        $pemesanan1 = Pemesanan::firstOrCreate(
-            ['id_pengguna' => $customer1->id_pengguna, 'id_layanan' => $layananRental->id_layanan, 'tgl_pesan' => Carbon::parse('2025-10-10')],
+        $armada2 = Armada::firstOrCreate(
+            ['no_plat' => 'B 2002 ZUL'],
             [
-                'id_armada' => $armada1->id_armada,
-                'tgl_mulai' => Carbon::parse('2025-10-11'),
-                'tgl_selesai' => Carbon::parse('2025-10-12'),
-                'lokasi_jemput' => 'Jakarta',
-                'lokasi_tujuan' => 'Bandung',
-                'total_biaya' => 1600000.00,
-                'status_pemesanan' => 'Selesai',
-                'lama_rental' => 2,
+                'jenis_kendaraan' => 'Fuso Standar',
+                'kapasitas' => '4 Ton',
+                'harga_sewa_per_hari' => 1200000.00,
+                'gambar' => 'fuso standar.jpeg',
             ]
         );
 
-        // Order 2: Angkutan - Untuk Siti Nurhaliza (Rating 5.0, Angkutan)
-        $pemesanan2 = Pemesanan::firstOrCreate(
-            ['id_pengguna' => $customer2->id_pengguna, 'id_layanan' => $layananAngkutan->id_layanan, 'tgl_pesan' => Carbon::parse('2025-10-09')],
-            [
-                'id_armada' => $armada1->id_armada,
-                'tgl_mulai' => Carbon::parse('2025-10-09'),
-                'tgl_selesai' => Carbon::parse('2025-10-09'),
-                'lokasi_jemput' => 'Tangerang',
-                'lokasi_tujuan' => 'Bekasi',
-                'total_biaya' => 500000.00,
-                'status_pemesanan' => 'Selesai',
-                'lama_rental' => 1,
-            ]
-        );
-
-        // Order 3: Sampah - Untuk Dewi Lestari (Rating 5.0, Sampah)
-        $pemesanan3 = Pemesanan::firstOrCreate(
-            ['id_pengguna' => $customer3->id_pengguna, 'id_layanan' => $layananSampah->id_layanan, 'tgl_pesan' => Carbon::parse('2025-10-04')],
-            [
-                'id_armada' => $armada1->id_armada,
-                'tgl_mulai' => Carbon::parse('2025-10-05'),
-                'tgl_selesai' => Carbon::parse('2025-10-05'),
-                'lokasi_jemput' => 'Depok',
-                'lokasi_tujuan' => 'Bogor',
-                'total_biaya' => 300000.00,
-                'status_pemesanan' => 'Selesai',
-                'lama_rental' => 1,
-            ]
-        );
-
-
-        // 5. BUAT DATA ULASAN (REVIEWS) UNTUK PENGUJIAN
+        // 3. BUAT DATA ULASAN UNTUK TESTING
+        // Ulasan ini menggunakan ID yang arbitrary (tidak harus ada di tabel pemesanan)
+        // Nanti saat tim lain integrate, akan disesuaikan dengan real pemesanan IDs
+        
         $reviews = [
-            // Ulasan 1: Rental - Rating 5.0 (Ditampilkan & Ditanggapi) -> Tes Modal Detail
+            // Ulasan 1: Rating Sempurna - Ditampilkan dengan respons admin
             [
                 'id_pengguna' => $customer1->id_pengguna,
                 'id_armada' => $armada1->id_armada,
-                'id_pemesanan' => $pemesanan1->id_pemesanan,
+                'id_pemesanan' => 1, // Mock ID - akan di-update nanti
                 'rating_driver' => 5, 
                 'rating_kendaraan' => 5, 
                 'rating_pelayanan' => 5, 
-                'komentar' => 'Pelayanan sangat memuaskan! Supir ramah dan armada bersih. Sangat direkomendasikan untuk rental mobil.',
-                'tanggapan_admin' => 'Terima kasih atas ulasan positifnya, kami senang Anda puas dengan layanan Rental kami!', 
+                'komentar' => 'Pelayanan sangat memuaskan! Supir ramah, armada bersih dan terawat. Harga juga terjangkau. Sangat direkomendasikan untuk rental mobil ke seluruh keluarga!',
+                'tanggapan_admin' => 'Terima kasih Andi atas kepercayaan Anda kepada Zulzi Trans! Kami senang Anda puas dengan layanan kami. Semoga pada kesempatan berikutnya kita dapat melayani Anda lagi!', 
                 'is_displayed' => true, 
-                'tgl_ulasan' => Carbon::parse('2025-10-12'), 
+                'tgl_ulasan' => Carbon::now()->subDays(5),
             ],
-            // Ulasan 2: Angkutan - Rating 5.0 (Ditampilkan, Belum Ditanggapi) -> Tes Filter Angkutan
+            
+            // Ulasan 2: Rating Tinggi - Ditampilkan tanpa respons
             [
                 'id_pengguna' => $customer2->id_pengguna,
-                'id_armada' => $armada1->id_armada,
-                'id_pemesanan' => $pemesanan2->id_pemesanan,
-                'rating_driver' => 5, 
-                'rating_kendaraan' => 5, 
-                'rating_pelayanan' => 5, 
-                'komentar' => 'Pengalaman terbaik menggunakan jasa angkutan Zulzi Trans! Cepat dan aman.',
-                'tanggapan_admin' => null, 
-                'is_displayed' => true, 
-                'tgl_ulasan' => Carbon::parse('2025-10-10'), 
-            ],
-            // Ulasan 3: Sampah - Rating 5.0 (Ditampilkan, Belum Ditanggapi) -> Tes Filter Sampah
-            [
-                'id_pengguna' => $customer3->id_pengguna,
-                'id_armada' => $armada1->id_armada,
-                'id_pemesanan' => $pemesanan3->id_pemesanan,
+                'id_armada' => $armada2->id_armada,
+                'id_pemesanan' => 2,
                 'rating_driver' => 5, 
                 'rating_kendaraan' => 4, 
                 'rating_pelayanan' => 5, 
-                'komentar' => 'Layanan pengangkutan sampah sangat memuaskan!',
+                'komentar' => 'Pengalaman yang sangat baik menggunakan jasa angkutan Zulzi Trans! Pengemudi sangat profesional, barang sampai dengan aman dan cepat. Top banget!',
                 'tanggapan_admin' => null, 
                 'is_displayed' => true, 
-                'tgl_ulasan' => Carbon::parse('2025-10-05'), 
+                'tgl_ulasan' => Carbon::now()->subDays(10),
             ],
-             // Ulasan 4: Angkutan - Rating Rendah (Tes Fungsi Delete)
-             [
-                'id_pengguna' => $customer1->id_pengguna,
+            
+            // Ulasan 3: Rating Sedang - Belum ditampilkan
+            [
+                'id_pengguna' => $customer3->id_pengguna,
                 'id_armada' => $armada1->id_armada,
-                'id_pemesanan' => $pemesanan2->id_pemesanan, 
-                'rating_driver' => 3, 
+                'id_pemesanan' => 3,
+                'rating_driver' => 4, 
                 'rating_kendaraan' => 3, 
-                'rating_pelayanan' => 3, 
-                'komentar' => 'Pelayanan cukup buruk, ada beberapa masalah kecil di armada.',
+                'rating_pelayanan' => 4, 
+                'komentar' => 'Layanan lumayan, tapi ada beberapa hal yang perlu diperbaiki. Armada agak bising saat dikendarai.',
                 'tanggapan_admin' => null, 
                 'is_displayed' => false, 
-                'tgl_ulasan' => Carbon::parse('2025-09-28'), 
+                'tgl_ulasan' => Carbon::now()->subDays(15),
+            ],
+            
+            // Ulasan 4: Rating Rendah - Untuk testing delete
+            [
+                'id_pengguna' => $customer1->id_pengguna,
+                'id_armada' => $armada2->id_armada,
+                'id_pemesanan' => 4,
+                'rating_driver' => 3, 
+                'rating_kendaraan' => 2, 
+                'rating_pelayanan' => 3, 
+                'komentar' => 'Pelayanan kurang memuaskan. Ada beberapa masalah dengan kendaraan dan pengemudi tidak responsif.',
+                'tanggapan_admin' => null, 
+                'is_displayed' => false, 
+                'tgl_ulasan' => Carbon::now()->subDays(20),
+            ],
+
+            // Ulasan 5: Rating Sempurna - Ditampilkan dengan respons beda
+            [
+                'id_pengguna' => $customer2->id_pengguna,
+                'id_armada' => $armada1->id_armada,
+                'id_pemesanan' => 5,
+                'rating_driver' => 5, 
+                'rating_kendaraan' => 5, 
+                'rating_pelayanan' => 5, 
+                'komentar' => 'Luar biasa! Pelayanan dari awal booking hingga selesai perjalanan sangat memuaskan. Akan saya rekomendasikan ke teman-teman saya!',
+                'tanggapan_admin' => 'Terima kasih telah memilih Zulzi Trans! Kami sangat menghargai kepuasan pelanggan seperti Anda. Tunggu kedatangan Anda berikutnya!', 
+                'is_displayed' => true, 
+                'tgl_ulasan' => Carbon::now()->subDays(3),
             ],
         ];
 
         foreach ($reviews as $review) {
-            // Menggunakan updateOrCreate untuk memastikan ulasan unik per pemesanan
             Ulasan::updateOrCreate(
-                ['id_pengguna' => $review['id_pengguna'], 'id_pemesanan' => $review['id_pemesanan']],
+                [
+                    'id_pengguna' => $review['id_pengguna'], 
+                    'id_pemesanan' => $review['id_pemesanan']
+                ],
                 $review
             );
         }
+
+        echo "✅ UlasanSeeder: " . count($reviews) . " ulasan test berhasil dibuat!\n";
+        echo "📝 Catatan: Data ini menggunakan mock id_pemesanan.\n";
+        echo "   Saat tim lain selesai database pemesanan, update id_pemesanan dengan real IDs.\n";
     }
 }

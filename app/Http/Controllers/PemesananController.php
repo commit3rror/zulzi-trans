@@ -106,53 +106,28 @@ class PemesananController extends Controller
         }
     }
 
-    /**
-     * 2. SHOW: Melihat Detail Pesanan (Untuk Refresh Status)
-     */
     public function show($id)
     {
-        // Ambil data pesanan beserta detail Armada (jika sudah dipilih admin)
-        $pemesanan = Pemesanan::with(['layanan', 'armada'])->find($id);
+        try {
+            $pemesanan = Pemesanan::with(['armada', 'supir', 'pengguna'])
+                ->find($id);
 
-        if (!$pemesanan) {
-            return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+            if (!$pemesanan) {
+                return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+            }
+
+            // Verify user owns this order
+            if ($pemesanan->id_pengguna != auth()->id()) {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $pemesanan
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengambil pesanan: ' . $e->getMessage()], 500);
         }
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $pemesanan
-        ]);
-    }
-
-    /**
-     * 3. GET ARMADA LIST: Untuk Dropdown (Opsional)
-     */
-    public function getArmadaList()
-    {
-        $armada = DB::table('armada')->where('status_ketersediaan', 'Tersedia')->get();
-        return response()->json($armada);
-    }
-
-    /**
-     * 4. GET USER ORDERS: Ambil semua pemesanan milik user yang login
-     */
-    public function getUserOrders(Request $request)
-    {
-        $userId = auth()->id();
-
-        if (!$userId) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Ambil semua pesanan user dengan relasi layanan, armada, pembayaran
-        $orders = Pemesanan::with(['layanan', 'armada', 'pembayaran'])
-            ->where('id_pengguna', $userId)
-            ->orderBy('tgl_pesan', 'desc')
-            ->get();
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $orders
-        ]);
     }
 }

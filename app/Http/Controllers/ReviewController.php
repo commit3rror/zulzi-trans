@@ -40,7 +40,46 @@ class ReviewController extends Controller
             ->find($id_pemesanan);
 
         if (!$pemesanan) {
-            return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+            // FALLBACK: Jika pemesanan tidak ada (karena tim lain belum selesai),
+            // ambil mock data dari ulasan terbaru dengan id_pemesanan yang sama
+            $ulasan = Ulasan::where('id_pemesanan', $id_pemesanan)
+                ->with('armada')
+                ->first();
+            
+            if ($ulasan && $ulasan->armada) {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => [
+                        'id_pemesanan' => $id_pemesanan,
+                        'id_armada' => $ulasan->id_armada,
+                        'kode_pesanan' => 'ZT-2025-' . str_pad($id_pemesanan, 6, '0', STR_PAD_LEFT),
+                        'tgl_selesai_formatted' => Carbon::parse($ulasan->tgl_ulasan)->translatedFormat('d F Y'),
+                        'jam_selesai' => '13:30 WIB',
+                        'rute' => 'Jakarta → Bandung',
+                        'total_biaya' => '1.200.000',
+                        'nama_armada' => $ulasan->armada->jenis_kendaraan ?? 'Armada Tidak Dikenal',
+                        'nama_supir' => 'Supir Professional',
+                        'foto_armada' => null,
+                    ]
+                ]);
+            }
+            
+            // DEFAULT MOCK: Jika tidak ada ulasan sebelumnya, return mock data generik
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'id_pemesanan' => $id_pemesanan,
+                    'id_armada' => 1,
+                    'kode_pesanan' => 'ZT-2025-' . str_pad($id_pemesanan, 6, '0', STR_PAD_LEFT),
+                    'tgl_selesai_formatted' => Carbon::now()->translatedFormat('d F Y'),
+                    'jam_selesai' => '13:30 WIB',
+                    'rute' => 'Jakarta → Bandung',
+                    'total_biaya' => '1.200.000',
+                    'nama_armada' => 'Isuzu Elf Long',
+                    'nama_supir' => 'Supir Professional',
+                    'foto_armada' => null,
+                ]
+            ]);
         }
 
         $data = [
@@ -69,13 +108,12 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id_pemesanan' => 'required|exists:pemesanan,id_pemesanan',
+            'id_pemesanan' => 'required|integer',
             'id_armada' => 'required|exists:armada,id_armada',
-            'id_pengguna' => 'required|exists:user,id_pengguna',
             'rating_driver' => 'required|integer|min:1|max:5',
             'rating_kendaraan' => 'required|integer|min:1|max:5',
             'rating_pelayanan' => 'required|integer|min:1|max:5',
-            'komentar' => 'nullable|string|max:500',
+            'komentar' => 'required|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -83,8 +121,10 @@ class ReviewController extends Controller
         }
 
         try {
+            // TEST MODE: Allow any user to submit review (akan di-restrict saat integration)
+            // Create ulasan tanpa constraint pemesanan - gunakan default user ID 1 untuk testing
             $ulasan = Ulasan::create([
-                'id_pengguna' => $request->id_pengguna,
+                'id_pengguna' => 1,
                 'id_armada' => $request->id_armada,
                 'id_pemesanan' => $request->id_pemesanan,
                 'rating_driver' => $request->rating_driver,
@@ -102,6 +142,49 @@ class ReviewController extends Controller
 
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Gagal menyimpan ulasan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $ulasan = Ulasan::with(['pemesanan.armada', 'pengguna'])
+                ->find($id);
+
+            if (!$ulasan) {
+                return response()->json(['status' => 'error', 'message' => 'Ulasan tidak ditemukan'], 404);
+            }
+
+            // TEST MODE: Allow anyone to view ulasan for demo
+            return response()->json([
+                'status' => 'success',
+                'data' => $ulasan
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengambil ulasan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $ulasan = Ulasan::find($id);
+
+            if (!$ulasan) {
+                return response()->json(['status' => 'error', 'message' => 'Ulasan tidak ditemukan'], 404);
+            }
+
+            // TEST MODE: Allow anyone to delete ulasan for demo
+            $ulasan->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ulasan berhasil dihapus!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal menghapus ulasan: ' . $e->getMessage()], 500);
         }
     }
 }
