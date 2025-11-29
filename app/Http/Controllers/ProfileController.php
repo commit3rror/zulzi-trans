@@ -2,61 +2,68 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\UserResource;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
-    /**
-     * Get user profile
-     */
-    public function show(Request $request): JsonResponse
+    public function show(Request $request)
     {
+        $user = $request->user();
+        $user->foto_url = $user->foto_profil ? asset('storage/' . $user->foto_profil) : null;
+        
         return response()->json([
-            'success' => true,
-            'data' => new UserResource($request->user()),
+            'status' => 'success',
+            'data' => $user
         ]);
     }
 
-    /**
-     * Update user profile
-     */
-    public function update(Request $request): JsonResponse
+    public function update(Request $request)
     {
+        $user = $request->user();
+
         $validator = Validator::make($request->all(), [
-            'nama' => ['required', 'string', 'max:100'],
-            'no_telepon' => ['required', 'string', 'max:15', 'regex:/^[0-9]+$/'],
-            'alamat' => ['nullable', 'string', 'max:255'],
-        ], [
-            'nama.required' => 'Nama lengkap wajib diisi',
-            'nama.max' => 'Nama maksimal 100 karakter',
-            'no_telepon.required' => 'No HP wajib diisi',
-            'no_telepon.regex' => 'No HP hanya boleh berisi angka',
-            'no_telepon.max' => 'No HP maksimal 15 digit',
+            'nama' => 'required|string|max:100',
+            'email' => 'required|email|max:255|unique:user,email,' . $user->id_pengguna . ',id_pengguna',
+            'no_telepon' => 'required|string|max:15',
+            // 'alamat' => 'nullable|string', <-- DIHAPUS
+            'foto_profil' => 'nullable|image|max:2048',
+            'password' => 'nullable|min:8|confirmed',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $validator->errors(),
-            ], 422);
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $user = $request->user();
-        
-        $user->update([
-            'nama' => $request->nama,
-            'no_telepon' => $request->no_telepon,
-            'alamat' => $request->alamat,
-        ]);
+        // Update Data Dasar
+        $user->nama = $request->nama;
+        $user->email = $request->email;
+        $user->no_telepon = $request->no_telepon;
+        // $user->alamat = $request->alamat; <-- DIHAPUS
+
+        // Update Password
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        // Update Foto
+        if ($request->hasFile('foto_profil')) {
+            if ($user->foto_profil) {
+                Storage::delete('public/' . $user->foto_profil);
+            }
+            $path = $request->file('foto_profil')->store('public/uploads/profil');
+            $user->foto_profil = $path;
+        }
+
+        $user->save();
+
+        $user->foto_url = $user->foto_profil ? asset('storage/' . $user->foto_profil) : null;
 
         return response()->json([
-            'success' => true,
-            'message' => 'Profile berhasil diperbarui',
-            'data' => new UserResource($user),
+            'message' => 'Profil berhasil diperbarui!',
+            'data' => $user
         ]);
     }
 }

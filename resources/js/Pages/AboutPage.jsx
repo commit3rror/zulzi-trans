@@ -21,10 +21,10 @@ export default function AboutPage(props) {
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
         
         <div className="container mx-auto px-4 relative z-10 text-center text-white">
-            <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight animate-fade-in-up">
+            <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight animate-fade-in-up text-[#e6f7ff]">
                 Tentang Zulzi Trans
             </h1>
-            <p className="text-blue-100 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed animate-fade-in-up delay-100">
+            <p className="text-[#cfe9ff] text-lg md:text-xl max-w-3xl mx-auto leading-relaxed animate-fade-in-up delay-100">
                 Kami bukan sekadar penyedia transportasi, kami adalah mitra perjalanan Anda menuju kesuksesan dan tujuan impian.
             </p>
         </div>

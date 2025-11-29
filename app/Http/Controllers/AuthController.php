@@ -11,6 +11,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -46,6 +48,7 @@ class AuthController extends Controller
                 'data' => [
                     'user' => new UserResource($user),
                     'token' => $token,
+                    'role' => $user->role_pengguna,
                 ],
             ], 201);
         } catch (\Exception $e) {
@@ -79,6 +82,7 @@ class AuthController extends Controller
             'data' => [
                 'user' => new UserResource($user),
                 'token' => $token,
+                'role' => $user->role_pengguna,
             ],
         ], 200);
     }
@@ -165,4 +169,74 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    // ==========================================
+    //  GOOGE OAUTH LOGIC
+    // ==========================================
+
+    /**
+     * 1. Arahkan User ke Halaman Login Google
+     */
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    /**
+     * 2. Terima Data dari Google
+     */
+    public function handleGoogleCallback()
+{
+    try {
+        // Ambil data user dari Google
+        $googleUser = Socialite::driver('google')->stateless()->user(); 
+
+        // Cari user berdasarkan google_id ATAU email
+        $user = User::where('google_id', $googleUser->getId())
+                    ->orWhere('email', $googleUser->getEmail())
+                    ->first();
+
+        if (!$user) {
+            // Jika user belum ada, buat baru
+            $user = User::create([
+                'role_pengguna' => 'customer',
+                'nama' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
+                'google_id' => $googleUser->getId(),
+                'avatar' => $googleUser->getAvatar(),
+                'password' => Hash::make(Str::random(16)),
+                'no_telepon' => null,
+                'tgl_daftar' => now(),
+            ]);
+        } else {
+            // Update google_id jika belum ada
+            if (!$user->google_id) {
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleUser->getAvatar()
+                ]);
+            }
+        }
+
+        // ============================================================
+        // ✅ PERBAIKAN: Generate Token untuk Frontend (Sanctum)
+        // ============================================================
+        
+        // 1. Buat token Sanctum (sama seperti login manual)
+        $token = $user->createToken('auth_token')->plainTextToken;
+        
+        // 2. Login session (opsional, untuk web guard)
+        Auth::login($user);
+        
+        // 3. Redirect ke halaman callback khusus dengan token di URL
+        return redirect('/auth/callback?token=' . $token);
+        
+        // ============================================================
+
+    } catch (\Exception $e) {
+        \Log::error('Google OAuth Error: ' . $e->getMessage());
+        
+        return redirect('/login?error=' . urlencode('Gagal login dengan Google'));
+    }
+}
 }
