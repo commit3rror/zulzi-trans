@@ -1,9 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-// Controller Import
-use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\ArmadaController;
 use App\Http\Controllers\Admin\LayananController;
@@ -12,17 +9,18 @@ use App\Http\Controllers\Admin\UlasanController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\Admin\PembayaranController;
 use App\Http\Controllers\Admin\PemesananController;
+use App\Http\Controllers\Admin\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Web Routes - Google OAuth Routes
 |--------------------------------------------------------------------------
 */
 
-// 1. REDIRECT ROOT KE BERANDA
-Route::get('/', function () {
-    return redirect('/beranda');
-});
+// ⚡ PENTING: Route ini harus di ATAS catch-all route
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
 
 // =====================================================
 // API ROUTES
@@ -79,8 +77,16 @@ Route::get('/admin/{any?}', function () {
     return view('admin');
 })->where('any', '.*')->name('admin.panel');
 
-
 // GROUP B: PUBLIC LANDING (Load view 'app' -> resources/js/main.jsx)
 Route::get('/{any?}', function () {
     return view('app');
 })->where('any', '^(?!api).*$');
+
+/*
+|--------------------------------------------------------------------------
+| Catch-all Route untuk React Router
+|--------------------------------------------------------------------------
+*/
+Route::get('/{any}', function () {
+    return view('app');
+})->where('any', '.*');

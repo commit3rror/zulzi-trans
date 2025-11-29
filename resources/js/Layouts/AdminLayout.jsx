@@ -6,6 +6,14 @@ import Sidebar from '@/Components/Sidebar.jsx';
  * Membungkus semua halaman dengan Sidebar dan struktur header.
  */
 const AdminLayout = ({ activePage, onNavigate, meta, headerAction, children }) => {
+    // Format tanggal otomatis
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
     return (
         <div className="flex min-h-screen bg-slate-50">
             <Sidebar activePage={activePage} onNavigate={onNavigate} />
@@ -15,7 +23,7 @@ const AdminLayout = ({ activePage, onNavigate, meta, headerAction, children }) =
                 {/* Header Konten */}
                 <header className="mb-8">
                     <h1 className="text-2xl font-bold text-slate-800">Hey Admin,</h1>
-                    <p className="text-slate-500 text-sm mt-1">Rabu, 8 Oktober, 2025</p>
+                    <p className="text-slate-500 text-sm mt-1">{formattedDate}</p>
                 </header>
 
                 {/* Wrapper Konten Halaman */}

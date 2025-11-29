@@ -50,6 +50,7 @@ class Pemesanan extends Model
         'lokasi_jemput',
         'lokasi_tujuan',
         'total_biaya',
+        'harga_lama',
         'status_pemesanan',
         'id_supir',
         'deskripsi_barang',
@@ -84,7 +85,7 @@ class Pemesanan extends Model
     public function pengguna()
     {
         return $this->belongsTo(User::class, 'id_pengguna', 'id_pengguna');
-      
+
     }
 
     /**

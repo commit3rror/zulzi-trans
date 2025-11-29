@@ -75,10 +75,10 @@ const PemesananPage = ({ setHeaderAction }) => {
     // Membuka Modal Edit/Verifikasi
     const handleEditClick = (item) => {
         // Simpan data item yang akan diedit, termasuk harga lama
-        setEditItem({
-            ...item,
-            harga_lama: item.total_biaya // simpan harga lama khusus item ini
-        });
+        setEditItem(item);
+        //     ...item,
+        //     harga_lama: item.total_biaya // simpan harga lama khusus item ini
+        // });
 
         setFormData({
             id_supir: item.id_supir || '',
@@ -101,18 +101,7 @@ const PemesananPage = ({ setHeaderAction }) => {
 
         api.put(`/api/admin/pemesanan/${editItem.id_pemesanan}`, payload)
             .then(() => {
-                setPemesanan(prev =>
-                    prev.map(p =>
-                        p.id_pemesanan === editItem.id_pemesanan
-                            ? {
-                                ...p,
-                                total_biaya: payload.total_biaya,  // harga baru
-                                harga_lama: editItem.total_biaya   // harga lama
-                            }
-                            : p
-                    )
-                );
-
+                fetchPemesanan(); // Mengambil ulang data dari database
                 setEditItem(null); // tutup modal
             })
             .catch(err => {
@@ -274,31 +263,38 @@ const PemesananPage = ({ setHeaderAction }) => {
             </div>
 
             {/* --- MODAL 1: KONFIRMASI / EDIT PESANAN --- */}
+            {/* --- MODAL 1: KONFIRMASI / EDIT PESANAN --- */}
             <Modal isOpen={!!editItem} onClose={() => setEditItem(null)} title="Konfirmasi Pesanan">
                 {editItem && (
                     <div className="text-slate-700">
-                        {/* Header Info Pesanan */}
-                            <div className="space-y-3 mb-6 mt-2">
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-400">Pesanan:</span>
-                                    <span className="font-medium text-slate-700">{editItem.kode_pesanan}</span>
+
+                        {/* BAGIAN 1: INFO PESANAN (READ ONLY) */}
+                        {/* Tambahkan p-6 disini agar ada jarak dari tepi modal */}
+                        <div className="p-6 border-b border-slate-100">
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-start text-sm">
+                                    <span className="text-slate-400 shrink-0">Pesanan:</span>
+                                    <span className="font-semibold text-slate-700 text-right">{editItem.kode_pesanan}</span>
+                                </div>
+                                <div className="flex justify-between items-start text-sm">
+                                    <span className="text-slate-400 shrink-0">Pelanggan:</span>
+                                    <span className="font-semibold text-slate-700 text-right">{editItem.nama_pelanggan}</span>
+                                </div>
+                                <div className="flex justify-between items-start text-sm">
+                                    <span className="text-slate-400 shrink-0">Tujuan:</span>
+                                    {/* text-right & max-w-[60%] agar jika alamat panjang tetap rapi di kanan */}
+                                    <span className="font-semibold text-slate-700 text-right max-w-[60%]">{editItem.lokasi_tujuan}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-400">Pelanggan:</span>
-                                    <span className="font-medium text-slate-700">{editItem.nama_pelanggan}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-400">Tujuan:</span>
-                                    <span className="font-medium text-slate-700">{editItem.lokasi_tujuan}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-400">Tanggal:</span>
-                                    <span className="font-medium text-slate-700">{formatDate(editItem.tgl_mulai)}</span>
+                                    <span className="text-slate-400 shrink-0">Tanggal:</span>
+                                    <span className="font-semibold text-slate-700 text-right">{formatDate(editItem.tgl_mulai)}</span>
                                 </div>
                             </div>
+                        </div>
 
-                        {/* Form Body */}
-                        <div className="space-y-4 px-2 pb-2">
+                        {/* BAGIAN 2: FORM INPUT */}
+                        {/* Gunakan p-6 juga disini agar sejajar dengan atas */}
+                        <div className="p-6 space-y-4">
                             <FormSelect
                                 label="Sopir"
                                 name="id_supir"
@@ -328,32 +324,33 @@ const PemesananPage = ({ setHeaderAction }) => {
                             </FormSelect>
 
                             {/* Harga Info & Edit */}
-                            <div className="flex justify-between items-center py-2 border-t border-dashed border-gray-200 mt-2">
-                                <span className="text-sm text-slate-500">Harga Awal:</span>
-                                <span className="text-sm font-medium text-slate-800">{formatCurrency(editItem.total_biaya)}</span>
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-slate-500">Harga Awal:</span>
+                                    <span className="text-sm font-medium text-slate-800">{formatCurrency(editItem.total_biaya)}</span>
+                                </div>
+                                <FormInput
+                                    label="Harga Setelah Negosiasi"
+                                    name="total_biaya"
+                                    type="number"
+                                    value={formData.total_biaya}
+                                    onChange={(e) => setFormData({...formData, total_biaya: e.target.value})}
+                                    placeholder="Masukkan harga deal"
+                                />
                             </div>
-
-                            <FormInput
-                                label="Harga Setelah Negosiasi"
-                                name="total_biaya"
-                                type="number"
-                                value={formData.total_biaya}
-                                onChange={(e) => setFormData({...formData, total_biaya: e.target.value})}
-                                placeholder="Masukkan harga deal"
-                            />
 
                             <FormTextarea
                                 label="Catatan (Opsional)"
                                 name="catatan"
                                 value={formData.catatan}
                                 onChange={(e) => setFormData({...formData, catatan: e.target.value})}
-                                placeholder="Hasil musyawarah dengan klien..."
+                                placeholder="Hasil Negosiasi dengan klien..."
                                 rows={3}
                             />
                         </div>
 
                         {/* Footer Action */}
-                        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                        <div className="flex justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl">
                             <button
                                 type="button"
                                 onClick={() => setEditItem(null)}

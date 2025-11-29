@@ -40,7 +40,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
         return instance;
     }, []);
 
-    const fetchPayments = () => {
+    const fetchPayments = async () => {
         setIsLoading(true);
         api.get(`/api/admin/pembayaran?search=${search}`)
             .then(res => {
@@ -287,8 +287,6 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                 </button>
                             </div>
                         </Modal>
-
-
         </>
     );
 };

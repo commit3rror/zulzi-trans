@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('no_telepon', 15);
             $table->date('tgl_daftar');
+            $table->string('google_id')->nullable();
             $table->timestamp('email_verified_at')->nullable(); // Disarankan untuk Laravel Auth
             $table->rememberToken(); // Disarankan untuk Laravel Auth
         });

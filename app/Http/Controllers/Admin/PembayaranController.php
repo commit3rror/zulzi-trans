@@ -38,6 +38,9 @@ class PembayaranController extends Controller
               ->orWhere('user.nama', 'like', "%{$search}%")
               ->orWhere('pembayaran.metode_bayar', 'like', "%{$search}%")
               ->orWhere('pembayaran.jenis_pembayaran', 'like', "%{$search}%");
+              // Search  bulan
+            $q->orWhereRaw("LOWER(MONTHNAME(pembayaran.tgl_bayar)) LIKE ?", ["%" . strtolower($search) . "%"]);
+
         });
     }
 
@@ -158,36 +161,6 @@ class PembayaranController extends Controller
 
         return response()->json(['message' => 'Pembayaran berhasil dihapus']);
     }
-
-    /**
-     * Mendapatkan statistik pembayaran
-     */
-    // public function statistics()
-    // {
-    //     $stats = [
-    //         'total_pembayaran' => DB::table('pembayaran')->count(),
-    //         'total_dp' => DB::table('pembayaran')
-    //             ->where('jenis_pembayaran', 'DP')
-    //             ->count(),
-    //         'total_lunas' => DB::table('pembayaran')
-    //             ->where('jenis_pembayaran', 'Lunas')
-    //             ->count(),
-    //         'menunggu_verifikasi' => DB::table('pembayaran')
-    //             ->whereNull('id_admin')
-    //             ->count(),
-    //         'terverifikasi' => DB::table('pembayaran')
-    //             ->whereNotNull('id_admin')
-    //             ->count(),
-    //         'total_nilai_dp' => DB::table('pembayaran')
-    //             ->where('jenis_pembayaran', 'DP')
-    //             ->sum('jumlah_bayar'),
-    //         'total_nilai_lunas' => DB::table('pembayaran')
-    //             ->where('jenis_pembayaran', 'Lunas')
-    //             ->sum('jumlah_bayar')
-    //     ];
-
-    //     return response()->json($stats);
-    // }
 
     /**
      * Helper: Dapatkan rekening tujuan berdasarkan metode bayar

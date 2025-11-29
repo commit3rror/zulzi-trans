@@ -39,6 +39,7 @@ class PemesananController extends Controller
                 'pemesanan.tgl_mulai',
                 'pemesanan.tgl_selesai',
                 'pemesanan.total_biaya',
+                'pemesanan.harga_lama',
                 'pemesanan.status_pemesanan',
                 'pemesanan.jumlah_orang',
                 'pemesanan.est_berat_ton',
@@ -142,36 +143,42 @@ class PemesananController extends Controller
      * Mengupdate pemesanan
      */
     public function update(Request $request, $id)
-{
-    $validated = $request->validate([
-        'id_armada' => 'nullable|exists:armada,id_armada',
-        'id_supir' => 'nullable|exists:supir,id_supir',
-        'tgl_mulai' => 'sometimes|date',
-        'tgl_selesai' => 'sometimes|date|after_or_equal:tgl_mulai',
-        'lokasi_jemput' => 'sometimes|string|max:255',
-        'lokasi_tujuan' => 'sometimes|string|max:255',
-        'total_biaya' => 'sometimes|numeric|min:0',
-        'status_pemesanan' => 'sometimes|string|max:20',
-        'deskripsi_barang' => 'nullable|string',
-        'est_berat_ton' => 'nullable|numeric',
-        'foto_barang' => 'nullable|string',
-        'jumlah_orang' => 'nullable|integer',
-        'lama_rental' => 'nullable|integer',
-    ]);
+    {
+        $validated = $request->validate([
+            'id_armada' => 'nullable|exists:armada,id_armada',
+            'id_supir' => 'nullable|exists:supir,id_supir',
+            'tgl_mulai' => 'sometimes|date',
+            'tgl_selesai' => 'sometimes|date|after_or_equal:tgl_mulai',
+            'lokasi_jemput' => 'sometimes|string|max:255',
+            'lokasi_tujuan' => 'sometimes|string|max:255',
+            'total_biaya' => 'sometimes|numeric|min:0',
+            'status_pemesanan' => 'sometimes|string|max:20',
+            'deskripsi_barang' => 'nullable|string',
+            'est_berat_ton' => 'nullable|numeric',
+            'foto_barang' => 'nullable|string',
+            'jumlah_orang' => 'nullable|integer',
+            'lama_rental' => 'nullable|integer',
+        ]);
 
-    $pemesanan = Pemesanan::findOrFail($id); // <-- ambil model dulu
-    if (!$pemesanan) {
-        return response()->json(['message' => 'Pemesanan tidak ditemukan'], 404);
+        $pemesanan = Pemesanan::findOrFail($id); // <-- ambil model dulu
+        if (!$pemesanan) {
+            return response()->json(['message' => 'Pemesanan tidak ditemukan'], 404);
+        }
+
+        // Simpan harga lama
+        if (isset($validated['total_biaya']) &&
+            $validated['total_biaya'] != $pemesanan->total_biaya) {
+                $pemesanan->harga_lama = $pemesanan->total_biaya;
+            }
+
+        $pemesanan->fill($validated);
+        $pemesanan->save();
+
+        return response()->json([
+            'message' => 'Pemesanan berhasil diupdate',
+            'data' => $pemesanan
+        ]);
     }
-
-    $pemesanan->fill($validated);
-    $pemesanan->save();
-
-    return response()->json([
-        'message' => 'Pemesanan berhasil diupdate',
-        'data' => $pemesanan
-    ]);
-}
 
     /**
      * Verifikasi pemesanan (ubah status)

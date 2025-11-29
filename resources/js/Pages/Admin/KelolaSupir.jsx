@@ -1,20 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';  
 
 import { 
     ActionButton,
     SearchInput,
     Modal,
-    FormInput, // Kita akan menggunakan FormInput untuk Modal
-} from '@/Components/ReusableUI'; // Sesuaikan path alias jika berbeda
+    FormInput,
+} from '@/Components/ReusableUI';
 
-import { Plus, Search, Edit2, Trash2, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
-// =============================================================================
-// KOMPONEN MODAL UNTUK TAMBAH/EDIT SUPIR
-// =============================================================================
+// Modal Tambah/Edit Supir
 const SupirModal = ({ isOpen, onClose, onSave, supirData, setSupirData, errors }) => {
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setSupirData(prev => ({ ...prev, [name]: value }));
@@ -27,11 +24,10 @@ const SupirModal = ({ isOpen, onClose, onSave, supirData, setSupirData, errors }
         <Modal isOpen={isOpen} onClose={onClose} title={modalTitle}>
             <form onSubmit={onSave}>
                 <div className="p-6 grid grid-cols-1 gap-4">
-                    
                     <FormInput 
                         label="Nama Lengkap"
                         name="nama_lengkap"
-                        value={supirData.nama_lengkap}
+                        value={supirData.nama_lengkap || ''}
                         onChange={handleChange}
                         placeholder="Masukkan nama lengkap"
                         error={errors.nama_lengkap ? errors.nama_lengkap[0] : null}
@@ -40,7 +36,7 @@ const SupirModal = ({ isOpen, onClose, onSave, supirData, setSupirData, errors }
                     <FormInput 
                         label="Nomor SIM"
                         name="no_sim"
-                        value={supirData.no_sim}
+                        value={supirData.no_sim || ''}
                         onChange={handleChange}
                         placeholder="Masukkan nomor SIM"
                         error={errors.no_sim ? errors.no_sim[0] : null}
@@ -49,7 +45,7 @@ const SupirModal = ({ isOpen, onClose, onSave, supirData, setSupirData, errors }
                     <FormInput 
                         label="Nomor Telepon"
                         name="no_telepon"
-                        value={supirData.no_telepon}
+                        value={supirData.no_telepon || ''}
                         onChange={handleChange}
                         placeholder="08XXXXXXXXXX"
                         error={errors.no_telepon ? errors.no_telepon[0] : null}
@@ -59,7 +55,7 @@ const SupirModal = ({ isOpen, onClose, onSave, supirData, setSupirData, errors }
                         label="Pengalaman (Tahun)"
                         name="pengalaman_tahun"
                         type="number"
-                        value={supirData.pengalaman_tahun}
+                        value={supirData.pengalaman_tahun || ''}
                         onChange={handleChange}
                         placeholder="Masukkan tahun pengalaman"
                         error={errors.pengalaman_tahun ? errors.pengalaman_tahun[0] : null}
@@ -67,7 +63,6 @@ const SupirModal = ({ isOpen, onClose, onSave, supirData, setSupirData, errors }
                     />
                 </div>
 
-                {/* Footer Modal yang sesuai dengan Modal reusable */}
                 <div className="flex justify-end gap-3 p-5 bg-slate-50 border-t border-slate-100 rounded-b-xl">
                     <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg">
                         Batal
@@ -81,10 +76,7 @@ const SupirModal = ({ isOpen, onClose, onSave, supirData, setSupirData, errors }
     );
 };
 
-
-// =============================================================================
-// KOMPONEN UTAMA KELOLA SUPIR
-// =============================================================================
+// Komponen Utama
 const KelolaSupir = ({ setHeaderAction }) => {
     const [supirList, setSupirList] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -94,41 +86,42 @@ const KelolaSupir = ({ setHeaderAction }) => {
     const [modalType, setModalType] = useState('add');
     const [currentSupir, setCurrentSupir] = useState({});
     const [formErrors, setFormErrors] = useState({});
-    
-    // State untuk konfirmasi hapus
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [supirToDelete, setSupirToDelete] = useState(null);
 
-    // Fungsi untuk mengambil data supir
+    // Fetch data supir dengan Authorization header
     const fetchSupir = async () => {
         setLoading(true);
+        setError(null);
+        
         try {
-            // UBAH URL INI ke endpoint API yang benar
+            const token = localStorage.getItem('auth_token');
             const response = await axios.get('/api/admin/supir', {
-                params: { search: searchQuery }
+                params: { search: searchQuery },
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
-            // Pastikan respons adalah array sebelum menyimpannya
+            // Validasi response
             if (Array.isArray(response.data)) {
                 setSupirList(response.data);
+            } else if (response.data.data && Array.isArray(response.data.data)) {
+                setSupirList(response.data.data);
             } else {
-                // Jika data bukan array (misal: objek kosong atau error), set array kosong
                 setSupirList([]);
                 console.error("API returned non-array data:", response.data);
             }
-            
-            setError(null);
         } catch (err) {
-            setError("Gagal mengambil data supir. Cek koneksi API.");
+            setError("Gagal mengambil data supir. Silakan coba lagi.");
+            setSupirList([]);
             console.error("API Fetch Error:", err.response ? err.response.data : err.message);
         } finally {
             setLoading(false);
         }
     };
 
-    // Efek untuk memuat data pertama kali dan menangani pencarian
     useEffect(() => {
-        // Debounce search input to avoid spamming the API
         const delaySearch = setTimeout(() => {
             fetchSupir();
         }, 300);
@@ -136,12 +129,11 @@ const KelolaSupir = ({ setHeaderAction }) => {
         return () => clearTimeout(delaySearch);
     }, [searchQuery]);
 
-    // Handler untuk membuka modal
+    // Handler Modal
     const handleOpenModal = (type, supir = null) => {
         setModalType(type);
-        // Pastikan pengalaman_tahun adalah integer untuk input number
         const defaultData = type === 'add' 
-            ? { pengalaman_tahun: '' } 
+            ? { nama_lengkap: '', no_sim: '', no_telepon: '', pengalaman_tahun: '' } 
             : { ...supir, pengalaman_tahun: parseInt(supir.pengalaman_tahun) || '' };
         
         setCurrentSupir(defaultData);
@@ -149,41 +141,35 @@ const KelolaSupir = ({ setHeaderAction }) => {
         setFormErrors({});
     };
 
-    // Handler untuk menutup modal
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setCurrentSupir({});
         setFormErrors({});
     };
 
-    // Handler untuk submit form (tambah/edit)
+    // Submit Form dengan Authorization header
     const handleFormSubmit = async (e) => {
         e.preventDefault();
         setFormErrors({});
         
-        const url = modalType === 'add' 
-            ? '/api/admin/supir' 
-            : `/api/admin/supir/${currentSupir.id_supir}`;
+        const token = localStorage.getItem('auth_token');
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
         
-        // Laravel API Resource menggunakan PUT untuk update, tapi React sering menggunakan 'put'
-        let method = modalType === 'add' ? 'post' : 'post';
-
-        let payload = { ...currentSupir };
-
-        if (modalType === 'edit') {
-            payload = { 
-                ...currentSupir, 
-                _method: 'PUT' 
-            };
-        }
-
         try {
-            await axios[method](url, currentSupir);
+            if (modalType === 'add') {
+                await axios.post('/api/admin/supir', currentSupir, { headers });
+            } else {
+                await axios.put(`/api/admin/supir/${currentSupir.id_supir}`, currentSupir, { headers });
+            }
+            
             fetchSupir();
             handleCloseModal();
         } catch (err) {
             if (err.response && err.response.status === 422) {
-                setFormErrors(err.response.data.errors);
+                setFormErrors(err.response.data.errors || {});
             } else {
                 setError("Gagal menyimpan data.");
                 console.error(err);
@@ -191,32 +177,34 @@ const KelolaSupir = ({ setHeaderAction }) => {
         }
     };
     
-    // Handler untuk membuka konfirmasi hapus
+    // Delete Handler
     const handleDeleteClick = (supir) => {
         setSupirToDelete(supir);
         setShowDeleteConfirm(true);
     };
 
-    // Handler untuk konfirmasi hapus
     const confirmDelete = async () => {
         if (!supirToDelete) return;
         
         try {
-            await axios.post(`/api/admin/supir/${supirToDelete.id_supir}`, {
-                _method: 'DELETE' 
+            const token = localStorage.getItem('auth_token');
+            await axios.delete(`/api/admin/supir/${supirToDelete.id_supir}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
             
             fetchSupir();
             setShowDeleteConfirm(false);
             setSupirToDelete(null);
         } catch (err) {
-            setError("Gagal menghapus data. Cek logs Laravel.");
+            setError("Gagal menghapus data.");
             console.error("API Delete Error:", err.response ? err.response.data : err.message);
             setShowDeleteConfirm(false);
         }
     };
 
-    // Kirim aksi ke AdminPanel untuk ditampilkan di Header
+    // Set Header Action
     useEffect(() => {
         setHeaderAction(
             <button 
@@ -227,10 +215,8 @@ const KelolaSupir = ({ setHeaderAction }) => {
                 <span>Tambah Supir</span>
             </button>
         );
-        // Cleanup function
         return () => setHeaderAction(null);
     }, [setHeaderAction]);
-
 
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm">
@@ -243,8 +229,12 @@ const KelolaSupir = ({ setHeaderAction }) => {
                 />
             </div>
 
-            {/* Tampilan Error */}
-            {error && <div className="text-red-500 mb-4">{error}</div>}
+            {/* Error Message */}
+            {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+                    {error}
+                </div>
+            )}
 
             {/* Tabel Supir */}
             <div className="overflow-x-auto">
@@ -261,24 +251,26 @@ const KelolaSupir = ({ setHeaderAction }) => {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {loading ? (
                             <tr>
-                                <td colSpan="5" className="text-center py-6">Loading...</td>
+                                <td colSpan="5" className="text-center py-12">
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                                    <p className="mt-2 text-slate-400">Memuat data...</p>
+                                </td>
                             </tr>
-                        ) : supirList.length === 0 ? (
+                        ) : Array.isArray(supirList) && supirList.length === 0 ? (
                             <tr>
-                                <td colSpan="5" className="text-center py-6 text-gray-500">Data supir tidak ditemukan.</td>
+                                <td colSpan="5" className="text-center py-12 text-gray-500">
+                                    Data supir tidak ditemukan.
+                                </td>
                             </tr>
                         ) : (
                             supirList.map((supir) => (
                                 <tr key={supir.id_supir} className="hover:bg-slate-50 transition-colors"> 
-                                    <td className="py-3.5 px-4 font-medium text-slate-900">{supir.nama_lengkap}</td>
-                                    <td className="py-3.5 px-4 text-slate-600">{supir.no_sim}</td>
-                                    <td className="py-3.5 px-4 text-slate-600">{supir.no_telepon}</td>
-                                    <td className="py-3.5 px-4 text-slate-600">{supir.pengalaman_tahun} tahun</td>
-
-                                    <td className="py-3.5 px-4 flex justify-center items-center gap-2">
-                                        {/* Gunakan ActionButton untuk tombol Edit */}
+                                    <td className="py-3.5 px-6 font-medium text-slate-900">{supir.nama_lengkap}</td>
+                                    <td className="py-3.5 px-6 text-slate-600">{supir.no_sim}</td>
+                                    <td className="py-3.5 px-6 text-slate-600">{supir.no_telepon}</td>
+                                    <td className="py-3.5 px-6 text-slate-600">{supir.pengalaman_tahun} tahun</td>
+                                    <td className="py-3.5 px-6 flex justify-center items-center gap-2">
                                         <ActionButton type="edit" onClick={() => handleOpenModal('edit', supir)} /> 
-                                        {/* Gunakan ActionButton untuk tombol Delete */}
                                         <ActionButton type="delete" onClick={() => handleDeleteClick(supir)} />
                                     </td>
                                 </tr>
