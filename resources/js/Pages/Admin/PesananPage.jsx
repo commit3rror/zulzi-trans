@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/services/api';
 import {
     ActionButton,
     SearchInput,
@@ -13,17 +13,11 @@ const PemesananPage = ({ setHeaderAction }) => {
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const api = axios.create({
-        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
-    });
-
     const fetchPemesanan = async () => {
     setIsLoading(true);
     try {
-        const token = localStorage.getItem('auth_token');
-        const res = await axios.get(`/api/admin/pemesanan`, {
-            params: { search, layanan: activeTab },
-            headers: { 'Authorization': `Bearer ${token}` }
+        const res = await api.get('/admin/pesanan', {
+            params: { search, layanan: activeTab }
         });
         
         // Validasi array
@@ -54,10 +48,7 @@ const PemesananPage = ({ setHeaderAction }) => {
 
     const handleDelete = async (id) => {
         try {
-            const token = localStorage.getItem('auth_token');
-            await axios.delete(`/api/admin/pemesanan/${id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            await api.delete(`/admin/pesanan/${id}`);
             fetchPemesanan();
             setDeleteConfirm(null);
         } catch (err) {
@@ -68,10 +59,7 @@ const PemesananPage = ({ setHeaderAction }) => {
 
     const handleVerifikasi = async (id) => {
         try {
-            const token = localStorage.getItem('auth_token');
-            await axios.put(`/api/admin/pemesanan/${id}/verifikasi`, {}, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            await api.put(`/admin/pesanan/${id}/status`, { status: 'Diverifikasi' });
             fetchPemesanan();
         } catch (err) {
             console.error("Gagal verifikasi:", err);

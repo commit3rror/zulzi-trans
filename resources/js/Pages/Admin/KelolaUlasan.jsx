@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '@/services/api'; // Gunakan instance API yang sudah dikonfigurasi
 import { Star, MessageSquare, Info, Trash2, X } from 'lucide-react';
 
 // Reusable Components dari ReusableUI
@@ -217,7 +217,14 @@ const KelolaUlasan = ({ setHeaderAction }) => {
     const [error, setError] = useState(null);
     const [detailModal, setDetailModal] = useState({ isOpen: false, data: null });
 
-    const filterOptions = ['Semua', 'Rental', 'Angkutan', 'Sampah'];
+    // START MODIFICATION: New structured options for consistent labels
+    const filterButtons = [
+        { name: 'Semua', label: 'Semua' },
+        { name: 'Rental', label: 'Layanan Rental' },
+        { name: 'Angkutan', label: 'Layanan Angkutan' },
+        { name: 'Sampah', label: 'Layanan Sampah' },
+    ];
+    // END MODIFICATION
 
     // Ambil token CSRF untuk Axios POST/PUT/DELETE
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -226,7 +233,7 @@ const KelolaUlasan = ({ setHeaderAction }) => {
     const fetchUlasan = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axios.get('/api/admin/ulasan', {
+            const response = await api.get('/admin/ulasan', {
                 params: { 
                     search: searchQuery,
                     layanan_filter: filter
@@ -272,7 +279,7 @@ const KelolaUlasan = ({ setHeaderAction }) => {
         // Fetch detail data untuk memastikan data paling baru
         setLoading(true);
         try {
-            const response = await axios.get(`/api/admin/ulasan/${ulasan.id_ulasan}`);
+            const response = await api.get(`/admin/ulasan/${ulasan.id_ulasan}`);
             setDetailModal({ isOpen: true, data: response.data });
         } catch (err) {
             setError("Gagal memuat detail ulasan.");
@@ -287,11 +294,10 @@ const KelolaUlasan = ({ setHeaderAction }) => {
         try {
             const payload = { 
                 tanggapan_admin: formData.tanggapan_admin,
-                is_displayed: formData.is_displayed,
-                _method: 'PUT' // Method Spoofing
+                is_displayed: formData.is_displayed
             };
             
-            await axios.post(`/api/admin/ulasan/${formData.id_ulasan}`, payload);
+            await api.put(`/admin/ulasan/${formData.id_ulasan}`, payload);
             setDetailModal({ isOpen: false, data: null });
             fetchUlasan(); // Refresh list
         } catch (err) {
@@ -307,9 +313,7 @@ const KelolaUlasan = ({ setHeaderAction }) => {
         }
 
         try {
-            await axios.post(`/api/admin/ulasan/${ulasanId}`, {
-                _method: 'DELETE' // Method Spoofing
-            });
+            await api.delete(`/admin/ulasan/${ulasanId}`);
             fetchUlasan(); // Refresh list
         } catch (err) {
             setError("Gagal menghapus ulasan.");
@@ -320,12 +324,12 @@ const KelolaUlasan = ({ setHeaderAction }) => {
     // Handler untuk aksi Toggle Tampilkan (Di dalam tabel)
     const handleToggleDisplay = async (ulasan) => {
         try {
-             const payload = { 
+            const payload = { 
                 is_displayed: !ulasan.is_displayed, // Toggle status
                 _method: 'PUT'
             };
             // Kita hanya mengirim kolom yang kita update
-            await axios.post(`/api/admin/ulasan/${ulasan.id_ulasan}`, payload);
+            await api.put(`/admin/ulasan/${ulasan.id_ulasan}`, payload);
             fetchUlasan(); // Refresh list
         } catch (err) {
             setError("Gagal memperbarui status tampilkan.");
@@ -346,17 +350,21 @@ const KelolaUlasan = ({ setHeaderAction }) => {
                     placeholder="Cari ulasan berdasarkan nama atau komentar..."
                 />
                 
-                {/* Filter Tabs */}
-                <div className="flex space-x-2 p-1 bg-slate-50 rounded-lg border w-fit">
-                    {filterOptions.map(opt => (
+                {/* Filter Tabs - MODIFIED SECTION */}
+                {/* Removed extra padding and border on parent div, switched to underline style */}
+                <div className="flex space-x-4 border-b border-gray-200">
+                    {filterButtons.map(opt => (
                         <button
-                            key={opt}
-                            onClick={() => setFilter(opt)}
-                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors
-                                ${filter === opt ? 'bg-slate-800 text-white shadow-md' : 'text-slate-600 hover:bg-slate-200'}
+                            key={opt.name}
+                            onClick={() => setFilter(opt.name)}
+                            className={`
+                                py-2 px-0 text-sm font-medium transition-colors
+                                ${filter === opt.name
+                                    ? 'border-b-2 border-blue-600 text-blue-600'
+                                    : 'text-slate-600 hover:text-blue-600 hover:border-blue-300'}
                             `}
                         >
-                            {opt}
+                            {opt.label}
                         </button>
                     ))}
                 </div>

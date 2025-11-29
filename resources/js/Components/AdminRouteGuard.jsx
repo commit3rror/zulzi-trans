@@ -42,13 +42,22 @@ const AdminRouteGuard = ({ element, isAdminOnly }) => {
     // 3. Cek Role (Hanya berlaku jika isAdminOnly adalah true)
     if (isAdminOnly) {
         // Cek apakah user sudah login TAPI role-nya bukan 'admin'
-        if (user?.role_pengguna !== 'admin') {
+        // Normalize ke lowercase untuk memastikan case-insensitive comparison
+        const userRole = user?.role_pengguna?.toLowerCase();
+        
+        console.log('🔐 AdminRouteGuard - Checking role:', {
+            userRole,
+            isAdminOnly,
+            isAdmin: userRole === 'admin'
+        });
+        
+        if (userRole !== 'admin') {
             // Jika bukan admin, redirect ke halaman utama (misalnya / atau /beranda)
-            console.warn("Akses ditolak: Pengguna bukan admin. Redirecting.");
-            // Redirect ke root (/) yang akan dihandle oleh App.jsx untuk dialihkan ke /login
-            // Jika ada halaman beranda publik, ganti '/' dengan path tersebut.
+            console.warn("⛔ Akses ditolak: Pengguna bukan admin. Redirecting to /beranda");
             return <Navigate to="/beranda" replace />; 
         }
+        
+        console.log('✅ Admin access granted');
     }
 
     // 4. Jika semua pemeriksaan lolos, tampilkan elemen rute yang diminta

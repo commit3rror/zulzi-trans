@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/services/api';
 import {
     ActionButton,
     SearchInput,
@@ -12,18 +12,11 @@ const PembayaranPage = ({ setHeaderAction }) => {
     const [detailModal, setDetailModal] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const api = axios.create({
-        baseURL: '/',
-        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
-    });
-
     const fetchPayments = async () => {
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('auth_token');
-            const res = await axios.get(`/api/admin/pembayaran`, {
-                params: { search },
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await api.get('/admin/pembayaran', {
+                params: { search }
             });
             
             // Validasi array
@@ -58,11 +51,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
         }
 
         try {
-            const token = localStorage.getItem('auth_token');
-            await axios.post(`/api/admin/pembayaran/${id}/verify`, 
-                { action },
-                { headers: { 'Authorization': `Bearer ${token}` }}
-            );
+            await api.put(`/admin/pembayaran/${id}/verify`, { action });
             alert(`Pembayaran berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}`);
             setDetailModal(null);
             fetchPayments();

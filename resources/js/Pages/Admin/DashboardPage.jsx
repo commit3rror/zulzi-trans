@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/services/api';
 import { StatCard } from '@/Components/ReusableUI';
 import { Briefcase, DollarSign, Archive } from 'lucide-react';
 
@@ -17,12 +17,7 @@ const DashboardPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = localStorage.getItem('auth_token');
-                const response = await axios.get('/api/admin/dashboard-stats', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const response = await api.get('/admin/dashboard-stats');
                 
                 const data = response.data;
                 
