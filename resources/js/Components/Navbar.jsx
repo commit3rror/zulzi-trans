@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Truck, User } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth'; // Import useAuth untuk sesi global
+import { useAuth } from '@/context/AuthContext'; // Import useAuth dari context
 
 // Komponen Navbar tidak lagi menerima props 'auth', 
 // melainkan mengambil data auth dari useAuth()
@@ -143,20 +143,7 @@ const Navbar = () => {
 
                 {/* --- AUTH BUTTONS --- */}
                 <div className="hidden md:flex items-center gap-4">
-                    {auth?.user ? (
-                        <div className="flex items-center gap-3">
-                            <Link to="/profile" className={`${isActive('/profile')} transition text-sm uppercase tracking-wide`}>
-                                Profile
-                            </Link>
-                            <a href="/admin/dashboard" className="bg-blue-900 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-800 transition shadow-md flex items-center gap-2">
-                                Dashboard
-                            </a>
-                        </div>
-                    ) : (
-                        <a href="/login" className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-6 py-2 rounded-full text-sm font-bold hover:shadow-lg hover:scale-105 transition transform shadow-md">
-                            Login
-                        </a>
-                    )}
+                    <AuthButton />
                 </div>
 
                 {/* --- MOBILE MENU BUTTON --- */}
@@ -193,24 +180,9 @@ const Navbar = () => {
                         Tentang Kami
                     </Link>
                     
-                    {auth?.user ? (
-                        <>
-                            <Link 
-                                to="/profile" 
-                                className="text-gray-700 font-medium hover:text-blue-600 py-2 border-b border-gray-50"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                Profile
-                            </Link>
-                            <a href="/admin/dashboard" className="bg-blue-900 text-white py-3 rounded-xl font-bold shadow-md mt-2">
-                                Dashboard
-                            </a>
-                        </>
-                    ) : (
-                        <a href="/login" className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 rounded-xl font-bold shadow-md mt-2">
-                            Login Sekarang
-                        </a>
-                    )}
+                    <div className="mt-4">
+                        <AuthButton />
+                    </div>
                 </div>
             </div>
         </nav>

@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemesananController;
-use App\Http\Controllers\PembayaranController; // <-- TAMBAHAN PENTING: Import Controller Pembayaran
+// use App\Http\Controllers\PembayaranController; // <-- TAMBAHAN PENTING: Import Controller Pembayaran
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ReviewController;
@@ -191,6 +191,4 @@ Route::get('/pemesanan/{id}', [PemesananController::class, 'show']); // Get orde
         Route::get('/ulasan/{id}', [UlasanController::class, 'show']);
         Route::put('/ulasan/{id}', [UlasanController::class, 'update']);
         Route::delete('/ulasan/{id}', [UlasanController::class, 'destroy']);
-    });
-
 });

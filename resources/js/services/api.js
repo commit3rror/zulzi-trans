@@ -31,17 +31,19 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      // Unauthorized - redirect to login
+      // Unauthorized - remove token dan local user data
+      // Jangan hard-redirect, biarkan component handle navigation
       if (error.response.status === 401) {
-        console.error('Unauthorized: Redirecting to login');
+        console.error('❌ Unauthorized (401): Token invalid atau expired');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        // Jangan redirect di sini, biarkan component/route handle
+        // window.location.href = '/login'; // REMOVED - biarkan React Router handle
       }
       
       // Forbidden
       if (error.response.status === 403) {
-        console.error('Forbidden: You do not have permission to access this resource');
+        console.error('❌ Forbidden (403): You do not have permission to access this resource');
       }
     }
     return Promise.reject(error);

@@ -1,20 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Truck, Users, Star, Calendar, CheckCircle, Phone, ChevronRight, Shield, Clock } from 'lucide-react';
-import Navbar from '../../Components/Navbar';
+import { Zap, Truck, Users, Star, Calendar, CheckCircle, Phone, ChevronRight, Shield, Clock, MapPin, Menu, X, ArrowRight } from 'lucide-react';
+import Navbar from '../../components/Navbar';
 import Footer from '../../Components/Footer';
 import { getPublicServices } from '../../services/serviceService';
 import { getPublicReviews } from '../../services/reviewService';
 import { getArmadaByCategory } from '../../services/armadaService';
-import { 
-    Zap, 
-    Shield, 
-    Clock, 
-    MapPin,   
-    Menu,
-    Users, 
-    X, 
-    ArrowRight 
-} from 'lucide-react';
 
 export default function LandingPage(props) { 
   // props.auth biasanya dikirim otomatis oleh Laravel/Inertia middleware ke page component

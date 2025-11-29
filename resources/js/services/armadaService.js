@@ -36,12 +36,14 @@ export const getArmadaByLayanan = async (layanan) => {
 };
 
 /**
- * Fetch armada dengan kategori yang sudah dikelompokkan
+ * Fetch armada dengan kategori yang sudah dikelompokkan (PUBLIC)
+ * Menggunakan endpoint public /armada-list
  */
 export const getArmadaByCategory = async () => {
     try {
-        const response = await api.get('/admin/armada');
-        const armada = Array.isArray(response.data) ? response.data : [];
+        const response = await api.get('/armada-list');
+        // Response structure: { success: true, data: [...] }
+        const armada = Array.isArray(response.data) ? response.data : (response.data?.data || []);
         
         // Group berdasarkan layanan
         const grouped = {
@@ -50,9 +52,15 @@ export const getArmadaByCategory = async () => {
             'Sampah': armada.filter(a => a.layanan?.toLowerCase() === 'sampah'),
         };
         
+        console.log('✅ Fetched armada by category:', grouped);
         return grouped;
     } catch (error) {
         console.error('❌ Gagal fetch armada by category:', error);
-        throw error;
+        // Return empty object jika error, jangan throw
+        return {
+            'Angkutan': [],
+            'Rental': [],
+            'Sampah': [],
+        };
     }
 };
