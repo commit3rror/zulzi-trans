@@ -5,16 +5,40 @@ import OAuthCallback from './Pages/Auth/OAuthCallback';
 
 // Import Halaman
 import PemesananPage from './Pages/Pemesanan/Index';
+import LandingPage from './Pages/public/LandingPage';
+import AboutPage from './Pages/AboutPage';
+import ReviewForm from './Pages/Review/ReviewForm';
+import ReviewSuccess from './Pages/Review/ReviewSuccess';
 
 // Disini kita daftarkan URL-nya
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <div className="p-10 text-center"><h1>Halaman Home Belum Dibuat (Klik <a href="/pemesanan" className="text-blue-500 underline">/pemesanan</a>)</h1></div>, 
+        element: <LandingPage />, 
+    },
+    {
+        path: "/beranda",
+        element: <LandingPage />,
+    },
+    {
+        path: "/tentang-kami",
+        element: <AboutPage />,
+    },
+    {
+        path: "/about",
+        element: <AboutPage />,
     },
     {
         path: "/pemesanan",
-        element: <PemesananPage />, // Ini halaman yang baru kita buat
+        element: <PemesananPage />, 
+    },
+    {
+        path: "/review/success",
+        element: <ReviewSuccess />,
+    },
+    {
+        path: "/review/:id",
+        element: <ReviewForm />,
     },
     {
         path: '/auth/google/callback',

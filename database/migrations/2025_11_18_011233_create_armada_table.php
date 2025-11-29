@@ -14,21 +14,12 @@ return new class extends Migration
         Schema::create('armada', function (Blueprint $table) {
             $table->id('id_armada');
             $table->string('no_plat')->unique();
-            
-            // Add these two columns
-            $table->string('nama_armada'); // Example: Isuzu Elf Long
-            $table->string('model')->nullable(); // Example: Minibus
-            
-            $table->string('jenis_kendaraan'); // Example: Truk, Pickup
-            $table->string('kapasitas'); // Example: 2 Ton
-            $table->string('status_ketersediaan')->default('Tersedia');
-            $table->double('harga_sewa_per_hari', 15, 2);
-            
-            // Only if your seeder uses 'layanan', add this too. 
-            // Based on your error log, the seeder IS trying to insert 'layanan'.
-            $table->string('layanan')->nullable(); 
-
-            $table->timestamps();
+            $table->string('layanan')->nullable()->default('Angkutan'); 
+            $table->string('jenis_kendaraan');
+            $table->string('kapasitas');
+            $table->decimal('harga_sewa_per_hari', 15, 2); 
+            $table->string('status_ketersediaan')->nullable();
+            $table->timestamps(); 
         });
     }
 

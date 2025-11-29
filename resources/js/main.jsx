@@ -15,7 +15,8 @@ import AdminRouteGuard from '@/Components/AdminRouteGuard.jsx';
 // Import halaman Public
 import LandingPage from '@/Pages/public/LandingPage';
 import AboutPage from '@/Pages/AboutPage';
-import ReviewPage from '@/Pages/ReviewPage'; 
+import ReviewForm from '@/Pages/Review/ReviewForm';
+import ReviewSuccess from '@/Pages/Review/ReviewSuccess';
 import PemesananPage from '@/Pages/Pemesanan/Index';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
 // import PembayaranPage from '@/Pages/PembayaranPage';

@@ -102,15 +102,30 @@ const Navbar = () => {
     return (
         <nav 
             className={`fixed w-full top-0 z-50 transition-all duration-300 ${
-                isScrolled ? 'bg-white shadow-md py-3' : 'bg-white/95 backdrop-blur-sm py-4 border-b border-gray-100'
+                isScrolled ? 'bg-white shadow-md py-3' : 'bg-gradient-to-br from-[#f0f9ff] via-white to-blue-50 py-4 border-b border-[#00a3e0]/20'
             }`}
         >
             <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
                 
-                {/* --- LOGO BERBASIS KODE (Anti-Gagal Render) --- */}
-                <Link to="/beranda" className="flex items-center gap-2 text-xl font-extrabold text-[#003366]">
-                    <Truck className="w-6 h-6 text-primary" />
-                    Zulzi <span className="text-primary">Trans</span>
+                {/* --- LOGO DENGAN GAMBAR --- */}
+                <Link to="/beranda" className="flex items-center gap-3 group no-underline">
+                    {/* Logo Image */}
+                    <div className="h-10 transform group-hover:scale-110 transition-transform duration-300">
+                        <img 
+                            src="/images/logozulzi.png" 
+                            alt="Zulzi Trans Logo" 
+                            className="h-full object-contain"
+                        />
+                    </div>
+                    {/* Text Container */}
+                    <div className="flex flex-col leading-none hidden sm:flex">
+                        <span className="text-lg font-extrabold text-blue-900 tracking-tight group-hover:text-blue-700 transition-colors">
+                            ZULZI TRANS
+                        </span>
+                        <span className="text-[9px] font-bold text-cyan-600 tracking-[0.15em]">
+                            CEPAT, AMAN, TERPERCAYA
+                        </span>
+                    </div>
                 </Link>
 
                 {/* --- DESKTOP MENU --- */}

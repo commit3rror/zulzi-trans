@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import axios from 'axios'; // Import axios untuk request ke API
+import React, { useState, useEffect } from 'react';
 import MainLayout from '../../Layouts/MainLayout';
 import Stepper from '../../Components/Pemesanan/Stepper';
 import FormRental from './Partials/FormRental';
@@ -14,7 +13,33 @@ const PemesananPage = () => {
     const [selectedService, setSelectedService] = useState(null);
     const [orderData, setOrderData] = useState(null); // Menyimpan data pesanan dari database
 
-    // Data pilihan layanan
+    // Parse service parameter dari URL
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const serviceParam = params.get('service');
+        
+        if (serviceParam) {
+            // Konversi URL parameter ke service ID
+            // 'angkut-barang' -> 'barang'
+            // 'sewa-kendaraan' -> 'rental'
+            // 'angkut-sampah' -> 'sampah'
+            let serviceId = null;
+            
+            if (serviceParam.includes('barang') && !serviceParam.includes('sampah')) {
+                serviceId = 'barang';
+            } else if (serviceParam.includes('sewa') || serviceParam.includes('kendaraan')) {
+                serviceId = 'rental';
+            } else if (serviceParam.includes('sampah')) {
+                serviceId = 'sampah';
+            }
+            
+            if (serviceId) {
+                setSelectedService(serviceId);
+            }
+        }
+    }, []);
+
+    // Data tombol layanan
     const services = [
         { id: 'rental', title: 'RENTAL MOBIL', icon: Car, color: 'bg-blue-400', borderColor: 'border-blue-400' },
         { id: 'barang', title: 'ANGKUT BARANG', icon: Truck, color: 'bg-blue-800', borderColor: 'border-blue-800' },
