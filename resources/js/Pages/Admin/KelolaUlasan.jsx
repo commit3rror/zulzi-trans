@@ -226,10 +226,6 @@ const KelolaUlasan = ({ setHeaderAction }) => {
     ];
     // END MODIFICATION
 
-    // Ambil token CSRF untuk Axios POST/PUT/DELETE
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-
     const fetchUlasan = useCallback(async () => {
         setLoading(true);
         try {
