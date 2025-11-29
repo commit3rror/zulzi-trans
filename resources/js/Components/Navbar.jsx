@@ -114,13 +114,34 @@ const Navbar = () => {
                 </Link>
 
                 {/* --- DESKTOP MENU --- */}
-                <div className="hidden md:flex items-center space-x-6">
-                    <Link to="/beranda" className={isActive("/beranda")}>Beranda</Link>
-                    <Link to="/pemesanan" className={isActive("/pemesanan")}>Pemesanan</Link>
-                    <Link to="/tentang-kami" className={isActive("/tentang-kami")}>Tentang Kami</Link>
-                    
-                    {/* Tombol Auth / Profile */}
-                    <AuthButton />
+                <div className="hidden md:flex items-center gap-8 font-medium">
+                    <Link to="/beranda" className={`${isActive('/beranda')} transition text-sm uppercase tracking-wide`}>
+                        Beranda
+                    </Link>
+                    <Link to="/pemesanan" className={`${isActive('/pemesanan')} transition text-sm uppercase tracking-wide`}>
+                        Pemesanan
+                    </Link>
+                    <Link to="/tentang-kami" className={`${isActive('/tentang-kami')} transition text-sm uppercase tracking-wide`}>
+                        Tentang Kami
+                    </Link>
+                </div>
+
+                {/* --- AUTH BUTTONS --- */}
+                <div className="hidden md:flex items-center gap-4">
+                    {auth?.user ? (
+                        <div className="flex items-center gap-3">
+                            <Link to="/profile" className={`${isActive('/profile')} transition text-sm uppercase tracking-wide`}>
+                                Profile
+                            </Link>
+                            <a href="/admin/dashboard" className="bg-blue-900 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-800 transition shadow-md flex items-center gap-2">
+                                Dashboard
+                            </a>
+                        </div>
+                    ) : (
+                        <a href="/login" className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-6 py-2 rounded-full text-sm font-bold hover:shadow-lg hover:scale-105 transition transform shadow-md">
+                            Login
+                        </a>
+                    )}
                 </div>
 
                 {/* --- MOBILE MENU BUTTON --- */}
@@ -133,37 +154,48 @@ const Navbar = () => {
             </div>
 
             {/* --- MOBILE MENU DROPDOWN --- */}
-            {mobileMenuOpen && (
-                <div className="md:hidden absolute w-full bg-white shadow-xl border-t border-gray-100">
-                    <div className="px-6 py-4 flex flex-col space-y-3">
-                        {/* Link Mobile */}
-                        <Link 
-                            to="/beranda" 
-                            className="text-gray-700 font-medium hover:text-blue-600 py-2 border-b border-gray-50"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            Beranda
-                        </Link>
-                        <Link 
-                            to="/pemesanan" 
-                            className="text-gray-700 font-medium hover:text-blue-600 py-2 border-b border-gray-50"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            Pemesanan
-                        </Link>
-                        <Link 
-                            to="/tentang-kami" 
-                            className="text-gray-700 font-medium hover:text-blue-600 py-2 border-b border-gray-50"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            Tentang Kami
-                        </Link>
-                        
-                        {/* Tombol Auth Mobile */}
-                        <div className="mt-4">
-                           <AuthButton />
-                        </div>
-                    </div>
+            <div className={`md:hidden absolute w-full bg-white border-t border-gray-100 shadow-xl transition-all duration-300 overflow-hidden ${mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="flex flex-col p-6 gap-4 text-center">
+                    <Link 
+                        to="/beranda" 
+                        className="text-gray-700 font-medium hover:text-blue-600 py-2 border-b border-gray-50"
+                        onClick={() => setMobileMenuOpen(false)}
+                    >
+                        Beranda
+                    </Link>
+                    <Link 
+                        to="/pemesanan" 
+                        className="text-gray-700 font-medium hover:text-blue-600 py-2 border-b border-gray-50"
+                        onClick={() => setMobileMenuOpen(false)}
+                    >
+                        Pemesanan
+                    </Link>
+                    <Link 
+                        to="/tentang-kami" 
+                        className="text-gray-700 font-medium hover:text-blue-600 py-2 border-b border-gray-50"
+                        onClick={() => setMobileMenuOpen(false)}
+                    >
+                        Tentang Kami
+                    </Link>
+                    
+                    {auth?.user ? (
+                        <>
+                            <Link 
+                                to="/profile" 
+                                className="text-gray-700 font-medium hover:text-blue-600 py-2 border-b border-gray-50"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Profile
+                            </Link>
+                            <a href="/admin/dashboard" className="bg-blue-900 text-white py-3 rounded-xl font-bold shadow-md mt-2">
+                                Dashboard
+                            </a>
+                        </>
+                    ) : (
+                        <a href="/login" className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 rounded-xl font-bold shadow-md mt-2">
+                            Login Sekarang
+                        </a>
+                    )}
                 </div>
             )}
         </nav>

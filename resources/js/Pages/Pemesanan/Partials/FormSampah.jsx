@@ -3,11 +3,12 @@ import axios from 'axios';
 import { Trash2, MapPin, Calendar, Camera, Layers, Truck } from 'lucide-react';
 
 const FormSampah = ({ onBack, onSuccess }) => {
+    // State form
     const [formData, setFormData] = useState({
         layanan: 'sampah',
         jenis_sampah: '', 
         perkiraan_volume: '',
-        id_armada: '',
+        preferensi_armada: '', // GANTI: Bukan id_armada lagi
         foto_sampah: null,
         tgl_mulai: '',
         lokasi_jemput: '',
@@ -15,26 +16,40 @@ const FormSampah = ({ onBack, onSuccess }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
+    // Handle perubahan input
     const handleChange = (e) => {
         const { name, value, type, files } = e.target;
         if (type === 'file') setFormData(prev => ({ ...prev, [name]: files[0] }));
         else setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Handle submit
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         setErrors({});
         
         const data = new FormData();
-        Object.keys(formData).forEach(key => data.append(key, formData[key] ?? ''));
+        // Masukkan semua data state ke FormData
+        Object.keys(formData).forEach(key => {
+            if (formData[key] !== null) {
+                data.append(key, formData[key]);
+            }
+        });
+        
+        // Untuk sampah, lokasi_tujuan disamakan dengan lokasi_jemput
+        data.append('lokasi_tujuan', formData.lokasi_jemput);
 
         try {
             const response = await axios.post('/api/pemesanan', data);
             if (onSuccess) onSuccess(response.data.data);
         } catch (error) {
-            if (error.response?.status === 422) setErrors(error.response.data.errors);
-            else alert('Error server');
+            if (error.response?.status === 422) {
+                setErrors(error.response.data.errors);
+            } else {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan server. Silakan coba lagi.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -62,6 +77,7 @@ const FormSampah = ({ onBack, onSuccess }) => {
                                     <option value="Puing Bangunan">Puing Bangunan</option>
                                     <option value="Sampah Rumah Tangga">Sampah Rumah Tangga</option>
                                     <option value="Limbah Kayu/Besi">Limbah Kayu/Besi</option>
+                                    <option value="Lainnya">Lainnya</option>
                                 </select>
                             </div>
                         </div>
@@ -69,24 +85,24 @@ const FormSampah = ({ onBack, onSuccess }) => {
                             <label className="block text-sm font-bold text-gray-700 mb-2">Volume (m³)</label>
                             <div className="relative">
                                 <Layers className="absolute left-3 top-3 text-gray-400" size={20} />
-                                <input type="text" name="perkiraan_volume" value={formData.perkiraan_volume} onChange={handleChange} className={inputStyle('perkiraan_volume')} placeholder="Contoh: 1 Pickup" />
+                                <input type="text" name="perkiraan_volume" value={formData.perkiraan_volume} onChange={handleChange} className={inputStyle('perkiraan_volume')} placeholder="Contoh: 1 Pickup / 2 Kubik" />
                             </div>
                         </div>
                     </div>
 
-                    {/* Foto Sampah (FIXED: Added relative class) */}
+                    {/* Foto Sampah */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Foto Tumpukan</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Foto Tumpukan (Opsional)</label>
                         <div className="border-2 border-dashed border-green-200 rounded-xl p-4 text-center relative overflow-hidden hover:bg-green-50 transition cursor-pointer group">
                             <Camera className="mx-auto text-green-500 mb-2" size={24} />
                             <span className="text-sm text-gray-500">{formData.foto_sampah ? formData.foto_sampah.name : 'Upload foto sampah'}</span>
                             
-                            {/* Input file full overlay */}
                             <input 
                                 type="file" 
                                 name="foto_sampah" 
                                 onChange={handleChange} 
                                 className="opacity-0 absolute inset-0 w-full h-full cursor-pointer" 
+                                accept="image/*"
                             />
                         </div>
                     </div>
@@ -96,11 +112,11 @@ const FormSampah = ({ onBack, onSuccess }) => {
                          <label className="block text-sm font-bold text-gray-700 mb-2">Lokasi Angkut</label>
                          <div className="relative">
                             <MapPin className="absolute left-3 top-3 text-gray-400" size={20} />
-                            <input type="text" name="lokasi_jemput" value={formData.lokasi_jemput} onChange={handleChange} className={inputStyle('lokasi_jemput')} placeholder="Alamat lengkap..." />
+                            <input type="text" name="lokasi_jemput" value={formData.lokasi_jemput} onChange={handleChange} className={inputStyle('lokasi_jemput')} placeholder="Alamat lengkap pengambilan..." />
                         </div>
                     </div>
 
-                    {/* Tanggal & Armada */}
+                    {/* Tanggal & Preferensi Armada */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-2">Tanggal</label>
@@ -110,20 +126,23 @@ const FormSampah = ({ onBack, onSuccess }) => {
                             </div>
                         </div>
                         <div>
-                             <label className="block text-sm font-bold text-gray-700 mb-2">Jenis Truk</label>
+                             <label className="block text-sm font-bold text-gray-700 mb-2">Request Truk (Opsional)</label>
                             <div className="relative">
                                 <Truck className="absolute left-3 top-3 text-gray-400" size={20} />
-                                <select name="id_armada" value={formData.id_armada} onChange={handleChange} className={inputStyle('id_armada')}>
-                                    <option value="">Pilih...</option>
-                                    <option value="5">Dump Truck (ID:5)</option>
-                                    <option value="4">Pickup Bak (ID:4)</option>
+                                {/* Value di sini STRING deskriptif, bukan ID database */}
+                                <select name="preferensi_armada" value={formData.preferensi_armada} onChange={handleChange} className={inputStyle('preferensi_armada')}>
+                                    <option value="">-- Serahkan ke Admin --</option>
+                                    <option value="Pickup Bak">Pickup Bak (Kecil)</option>
+                                    <option value="Dump Truck">Dump Truck (Besar)</option>
+                                    <option value="Engkel">Truk Engkel</option>
                                 </select>
                             </div>
+                            <p className="text-xs text-gray-500 mt-1 ml-1">*Admin akan menyesuaikan dengan volume sampah.</p>
                         </div>
                     </div>
 
                     <button type="submit" disabled={isLoading} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition shadow-lg mt-4">
-                        {isLoading ? 'Memproses...' : 'Lanjut Pembayaran'}
+                        {isLoading ? 'Sedang Memproses...' : 'Buat Pesanan & Tunggu Konfirmasi'}
                     </button>
                 </form>
             </div>
