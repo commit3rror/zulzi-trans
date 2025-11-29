@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, User, Star, Calendar, CheckCircle, Phone } from 'lucide-react';
+import { Truck, User, Star, Calendar, CheckCircle, Phone, Zap, Shield, Clock, Users } from 'lucide-react';
 import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
 import { getPublicServices } from '../../services/serviceService';
@@ -83,6 +83,7 @@ export default function LandingPage(props) {
         // Fallback jika API error
         setServices([]);
         setReviews([]);
+        setServices(ARMADA_DATA); // Fallback ke hardcoded jika error
       } finally {
         setLoading(false);
       }
