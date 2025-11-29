@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, User, Star, Calendar, CheckCircle, Phone } from 'lucide-react';
+import { Zap, Truck, Users, Star, Calendar, CheckCircle, Phone, ChevronRight, Shield, Clock } from 'lucide-react';
 import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
 import { getPublicServices } from '../../services/serviceService';
