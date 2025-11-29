@@ -31,6 +31,8 @@ class PemesananController extends Controller
             ->leftJoin('armada', 'pemesanan.id_armada', '=', 'armada.id_armada')
             ->select(
                 'pemesanan.id_pemesanan',
+                'pemesanan.id_supir',
+                'pemesanan.id_armada',
                 DB::raw("CONCAT('RNT-', LPAD(pemesanan.id_pemesanan, 3, '0')) as kode_pesanan"),
                 'user.nama as nama_pelanggan',
                 'pemesanan.lokasi_jemput',

@@ -126,7 +126,7 @@ class PembayaranController extends Controller
 
     // Update status pemesanan terkait
     $newOrderStatus = $request->action === 'approve'
-        ? 'Diproses'
+        ? 'Berlangsung'
         : 'Pembayaran Ditolak';
 
     DB::table('pemesanan')

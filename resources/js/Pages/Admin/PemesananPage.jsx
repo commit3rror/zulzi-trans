@@ -74,16 +74,14 @@ const PemesananPage = ({ setHeaderAction }) => {
 
     // Membuka Modal Edit/Verifikasi
     const handleEditClick = (item) => {
+        console.log("Item saat edit: ", item);
         // Simpan data item yang akan diedit, termasuk harga lama
         setEditItem(item);
-        //     ...item,
-        //     harga_lama: item.total_biaya // simpan harga lama khusus item ini
-        // });
 
         setFormData({
-            id_supir: item.id_supir || '',
-            id_armada: item.id_armada || '',
-            total_biaya: item.total_biaya || 0,
+            id_supir: item.id_supir ? String(item.id_supir) : "",
+            id_armada: item.id_armada ? String(item.id_armada) : "",
+            total_biaya: item.total_biaya || '',
             catatan: item.deskripsi_barang || ''
         });
     };
@@ -298,12 +296,12 @@ const PemesananPage = ({ setHeaderAction }) => {
                             <FormSelect
                                 label="Sopir"
                                 name="id_supir"
-                                value={formData.id_supir}
+                                value={String(formData.id_supir)}
                                 onChange={(e) => setFormData({...formData, id_supir: e.target.value})}
                             >
                                 <option value="">-- Pilih Supir --</option>
                                 {supirList.map(supir => (
-                                    <option key={supir.id_supir} value={supir.id_supir}>
+                                    <option key={supir.id_supir} value={String(supir.id_supir)}>
                                         {supir.nama_lengkap}
                                     </option>
                                 ))}
@@ -312,12 +310,12 @@ const PemesananPage = ({ setHeaderAction }) => {
                             <FormSelect
                                 label="Armada"
                                 name="id_armada"
-                                value={formData.id_armada}
+                                value={String(formData.id_armada)}
                                 onChange={(e) => setFormData({...formData, id_armada: e.target.value})}
                             >
                                 <option value="">-- Pilih Armada --</option>
                                 {armadaList.map(armada => (
-                                    <option key={armada.id_armada} value={armada.id_armada}>
+                                    <option key={armada.id_armada} value={String(armada.id_armada)}>
                                         {armada.jenis_kendaraan} - {armada.no_plat}
                                     </option>
                                 ))}
