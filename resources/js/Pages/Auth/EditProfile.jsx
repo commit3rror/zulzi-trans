@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Alert } from '@/components/ReusableUI'; 
+import { Alert } from '@/Components/ReusableUI'; 
 import { ArrowLeft } from 'lucide-react';
 import userService from '../../../service/userService.js';
 
@@ -14,7 +14,7 @@ const EditProfile = () => {
         nama: '',
         no_telepon: '',
         email: '',
-        alamat: '',
+        //alamat: '',
     });
     
     const [errors, setErrors] = useState({});
@@ -28,7 +28,7 @@ const EditProfile = () => {
                 nama: user.nama || '',
                 no_telepon: user.no_telepon || '',
                 email: user.email || '',
-                alamat: user.alamat || '',
+                //alamat: user.alamat || '',
             });
         }
     }, [user]);
@@ -160,14 +160,14 @@ const EditProfile = () => {
                         disabled
                     />
 
-                    <CustomInput
+                    {/* <CustomInput
                         label="Alamat"
                         name="alamat"
                         value={formData.alamat}
                         onChange={handleChange}
                         error={errors.alamat}
                         placeholder="Masukkan Alamat"
-                    />
+                    /> */}
 
                     <div className="text-center mt-8 mb-6">
                         <p className="text-neutral-gray text-sm md:text-base">

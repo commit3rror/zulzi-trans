@@ -41,11 +41,18 @@ const FormSampah = ({ onBack, onSuccess }) => {
         data.append('lokasi_tujuan', formData.lokasi_jemput);
 
         try {
-            const response = await axios.post('/api/pemesanan', data);
+            const response = await axios.post('/api/pemesanan', data, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
             if (onSuccess) onSuccess(response.data.data);
         } catch (error) {
             if (error.response?.status === 422) {
                 setErrors(error.response.data.errors);
+            } else if (error.response?.status === 401) {
+                alert('Anda harus login terlebih dahulu!');
+                window.location.href = '/login';
             } else {
                 console.error('Error:', error);
                 alert('Terjadi kesalahan server. Silakan coba lagi.');

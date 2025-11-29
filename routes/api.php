@@ -4,11 +4,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemesananController;
-use App\Http\Controllers\PembayaranController; // <-- TAMBAHAN PENTING: Import Controller Pembayaran
+use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ProfileController;
+
+// Import Admin Controllers
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PesananController;
+use App\Http\Controllers\Admin\SupirController;
+use App\Http\Controllers\PenggunaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,40 +43,23 @@ Route::prefix('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes (Tanpa Login)
+| Public Routes (No Auth Required)
 |--------------------------------------------------------------------------
 */
-// Route untuk mengambil data Armada (Untuk Dropdown di Form Rental)
-Route::get('/armada-list', [PemesananController::class, 'getArmadaList']);
-
-// Route untuk menyimpan Pemesanan Baru
-Route::post('/pemesanan', [PemesananController::class, 'store']);
-
-// --- TAMBAHAN PENTING (MULAI) ---
-// Route untuk Refresh Status (Cek status pesanan berdasarkan ID)
-Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
-
-// Route untuk mendapatkan history pemesanan user (Login Required)
-Route::middleware('auth:sanctum')->get('/user/pemesanan', [PemesananController::class, 'getUserOrders']);
-
-// Route untuk Upload Bukti Pembayaran
-Route::post('/pembayaran', [PembayaranController::class, 'store']);
-// --- TAMBAHAN PENTING (SELESAI) ---
-
-// Route Public Lainnya
 Route::get('/reviews/public', [ReviewController::class, 'getPublicReviews']); 
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/about', [AboutController::class, 'index']);
 
-// Route Khusus Halaman Review (Mengambil target pesanan)
+// Route Khusus Halaman Review
 Route::get('/reviews/target/{id_pemesanan}', [ReviewController::class, 'getReviewTarget']);
-// Menyimpan review
 Route::post('/reviews', [ReviewController::class, 'store']);
 
+// Route Armada List (Public untuk dropdown)
+Route::get('/armada-list', [PemesananController::class, 'getArmadaList']);
 
 /*
 |--------------------------------------------------------------------------
-| Protected Routes (Butuh Login / Token)
+| Protected Routes (Require Authentication)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:sanctum')->group(function () {
@@ -89,12 +78,39 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Profile Routes
-    Route::get('/profile', [ProfileController::class, 'show']);
-    Route::put('/profile', [ProfileController::class, 'update']);
+    Route::prefix('user/profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'show']); 
+        Route::put('/', [ProfileController::class, 'update']); 
+    });
 
-    // Admin Only Routes (Jika ada)
+    // User Pemesanan (PINDAH KE SINI - HARUS LOGIN)
+    Route::post('/pemesanan', [PemesananController::class, 'store']);
+    Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
+    Route::get('/user/pemesanan', [PemesananController::class, 'getUserOrders']);
+
+    // User Pembayaran (HARUS LOGIN)
+    Route::post('/pembayaran', [PembayaranController::class, 'store']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Only Routes
+    |--------------------------------------------------------------------------
+    */
     Route::middleware('admin')->prefix('admin')->group(function () {
-        // Route khusus admin bisa ditaruh di sini
+        
+        // Dashboard Stats
+        Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
+        
+        // Pengguna Management
+        Route::get('/pengguna', [PenggunaController::class, 'index']);
+        Route::delete('/pengguna/{id}', [PenggunaController::class, 'destroy']);
+        
+        // Supir Management
+        Route::get('/supir', [SupirController::class, 'index']);
+        Route::post('/supir', [SupirController::class, 'store']);
+        Route::get('/supir/{id}', [SupirController::class, 'show']);
+        Route::put('/supir/{id}', [SupirController::class, 'update']);
+        Route::delete('/supir/{id}', [SupirController::class, 'destroy']);
     });
 
 });

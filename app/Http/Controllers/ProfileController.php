@@ -26,9 +26,7 @@ class ProfileController extends Controller
 
         $validator = Validator::make($request->all(), [
             'nama' => 'required|string|max:100',
-            'email' => 'required|email|max:255|unique:user,email,' . $user->id_pengguna . ',id_pengguna',
             'no_telepon' => 'required|string|max:15',
-            // 'alamat' => 'nullable|string', <-- DIHAPUS
             'foto_profil' => 'nullable|image|max:2048',
             'password' => 'nullable|min:8|confirmed',
         ]);
@@ -37,11 +35,9 @@ class ProfileController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Update Data Dasar
+        // Update Data Dasar (Email tidak diubah)
         $user->nama = $request->nama;
-        $user->email = $request->email;
         $user->no_telepon = $request->no_telepon;
-        // $user->alamat = $request->alamat; <-- DIHAPUS
 
         // Update Password
         if ($request->filled('password')) {

@@ -60,7 +60,7 @@ class PemesananController extends Controller
 
         // Siapkan Data
         $data = [
-            'id_pengguna' => auth()->id() ?? 1, // Fallback ID 1 jika testing
+            'id_pengguna' => auth()->id(), // PERBAIKAN: Hapus fallback, user HARUS login
             'id_layanan' => $layananId,
             'tgl_pesan' => Carbon::now(),
             'tgl_mulai' => $request->tgl_mulai,
@@ -144,15 +144,25 @@ class PemesananController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        // Debug: Log user ID
+        \Log::info('🔍 Fetching orders for user ID: ' . $userId);
+
         // Ambil semua pesanan user dengan relasi layanan, armada, pembayaran
         $orders = Pemesanan::with(['layanan', 'armada', 'pembayaran'])
             ->where('id_pengguna', $userId)
             ->orderBy('tgl_pesan', 'desc')
             ->get();
 
+        // Debug: Log hasil query
+        \Log::info('📦 Found ' . $orders->count() . ' orders');
+
         return response()->json([
             'status' => 'success',
-            'data' => $orders
+            'data' => $orders,
+            'debug' => [
+                'user_id' => $userId,
+                'total_orders' => $orders->count()
+            ]
         ]);
     }
 }

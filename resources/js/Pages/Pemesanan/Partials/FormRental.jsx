@@ -58,7 +58,11 @@ const FormRental = ({ onBack, onSuccess }) => {
             data.append('est_berat_ton', 0);
 
             // Kirim ke API
-            const response = await axios.post('/api/pemesanan', data);
+            const response = await axios.post('/api/pemesanan', data, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
             
             // Jika sukses, panggil fungsi onSuccess dari parent (Index.jsx)
             if (onSuccess) {
@@ -70,6 +74,9 @@ const FormRental = ({ onBack, onSuccess }) => {
                 if (error.response.status === 422) {
                     // Error Validasi (Misal: Tanggal kosong)
                     setErrors(error.response.data.errors || {});
+                } else if (error.response.status === 401) {
+                    alert('Anda harus login terlebih dahulu!');
+                    window.location.href = '/login';
                 } else {
                     // Error Server (Misal: Database mati)
                     alert(`Gagal: ${error.response.data.message || 'Terjadi kesalahan server'}`);

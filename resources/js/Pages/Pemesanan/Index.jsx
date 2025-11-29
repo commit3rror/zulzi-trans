@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios'; // Import axios untuk request ke API
 import MainLayout from '../../Layouts/MainLayout';
 import Stepper from '../../Components/Pemesanan/Stepper';
@@ -9,10 +10,21 @@ import PaymentWizard from './Partials/PaymentWizard'; // Komponen baru untuk pem
 import { Car, Truck, Trash2, ArrowLeft } from 'lucide-react';
 
 const PemesananPage = () => {
+    const location = useLocation();
+    
     // State Management
     const [step, setStep] = useState(1); // 1: Form Input, 2: Payment Wizard
     const [selectedService, setSelectedService] = useState(null);
     const [orderData, setOrderData] = useState(null); // Menyimpan data pesanan dari database
+
+    // Check jika ada data pesanan dari navigation state (dari profile)
+    useEffect(() => {
+        if (location.state?.orderData && location.state?.showPayment) {
+            setOrderData(location.state.orderData);
+            setStep(2); // Langsung ke payment wizard
+            window.scrollTo(0, 0);
+        }
+    }, [location]);
 
     // Data pilihan layanan
     const services = [
@@ -34,7 +46,12 @@ const PemesananPage = () => {
         if (!orderData?.id_pemesanan) return;
 
         try {
-            const res = await axios.get(`/api/pemesanan/${orderData.id_pemesanan}`);
+            const token = localStorage.getItem('auth_token');
+            const res = await axios.get(`/api/pemesanan/${orderData.id_pemesanan}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (res.data.status === 'success') {
                 setOrderData(res.data.data); // Update state dengan data terbaru dari DB
                 // Opsional: Beri notifikasi kecil/console log

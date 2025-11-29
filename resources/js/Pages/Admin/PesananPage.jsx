@@ -17,17 +17,31 @@ const PemesananPage = ({ setHeaderAction }) => {
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
     });
 
-    const fetchPemesanan = () => {
-        setIsLoading(true);
-        api.get(`/api/admin/pemesanan?search=${search}&layanan=${activeTab}`)
-            .then(res => {
-                setPemesanan(res.data);
-            })
-            .catch(err => {
-                console.error("Gagal mengambil data pemesanan:", err);
-            })
-            .finally(() => setIsLoading(false));
-    };
+    const fetchPemesanan = async () => {
+    setIsLoading(true);
+    try {
+        const token = localStorage.getItem('auth_token');
+        const res = await axios.get(`/api/admin/pemesanan`, {
+            params: { search, layanan: activeTab },
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        // Validasi array
+        if (Array.isArray(res.data)) {
+            setPemesanan(res.data);
+        } else if (res.data.data && Array.isArray(res.data.data)) {
+            setPemesanan(res.data.data);
+        } else {
+            setPemesanan([]);
+            console.error("API returned non-array:", res.data);
+        }
+    } catch (err) {
+        console.error("Gagal mengambil data pemesanan:", err);
+        setPemesanan([]);
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     useEffect(() => {
         fetchPemesanan();
@@ -38,27 +52,31 @@ const PemesananPage = ({ setHeaderAction }) => {
         return () => setHeaderAction(null);
     }, [setHeaderAction]);
 
-    const handleDelete = (id) => {
-        api.delete(`/api/admin/pemesanan/${id}`)
-            .then(() => {
-                fetchPemesanan();
-                setDeleteConfirm(null);
-            })
-            .catch(err => {
-                console.error("Gagal menghapus:", err);
-                alert("Gagal menghapus pemesanan.");
+    const handleDelete = async (id) => {
+        try {
+            const token = localStorage.getItem('auth_token');
+            await axios.delete(`/api/admin/pemesanan/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
+            fetchPemesanan();
+            setDeleteConfirm(null);
+        } catch (err) {
+            console.error("Gagal menghapus:", err);
+            alert("Gagal menghapus pemesanan.");
+        }
     };
 
-    const handleVerifikasi = (id) => {
-        api.put(`/api/admin/pemesanan/${id}/verifikasi`)
-            .then(() => {
-                fetchPemesanan();
-            })
-            .catch(err => {
-                console.error("Gagal verifikasi:", err);
-                alert("Gagal verifikasi pemesanan.");
+    const handleVerifikasi = async (id) => {
+        try {
+            const token = localStorage.getItem('auth_token');
+            await axios.put(`/api/admin/pemesanan/${id}/verifikasi`, {}, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
+            fetchPemesanan();
+        } catch (err) {
+            console.error("Gagal verifikasi:", err);
+            alert("Gagal verifikasi pemesanan.");
+        }
     };
 
     const formatCurrency = (amount) => {

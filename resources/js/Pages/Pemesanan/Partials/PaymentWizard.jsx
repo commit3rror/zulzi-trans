@@ -354,7 +354,13 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
             data.append('metode_bayar', form.metode_bayar); // Kirim metode yang dipilih (BCA/QRIS) 
 
             try {
-                await axios.post('/api/pembayaran', data);
+                const token = localStorage.getItem('auth_token');
+                await axios.post('/api/pembayaran', data, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
                 refreshOrder(); 
                 setScreen('success'); 
             } catch (err) {
