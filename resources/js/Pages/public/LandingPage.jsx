@@ -1,21 +1,81 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Truck, User, Star, Calendar, CheckCircle, Phone, Zap, Shield, Clock, Users } from 'lucide-react';
 import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
 import { getPublicReviews } from '../../services/reviewService';
-import { 
-    Zap, 
-    Shield, 
-    Clock, 
-    MapPin,   
-    Menu,
-    Users, 
-    X, 
-    ArrowRight 
-} from 'lucide-react';
+import { Alert } from '@/Components/ReusableUI'; // <-- IMPORT ALERT COMPONENT
+
+// Data Armada ditanam langsung di Front-end
+const ARMADA_DATA = [
+  {
+    id_layanan: 1,
+    nama_layanan: 'Angkut Barang',
+    armada: [
+      {
+        id_armada: 1,
+        no_plat: 'B 1001 ZUL',
+        jenis_kendaraan: 'Minibus',
+        kapasitas: '19 Orang',
+        harga_sewa_per_hari: 800000,
+        status_ketersediaan: 'Tersedia',
+      },
+      {
+        id_armada: 2,
+        no_plat: 'B 2002 TRANS',
+        jenis_kendaraan: 'Truk Box',
+        kapasitas: '4 Ton',
+        harga_sewa_per_hari: 1200000,
+        status_ketersediaan: 'Tersedia',
+      },
+    ]
+  },
+  {
+    id_layanan: 2,
+    nama_layanan: 'Angkut Sampah',
+    armada: [
+      {
+        id_armada: 3,
+        no_plat: 'B 3003 ZUL',
+        jenis_kendaraan: 'Avanza',
+        kapasitas: '7 Orang',
+        harga_sewa_per_hari: 450000,
+        status_ketersediaan: 'Tersedia',
+      },
+      {
+        id_armada: 4,
+        no_plat: 'B 4004 TRANSPORT',
+        jenis_kendaraan: 'Canter',
+        kapasitas: '3 Ton',
+        harga_sewa_per_hari: 600000,
+        status_ketersediaan: 'Tersedia',
+      },
+    ]
+  },
+  {
+    id_layanan: 3,
+    nama_layanan: 'Sewa Kendaraan',
+    armada: [
+      {
+        id_armada: 5,
+        no_plat: 'B 5005 RENTAL',
+        jenis_kendaraan: 'Innova',
+        kapasitas: '8 Orang',
+        harga_sewa_per_hari: 750000,
+        status_ketersediaan: 'Tersedia',
+      },
+      {
+        id_armada: 6,
+        no_plat: 'B 6006 ZULZI',
+        jenis_kendaraan: 'Elf',
+        kapasitas: '16 Orang',
+        harga_sewa_per_hari: 950000,
+        status_ketersediaan: 'Tersedia',
+      },
+    ]
+  },
+];
 
 export default function LandingPage(props) { 
-  // props.auth biasanya dikirim otomatis oleh Laravel/Inertia middleware ke page component
   const auth = props.auth || {}; 
 
   const [services, setServices] = useState([]);
@@ -81,19 +141,9 @@ export default function LandingPage(props) {
         const reviewResponse = await getPublicReviews();
         const reviewData = reviewResponse.data.data || reviewResponse.data || [];
         
-        console.log("🎯 Review API Response:", reviewResponse);
-        console.log("📊 Review Data:", reviewData);
-        console.log("📈 Total Reviews:", Array.isArray(reviewData) ? reviewData.length : 0);
-        
-        // Backend sudah filter is_displayed, jadi langsung set
         const reviews = Array.isArray(reviewData) ? reviewData : [];
         setReviews(reviews);
         
-        if (reviews.length === 0) {
-          console.warn("⚠️ Tidak ada review yang ditampilkan. Pastikan:");
-          console.warn("1. Migration sudah dijalankan: php artisan migrate");
-          console.warn("2. Ada data ulasan dengan is_displayed = true di admin");
-        }
       } catch (error) {
         console.error("❌ Gagal mengambil data landing page:", error);
         // Fallback: gunakan data armada statis
@@ -125,12 +175,49 @@ export default function LandingPage(props) {
       return () => clearInterval(reviewTimer);
     }
   }, [reviews.length]);
+  
+  // ============================================================
+  // ✅ LOGIC BARU: Cek dan Tampilkan Notifikasi OAuth
+  // ============================================================
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      const storedAlert = localStorage.getItem('oauth_alert');
+      if (storedAlert) {
+        try {
+          const alertData = JSON.parse(storedAlert);
+          setOauthAlert(alertData);
+          
+          // Set timer untuk menghilangkan alert setelah 5 detik
+          setTimeout(() => setOauthAlert(null), 5000);
+          
+        } catch (e) {
+          console.error("Failed to parse OAuth alert:", e);
+        }
+        // Pastikan alert dihapus dari storage setelah dibaca
+        localStorage.removeItem('oauth_alert');
+      }
+      isInitialLoad.current = false;
+    }
+  }, []); 
+  // ============================================================
 
   return (
     <div className="font-sans antialiased text-gray-800 bg-white min-h-screen flex flex-col">
       
       {/* Panggil Navbar Reusable */}
       <Navbar auth={auth} />
+
+      {/* --- NOTIFIKASI OAUTH DI ATAS HERO --- */}
+      {oauthAlert && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md p-4 animate-fade-in-up">
+            <Alert 
+                type={oauthAlert.type} 
+                message={oauthAlert.message} 
+                onClose={() => setOauthAlert(null)} 
+            />
+        </div>
+      )}
+      {/* --- END NOTIFIKASI --- */}
 
       {/* --- HERO SECTION --- */}
       <section className="relative bg-gradient-to-br from-[#f0f9ff] via-white to-blue-50 pt-40 pb-40 overflow-hidden">

@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password; // ✅ PERBAIKAN: Import Facade Password untuk Forgot Password
+use Illuminate\Validation\ValidationException; // ✅ PERBAIKAN: Import ValidationException (jika dibutuhkan, optional)
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -22,7 +25,6 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         return view('auth.login');
-
     }
 
     /**
@@ -186,57 +188,133 @@ class AuthController extends Controller
      * 2. Terima Data dari Google
      */
     public function handleGoogleCallback()
-{
-    try {
-        // Ambil data user dari Google
-        $googleUser = Socialite::driver('google')->stateless()->user(); 
+    {
+        try {
+            // --- PERBAIKAN DI SINI ---
+            // Kita beri tahu VS Code bahwa driver ini adalah 'AbstractProvider'
+            // yang memiliki method stateless()
+            
+            /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+            $driver = Socialite::driver('google');
 
-        // Cari user berdasarkan google_id ATAU email
-        $user = User::where('google_id', $googleUser->getId())
-                    ->orWhere('email', $googleUser->getEmail())
-                    ->first();
+            // Sekarang panggil stateless() dari variabel $driver
+            $googleUser = $driver->stateless()->user(); 
+            // -------------------------
 
-        if (!$user) {
-            // Jika user belum ada, buat baru
-            $user = User::create([
-                'role_pengguna' => 'customer',
-                'nama' => $googleUser->getName(),
-                'email' => $googleUser->getEmail(),
-                'google_id' => $googleUser->getId(),
-                'avatar' => $googleUser->getAvatar(),
-                'password' => Hash::make(Str::random(16)),
-                'no_telepon' => null,
-                'tgl_daftar' => now(),
-            ]);
-        } else {
-            // Update google_id jika belum ada
-            if (!$user->google_id) {
-                $user->update([
+            // Cari user berdasarkan google_id ATAU email
+            $user = User::where('google_id', $googleUser->getId())
+                        ->orWhere('email', $googleUser->getEmail())
+                        ->first();
+
+            if (!$user) {
+                // Jika user belum ada, buat baru
+                $user = User::create([
+                    'role_pengguna' => 'customer',
+                    'nama' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar()
+                    'avatar' => $googleUser->getAvatar(),
+                    'password' => Hash::make(Str::random(16)),
+                    'no_telepon' => null,
+                    'tgl_daftar' => now(),
                 ]);
+            } else {
+                // Update google_id jika belum ada
+                if (!$user->google_id) {
+                    $user->update([
+                        'google_id' => $googleUser->getId(),
+                        'avatar' => $googleUser->getAvatar()
+                    ]);
+                }
             }
+
+            // Generate Token
+            $user->tokens()->delete();
+            $token = $user->createToken('auth_token')->plainTextToken;
+            
+            // Redirect ke Frontend
+            $userDataEncoded = urlencode(json_encode(new UserResource($user)));
+            
+            return redirect('/auth/callback?token=' . $token . '&user=' . $userDataEncoded);
+
+        } catch (\Exception $e) {
+            // Pastikan Anda sudah menambahkan: use Illuminate\Support\Facades\Log; di atas
+            Log::error('Google OAuth Error: ' . $e->getMessage());
+            
+            return redirect('/auth/callback?error=' . urlencode('Gagal login dengan Google: ' . $e->getMessage()));
+        }
+    }
+
+    // ==========================================
+    //  FORGOT & RESET PASSWORD LOGIC
+    // ==========================================
+
+    /**
+     * Kirim link reset password ke email user.
+     */
+    public function sendPasswordResetLink(Request $request): JsonResponse
+    {
+        // dd($request->all());
+        // 1. Validasi input email
+        $request->validate(['email' => 'required|email']);
+
+
+        // 2. Kirim notifikasi link reset password
+        // getBroker() secara default mengambil 'users' (provider) dari config/auth.php
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Link reset password berhasil dikirim ke email Anda.',
+            ]);
         }
 
-        // ============================================================
-        // ✅ PERBAIKAN: Generate Token untuk Frontend (Sanctum)
-        // ============================================================
-        
-        // 1. Buat token Sanctum (sama seperti login manual)
-        $token = $user->createToken('auth_token')->plainTextToken;
-        
-        // 2. Login session (opsional, untuk web guard)
-        Auth::login($user);
-        
-        // 3. Redirect ke halaman callback khusus dengan token di URL
-        return redirect('/auth/callback?token=' . $token);
-        
-        // ============================================================
-
-    } catch (\Exception $e) {
-        \Log::error('Google OAuth Error: ' . $e->getMessage());
-        
-        return redirect('/login?error=' . urlencode('Gagal login dengan Google'));
+        // Jika gagal (misal email tidak terdaftar)
+        // Laravel secara default memberikan pesan generik untuk keamanan.
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengirim link reset. Email tidak terdaftar.',
+        ], 400); 
     }
-}
+
+    /**
+     * Memproses reset password menggunakan token.
+     * Biasanya dipanggil setelah user mengklik link di email.
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        // 1. Validasi input (token, email, password, password_confirmation)
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        // 2. Panggil fungsi reset password dari Laravel
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Password Anda berhasil diubah.',
+            ]);
+        }
+
+        // Jika gagal (misal token kadaluarsa/salah)
+        return response()->json([
+            'success' => false,
+            'message' => 'Reset password gagal. Token tidak valid atau kedaluwarsa.',
+        ], 400); 
+    }
 }

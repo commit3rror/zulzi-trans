@@ -1,4 +1,4 @@
-// resources/service/authService.js
+// resources/js/services/authService.js
 import api from './api';
 import axios from 'axios'; 
 
@@ -44,28 +44,6 @@ const authService = {
     me: async () => {
         try {
             const response = await api.get('/auth/me'); 
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error;
-        }
-    },
-
-    // ✅ BARU: Kirim email lupa password
-    forgotPassword: async (data) => {
-        try {
-            await authService.getCsrfToken();
-            const response = await api.post('/auth/forgot-password', data);
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error;
-        }
-    },
-    
-    // ✅ BARU: Reset password dengan token
-    resetPassword: async (data) => {
-        try {
-            await authService.getCsrfToken();
-            const response = await api.post('/auth/reset-password', data);
             return response.data;
         } catch (error) {
             throw error.response?.data || error;

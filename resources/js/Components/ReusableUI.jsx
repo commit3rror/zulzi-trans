@@ -1,252 +1,246 @@
 import React from 'react';
-import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
+import { AlertCircle, CheckCircle, X } from 'lucide-react';
 
-// ==================== FORM COMPONENTS ====================
-
-/**
- * FormInput - Input teks standar
- */
-export const FormInput = ({ 
-    label, name, value, onChange, error, type = 'text', placeholder = '', 
-    disabled = false, required = false, ...props 
+// Form Input Component
+export const FormInput = ({
+    label,
+    name,
+    type = 'text',
+    value,
+    onChange,
+    error,
+    placeholder,
+    required = false,
+    disabled = false,
+    className = ''
 }) => {
     return (
-        <div className="space-y-2 w-full">
+        <div className="space-y-2">
             {label && (
-                <label htmlFor={name} className="block text-sm font-medium text-gray-700">
-                    {label} {required && <span className="text-red-500">*</span>}
+                <label className="block text-sm font-medium text-gray-700">
+                    {label}
+                    {required && <span className="text-red-500">*</span>}
                 </label>
             )}
             <input
                 type={type}
-                id={name}
                 name={name}
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
                 disabled={disabled}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
-                    error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
-                } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                {...props}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    error ? 'border-red-500' : 'border-gray-300'
+                } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'} ${className}`}
             />
-            {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
+            {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
     );
 };
 
-/**
- * FormSelect - Dropdown menu standar
- */
-export const FormSelect = ({ 
-    label, name, value, onChange, error, children, 
-    disabled = false, required = false 
+// Form Select Component
+export const FormSelect = ({
+    label,
+    name,
+    value,
+    onChange,
+    options = [],
+    error,
+    required = false,
+    disabled = false,
+    placeholder = 'Pilih opsi...'
 }) => {
     return (
-        <div className="space-y-2 w-full">
+        <div className="space-y-2">
             {label && (
-                <label htmlFor={name} className="block text-sm font-medium text-gray-700">
-                    {label} {required && <span className="text-red-500">*</span>}
+                <label className="block text-sm font-medium text-gray-700">
+                    {label}
+                    {required && <span className="text-red-500">*</span>}
                 </label>
             )}
             <select
-                id={name}
                 name={name}
                 value={value}
                 onChange={onChange}
                 disabled={disabled}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
-                    error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
-                } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    error ? 'border-red-500' : 'border-gray-300'
+                } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
             >
-                {children}
+                <option value="">{placeholder}</option>
+                {options.map((option) => (
+                    <option key={option.value} value={option.value}>
+                        {option.label}
+                    </option>
+                ))}
             </select>
-            {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
+            {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
     );
 };
 
-/**
- * FormTextarea - Textarea standar
- */
-export const FormTextarea = ({ 
-    label, name, value, onChange, error, placeholder = '', 
-    rows = 4, disabled = false, required = false 
-}) => {
-    return (
-        <div className="space-y-2 w-full">
-            {label && (
-                <label htmlFor={name} className="block text-sm font-medium text-gray-700">
-                    {label} {required && <span className="text-red-500">*</span>}
-                </label>
-            )}
-            <textarea
-                id={name}
-                name={name}
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                rows={rows}
-                disabled={disabled}
-                className={`w-full px-4 py-2 border rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
-                    error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
-                } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-            />
-            {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
-        </div>
-    );
-};
+// Alert Component
+export const Alert = ({ type = 'info', message, onClose, title = '' }) => {
+    const bgColor =
+        type === 'success'
+            ? 'bg-green-50 border-green-200'
+            : type === 'error'
+            ? 'bg-red-50 border-red-200'
+            : type === 'warning'
+            ? 'bg-yellow-50 border-yellow-200'
+            : 'bg-blue-50 border-blue-200';
 
-// ==================== DISPLAY & ACTION COMPONENTS ====================
+    const textColor =
+        type === 'success'
+            ? 'text-green-800'
+            : type === 'error'
+            ? 'text-red-800'
+            : type === 'warning'
+            ? 'text-yellow-800'
+            : 'text-blue-800';
 
-export const StatCard = ({ label, value, subtext, icon: Icon, iconBgColor = 'bg-indigo-600' }) => {
+    const iconColor =
+        type === 'success'
+            ? 'text-green-500'
+            : type === 'error'
+            ? 'text-red-500'
+            : type === 'warning'
+            ? 'text-yellow-500'
+            : 'text-blue-500';
+
+    const Icon = type === 'error' ? AlertCircle : CheckCircle;
+
     return (
-        <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm text-gray-500 font-medium">{label}</p>
-                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{value}</h3>
-                    {subtext && <p className="text-xs text-gray-500 mt-1">{subtext}</p>}
+        <div className={`border rounded-lg p-4 mb-4 ${bgColor}`}>
+            <div className="flex items-start gap-3">
+                <Icon className={`${iconColor} flex-shrink-0 mt-0.5`} size={20} />
+                <div className="flex-1">
+                    {title && <p className={`font-semibold ${textColor}`}>{title}</p>}
+                    <p className={`${textColor} text-sm`}>{message}</p>
                 </div>
-                {Icon && (
-                    <div className={`${iconBgColor} p-4 rounded-lg`}>
-                        <Icon className="w-8 h-8 text-white" />
-                    </div>
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className={`${textColor} hover:opacity-75 transition-opacity`}
+                    >
+                        <X size={18} />
+                    </button>
                 )}
             </div>
         </div>
     );
 };
 
-export const PrimaryButton = ({ onClick, icon: Icon, children, type = 'button', disabled = false, className = '' }) => {
+// Loading Button Component
+export const LoadingButton = ({ type = 'button', loading, disabled, children, className = '', onClick }) => {
     return (
         <button
             type={type}
+            disabled={loading || disabled}
+            onClick={onClick}
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium ${className}`}
+        >
+            {loading ? (
+                <span className="flex items-center gap-2">
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                    Loading...
+                </span>
+            ) : (
+                children
+            )}
+        </button>
+    );
+};
+
+// Primary Button Component
+export const PrimaryButton = ({ onClick, children, className = '', disabled = false }) => {
+    return (
+        <button
             onClick={onClick}
             disabled={disabled}
-            className={`bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium ${className}`}
         >
-            {Icon && <Icon className="w-5 h-5" />}
             {children}
         </button>
     );
 };
 
-export const SecondaryButton = ({ onClick, icon: Icon, children, type = 'button', disabled = false, className = '' }) => {
+// Action Button Component (for edit/delete)
+export const ActionButton = ({ onClick, children, variant = 'primary', className = '' }) => {
+    const variants = {
+        primary: 'bg-blue-500 hover:bg-blue-600 text-white',
+        danger: 'bg-red-500 hover:bg-red-600 text-white',
+        warning: 'bg-yellow-500 hover:bg-yellow-600 text-white',
+        secondary: 'bg-gray-400 hover:bg-gray-500 text-white'
+    };
+
     return (
         <button
-            type={type}
             onClick={onClick}
-            disabled={disabled}
-            className={`bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+            className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${variants[variant]} ${className}`}
         >
-            {Icon && <Icon className="w-5 h-5" />}
             {children}
         </button>
     );
 };
 
-/**
- * LoadingButton - Penting untuk Login Page
- */
-export const LoadingButton = ({ isLoading, children, loadingText = 'Memproses...', type = 'submit', className = '', ...props }) => {
+// Search Input Component
+export const SearchInput = ({ value, onChange, placeholder = 'Cari...', className = '' }) => {
     return (
-        <button
-            type={type}
-            disabled={isLoading}
-            className={`w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all ${className}`}
-            {...props}
-        >
-            {isLoading ? (
-                <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {loadingText}
-                </>
-            ) : children}
-        </button>
+        <input
+            type="text"
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
+        />
     );
 };
 
-export const ActionButton = ({ type, onClick, title }) => {
-    const config = {
-        edit: { icon: Edit2, className: 'text-blue-600 hover:text-blue-800 hover:bg-blue-50', title: title || 'Edit' },
-        delete: { icon: Trash2, className: 'text-red-600 hover:text-red-800 hover:bg-red-50', title: title || 'Hapus' }
+// Status Badge Component
+export const StatusBadge = ({ status, className = '' }) => {
+    const statusColors = {
+        active: 'bg-green-100 text-green-800',
+        inactive: 'bg-red-100 text-red-800',
+        pending: 'bg-yellow-100 text-yellow-800',
+        completed: 'bg-blue-100 text-blue-800',
+        'in-progress': 'bg-purple-100 text-purple-800',
+        available: 'bg-green-100 text-green-800',
+        unavailable: 'bg-red-100 text-red-800'
     };
-    const { icon: Icon, className, title: btnTitle } = config[type];
 
     return (
-        <button onClick={onClick} title={btnTitle} className={`p-2 rounded-lg transition-all duration-200 ${className}`}>
-            <Icon className="w-5 h-5" />
-        </button> 
-    );
-};
-
-export const SearchInput = ({ value, onChange, placeholder = 'Cari data...' }) => {
-    return (
-        <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-                type="text"
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-            />
-        </div>
-    );
-};
-
-export const StatusBadge = ({ status }) => {
-    const getStatusColor = (status) => {
-        const s = status?.toLowerCase() || '';
-        if (s.includes('tersedia') || s.includes('aktif') || s.includes('selesai')) return 'bg-green-100 text-green-800';
-        if (s.includes('proses') || s.includes('pending') || s.includes('digunakan')) return 'bg-yellow-100 text-yellow-800';
-        if (s.includes('tidak') || s.includes('nonaktif') || s.includes('batal') || s.includes('perbaikan')) return 'bg-red-100 text-red-800';
-        return 'bg-blue-100 text-blue-800';
-    };
-    return (
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}>
+        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[status] || 'bg-gray-100 text-gray-800'} ${className}`}>
             {status}
         </span>
     );
 };
 
-// ==================== MODAL COMPONENT (FIXED) ====================
-
-/**
- * Modal - Jendela pop-up.
- * FIXED: Menggunakan 'bg-black/50' agar background transparan (tidak hitam pekat).
- */
+// Modal Component
 export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
     if (!isOpen) return null;
 
     const sizeClasses = {
-        sm: 'max-w-md', md: 'max-w-2xl', lg: 'max-w-4xl', xl: 'max-w-6xl'
+        sm: 'max-w-sm',
+        md: 'max-w-md',
+        lg: 'max-w-lg',
+        xl: 'max-w-xl',
+        '2xl': 'max-w-2xl'
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-            {/* Backdrop: Menggunakan opacity Tailwind yang benar */}
-            <div 
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-                onClick={onClose}
-            />
-            
-            {/* Modal Container */}
-            <div className="flex min-h-full items-center justify-center p-4">
-                <div className={`relative bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} transform transition-all z-10`}>
-                    {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                        <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-                            <X className="w-6 h-6" />
-                        </button>
-                    </div>
-                    
-                    {/* Content */}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`bg-white rounded-lg shadow-xl ${sizeClasses[size]} w-full mx-4`}>
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
+                <div className="overflow-y-auto max-h-[calc(100vh-200px)]">
                     {children}
                 </div>
             </div>
@@ -254,50 +248,78 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
     );
 };
 
-// ==================== UTILS ====================
-
-export const Alert = ({ type = 'info', message, onClose }) => {
-    const types = {
-        success: { bg: 'bg-green-50', border: 'border-green-500', text: 'text-green-800' },
-        error: { bg: 'bg-red-50', border: 'border-red-500', text: 'text-red-800' },
-        warning: { bg: 'bg-yellow-50', border: 'border-yellow-500', text: 'text-yellow-800' },
-        info: { bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-800' }
+// Stat Card Component
+export const StatCard = ({ title, value, icon: Icon, trend, color = 'blue' }) => {
+    const colorClasses = {
+        blue: 'bg-blue-50 text-blue-600',
+        green: 'bg-green-50 text-green-600',
+        red: 'bg-red-50 text-red-600',
+        yellow: 'bg-yellow-50 text-yellow-600',
+        purple: 'bg-purple-50 text-purple-600'
     };
-    const { bg, border, text } = types[type];
 
     return (
-        <div className={`${bg} ${border} ${text} border-l-4 p-4 rounded-lg mb-4 flex items-center justify-between`}>
-            <p className="font-medium">{message}</p>
-            {onClose && <button onClick={onClose} className="ml-4 text-xl font-bold hover:opacity-70">×</button>}
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-gray-500 text-sm font-medium">{title}</p>
+                    <p className="text-2xl font-bold text-gray-800 mt-2">{value}</p>
+                    {trend && (
+                        <p className="text-sm text-green-600 mt-1">{trend}</p>
+                    )}
+                </div>
+                {Icon && (
+                    <div className={`${colorClasses[color]} p-3 rounded-lg`}>
+                        <Icon size={24} />
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
 
-export const Loading = ({ message = 'Loading...' }) => (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
-        <p className="mt-4 text-gray-500 font-medium">{message}</p>
-    </div>
-);
+// Confirmation Dialog
+export const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, isDangerous = false }) => {
+    if (!isOpen) return null;
 
-export const Table = ({ headers, children }) => (
-    <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-                <tr>
-                    {headers.map((h, i) => (
-                        <th key={i} className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">{h}</th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">{children}</tbody>
-        </table>
-    </div>
-);
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-2">{title}</h2>
+                <p className="text-gray-600 mb-6">{message}</p>
+                <div className="flex gap-3 justify-end">
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                            isDangerous
+                                ? 'bg-red-600 hover:bg-red-700'
+                                : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                    >
+                        Konfirmasi
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
-export const EmptyState = ({ message = 'Tidak ada data', icon: Icon }) => (
-    <div className="flex flex-col items-center justify-center py-12">
-        {Icon && <Icon className="w-16 h-16 text-gray-300 mb-4" />}
-        <p className="text-gray-500 text-lg">{message}</p>
-    </div>
-);
+export default {
+    FormInput,
+    FormSelect,
+    Alert,
+    LoadingButton,
+    PrimaryButton,
+    ActionButton,
+    SearchInput,
+    StatusBadge,
+    Modal,
+    StatCard,
+    ConfirmDialog
+};

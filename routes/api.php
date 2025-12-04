@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemesananController;
-use App\Http\Controllers\PembayaranController; // <-- TAMBAHAN PENTING: Import Controller Pembayaran
+// use App\Http\Controllers\PembayaranController; // <-- TAMBAHAN PENTING: Import Controller Pembayaran
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ReviewController;
@@ -43,6 +43,8 @@ Route::get('/health', function () {
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
 /*
@@ -141,6 +143,21 @@ Route::get('/pemesanan/{id}', [PemesananController::class, 'show']); // Get orde
         // Route::post('/change-password', [ProfileController::class, 'changePassword']); 
     });
 
+    // Profile Routes
+    Route::prefix('user/profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'show']); 
+        Route::put('/', [ProfileController::class, 'update']); 
+    });
+
+    // User Routes
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    
+    // PENTING: Pindahkan Route Pemesanan ke dalam grup ini
+    // Memastikan Pemesanan hanya bisa dibuat jika user sudah login.
+    Route::post('/pemesanan', [PemesananController::class, 'store']);
+
     // User Routes
     Route::get('/user', function (Request $request) {
         return $request->user();
@@ -191,6 +208,4 @@ Route::get('/pemesanan/{id}', [PemesananController::class, 'show']); // Get orde
         Route::get('/ulasan/{id}', [UlasanController::class, 'show']);
         Route::put('/ulasan/{id}', [UlasanController::class, 'update']);
         Route::delete('/ulasan/{id}', [UlasanController::class, 'destroy']);
-    });
-
 });
