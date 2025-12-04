@@ -6,7 +6,7 @@ import OAuthCallback from './Pages/Auth/OAuthCallback';
 import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 
 // Import hooks
-import { useAuth } from '@/hooks/useAuth'; // 👈 PENAMBAHAN KRUSIAL UNTUK MEMPERBAIKI ERROR
+import { useAuth } from '@/hooks/useAuth';
 
 // Import AuthProvider & AdminRouteGuard
 import { AuthProvider } from '@/context/AuthContext';
@@ -17,6 +17,7 @@ import LandingPage from '@/Pages/public/LandingPage';
 import AboutPage from '@/Pages/AboutPage';
 import ReviewPage from '@/Pages/ReviewPage';
 import PemesananPage from '@/Pages/Pemesanan/Index';
+import ProfilePage from '@/Pages/Profile/ProfilePage';
 
 // Import halaman Auth
 import LoginPage from '@/Pages/Auth/LoginPage.jsx';
@@ -29,10 +30,6 @@ import AdminPanel from '@/Pages/Admin/AdminPanel.jsx';
 
 // Wrapper untuk menangkap token Google OAuth
 const LandingPageWithAuth = () => {
-    // ⚡ CATATAN: Karena Anda telah memodifikasi AuthController untuk menggunakan SESSION,
-    // logika pengambilan token di sini TIDAK AKAN BERJALAN,
-    // tetapi komponen ini tetap harus berfungsi setelah impor useAuth.
-
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { updateUser } = useAuth();
@@ -52,8 +49,6 @@ const LandingPageWithAuth = () => {
                     localStorage.setItem('user', JSON.stringify(userData));
                     updateUser(userData);
                 }
-
-                // PERBAIKAN: Import dari path yang benar
                 import('@/services/api').then(({ default: api }) => {
                     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 });
@@ -97,8 +92,12 @@ root.render(
           <Route path="/auth/callback" element={<OAuthCallback />} />
 
           {/* ===================================== */}
-          {/* ROUTE USER (Harus Login)             */}\
+          {/* ROUTE USER (Harus Login)             */}
           {/* ===================================== */}
+          <Route
+            path="/profile"
+            element={<AdminRouteGuard element={<ProfilePage />} isAdminOnly={false} />}
+          />
           <Route
             path="/edit-profile"
             element={<AdminRouteGuard element={<EditProfile />} isAdminOnly={false} />}

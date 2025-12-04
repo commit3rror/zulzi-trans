@@ -18,6 +18,8 @@ return new class extends Migration
             // Foreign Keys
             $table->unsignedBigInteger('id_pengguna');
             $table->unsignedBigInteger('id_layanan');
+
+            // PENTING: Ini harus nullable agar bisa menggunakan sistem Dispatcher
             $table->unsignedBigInteger('id_armada')->nullable();
             $table->unsignedBigInteger('id_supir')->nullable();
 
@@ -28,17 +30,17 @@ return new class extends Migration
 
             // Lokasi
             $table->string('lokasi_jemput');
-            $table->string('lokasi_tujuan'); // Pastikan hanya satu definisi
+            $table->string('lokasi_tujuan')->nullable();
 
             // Harga baru dan lama
             // Kita gunakan yang presisi tinggi (15 digit, 2 desimal).
             $table->decimal('total_biaya', 15, 2)->default(0);
             $table->decimal('harga_lama', 15, 2)->nullable();
 
-            $table->string('status_pemesanan', 20);
+            $table->string('status_pemesanan', 20)->default('Menunggu');
 
             // Detail Tambahan (Nullable karena tergantung jenis layanan)
-            $table->string('deskripsi_barang')->nullable();
+            $table->text('deskripsi_barang')->nullable();
             $table->double('est_berat_ton', 8, 2)->nullable();
             $table->string('foto_barang')->nullable();
             $table->integer('jumlah_orang')->nullable();

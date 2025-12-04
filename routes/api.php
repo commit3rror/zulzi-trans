@@ -1,9 +1,10 @@
 <?php
 
-use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemesananController;
+use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ReviewController;
@@ -26,7 +27,7 @@ Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
         'message' => 'Zulzi Trans Express API is running',
-        'timestamp' => now()->toISOString(),
+        'timestamp' => now()->toIso8601String(),
     ]);
 });
 
@@ -53,8 +54,8 @@ Route::get('/about', [AboutController::class, 'index']);
 Route::get('/reviews/target/{id_pemesanan}', [ReviewController::class, 'getReviewTarget']);
 Route::post('/reviews', [ReviewController::class, 'store']);
 
-// Route Pemesanan
-Route::post('/pemesanan', [PemesananController::class, 'store']);
+// Route Armada List (Public untuk dropdown)
+Route::get('/armada-list', [PemesananController::class, 'getArmadaList']);
 
 /*
 |--------------------------------------------------------------------------
@@ -63,7 +64,12 @@ Route::post('/pemesanan', [PemesananController::class, 'store']);
 */
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Auth Routes
+    // User Data
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    // Auth Actions
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
@@ -71,28 +77,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
     });
 
+    // Profile Routes
     Route::prefix('user/profile')->group(function () {
-
-        // 1. Route untuk melihat data (GET)
         Route::get('/', [ProfileController::class, 'show']);
-
-        // 2. Route untuk memperbarui data (PUT) - INI YANG HILANG/SALAH!
-        // Metode PUT harus mengarah ke ProfileController::update
         Route::put('/', [ProfileController::class, 'update']);
-
-        // Catatan: Jika Anda juga memiliki route password atau avatar, pastikan mereka ada di sini.
-        // Route::post('/change-password', [ProfileController::class, 'changePassword']);
     });
 
-});
-// Route Public
-Route::get('/reviews/public', [ReviewController::class, 'getPublicReviews']);
-Route::get('/services', [ServiceController::class, 'index']);
-    // User Routes
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    // User Pemesanan (PINDAH KE SINI - HARUS LOGIN)
+    Route::post('/pemesanan', [PemesananController::class, 'store']);
+    Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
+    Route::get('/user/pemesanan', [PemesananController::class, 'getUserOrders']);
 
+    // User Pembayaran (HARUS LOGIN)
+    Route::post('/pembayaran', [PembayaranController::class, 'store']);
     /*
     |--------------------------------------------------------------------------
     | Admin Only Routes
@@ -114,21 +111,6 @@ Route::get('/services', [ServiceController::class, 'index']);
         Route::put('/supir/{id}', [SupirController::class, 'update']);
         Route::delete('/supir/{id}', [SupirController::class, 'destroy']);
 
-        // Pesanan Management (jika ada)
-        // Route::get('/pesanan', [PesananController::class, 'index']);
-        // Route::get('/pesanan/{id}', [PesananController::class, 'show']);
-        // Route::put('/pesanan/{id}/status', [PesananController::class, 'updateStatus']);
-
-        // Armada Management (jika ada)
-        // Route::resource('armada', ArmadaController::class);
-
-        // Pembayaran Management (jika ada)
-        // Route::get('/pembayaran', [PembayaranController::class, 'index']);
-        // Route::put('/pembayaran/{id}/verify', [PembayaranController::class, 'verify']);
-
-        // Ulasan Management (jika ada)
-        // Route::get('/ulasan', [UlasanController::class, 'index']);
-        // Route::delete('/ulasan/{id}', [UlasanController::class, 'destroy']);
     });
 
 Route::middleware('api')->group(function () {
@@ -141,3 +123,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // ROUTE BARU UNTUK PEMESANAN (Menerima data dari React)
 Route::post('/pemesanan', [PemesananController::class, 'store']);
+
+});

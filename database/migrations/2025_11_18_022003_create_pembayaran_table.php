@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pembayaran', function (Blueprint $table) {
-            $table->id('id_pembayaran'); // bigint unsigned auto increment
+            $table->id('id_pembayaran'); // Primary Key
 
             // Foreign Keys
             $table->foreignId('id_pemesanan')
@@ -20,7 +20,7 @@ return new class extends Migration
                   ->onDelete('cascade');
 
             $table->foreignId('id_admin')
-                  ->nullable()
+                  ->nullable() // Boleh kosong (sebelum diverifikasi)
                   ->constrained('user', 'id_pengguna')
                   ->onDelete('set null');
 

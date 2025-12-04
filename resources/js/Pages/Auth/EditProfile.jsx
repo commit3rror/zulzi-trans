@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Alert } from '@/components/ReusableUI'; 
+import { Alert } from '@/Components/ReusableUI'; 
 import { ArrowLeft } from 'lucide-react';
 import userService from '../../../service/userService.js';
 

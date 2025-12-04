@@ -197,7 +197,10 @@ const PemesananPage = ({ setHeaderAction }) => {
                         <tr className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                             <th className="py-4 px-2 text-center">ID</th>
                             <th className="py-4 px-2 text-center">Pelanggan</th>
+                            <th className="py-4 px-2 text-center">Lokasi Jemput</th>
+                            { (activeTab === 'rental' || activeTab === 'angkutan') && (
                             <th className="py-4 px-2 text-center">Tujuan</th>
+                            )}
                             <th className="py-4 px-2 text-center">Keberangkatan</th>
                             <th className="py-4 px-2 text-center">{activeTab === 'rental' ? 'Penumpang' : 'Muatan'}</th>
                             <th className="py-4 px-2 text-center">Harga</th>
@@ -215,7 +218,10 @@ const PemesananPage = ({ setHeaderAction }) => {
                                 <tr key={item.id_pemesanan} className="hover:bg-slate-50 transition-colors">
                                     <td className="py-3.5 px-4 font-medium text-slate-900">{item.kode_pesanan}</td>
                                     <td className="py-3.5 px-4 text-slate-600">{item.nama_pelanggan}</td>
-                                    <td className="py-3.5 px-4 text-slate-600">{item.lokasi_tujuan}</td>
+                                    <td className="py-3.5 px-4 text-slate-600">{item.lokasi_jemput}</td>
+                                    { (activeTab === 'rental' || activeTab === 'angkutan') && (
+                                        <td className="py-3.5 px-4 text-slate-600">{item.lokasi_tujuan}</td>
+                                    )}
                                     <td className="py-3.5 px-4 text-slate-600">{formatDate(item.tgl_mulai)}</td>
                                     <td className="py-3.5 px-4 text-slate-600">
                                         {activeTab === 'rental' ? `${item.jumlah_orang} orang` :
@@ -260,7 +266,6 @@ const PemesananPage = ({ setHeaderAction }) => {
                 </table>
             </div>
 
-            {/* --- MODAL 1: KONFIRMASI / EDIT PESANAN --- */}
             {/* --- MODAL 1: KONFIRMASI / EDIT PESANAN --- */}
             <Modal isOpen={!!editItem} onClose={() => setEditItem(null)} title="Konfirmasi Pesanan">
                 {editItem && (
@@ -337,14 +342,17 @@ const PemesananPage = ({ setHeaderAction }) => {
                                 />
                             </div>
 
-                            <FormTextarea
-                                label="Catatan (Opsional)"
-                                name="catatan"
-                                value={formData.catatan}
-                                onChange={(e) => setFormData({...formData, catatan: e.target.value})}
-                                placeholder="Hasil Negosiasi dengan klien..."
-                                rows={3}
-                            />
+                            {/* Gambar Barang */}
+                            {editItem.foto_barang && (
+                            <div className="mt-4">
+                                <span className="text-sm text-slate-500">Foto Barang:</span>
+                                <img
+                                src={editItem.foto_barang}
+                                alt="Foto Barang"
+                                className="mt-2 w-full max-w-xs rounded-lg border border-slate-200"
+                                />
+                            </div>
+                            )}
                         </div>
 
                         {/* Footer Action */}

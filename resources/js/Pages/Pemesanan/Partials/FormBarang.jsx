@@ -4,7 +4,7 @@ import { MapPin, Package, Scale, Camera, Truck } from 'lucide-react';
 
 const FormBarang = ({ onBack, onSuccess }) => {
     const [formData, setFormData] = useState({
-        layanan: 'barang',
+        layanan: 'Angkut Barang',
         deskripsi_barang: '',
         est_berat_ton: '',
         id_armada: '',
@@ -35,11 +35,18 @@ const FormBarang = ({ onBack, onSuccess }) => {
         Object.keys(formData).forEach(key => data.append(key, formData[key] ?? ''));
 
         try {
-            const response = await axios.post('/api/pemesanan', data);
+            const response = await axios.post('/api/pemesanan', data, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
             if (onSuccess) onSuccess(response.data.data);
         } catch (error) {
             if (error.response?.status === 422) {
                 setErrors(error.response.data.errors);
+            } else if (error.response?.status === 401) {
+                alert('Anda harus login terlebih dahulu!');
+                window.location.href = '/login';
             } else {
                 alert('Error server');
             }

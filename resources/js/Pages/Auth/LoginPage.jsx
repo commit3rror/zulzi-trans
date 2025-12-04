@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { FormInput, Alert, LoadingButton } from '@/components/ReusableUI';
+import { FormInput, Alert, LoadingButton } from '@/Components/ReusableUI';
 import { CheckCircle } from 'lucide-react';
 
 const LoginPage = () => {

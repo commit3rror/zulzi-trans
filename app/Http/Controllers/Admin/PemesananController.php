@@ -33,6 +33,7 @@ class PemesananController extends Controller
                 'pemesanan.id_pemesanan',
                 'pemesanan.id_supir',
                 'pemesanan.id_armada',
+                'pemesanan.foto_barang',
                 DB::raw("CONCAT('RNT-', LPAD(pemesanan.id_pemesanan, 3, '0')) as kode_pesanan"),
                 'user.nama as nama_pelanggan',
                 'pemesanan.lokasi_jemput',

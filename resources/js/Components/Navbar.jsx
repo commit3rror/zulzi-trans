@@ -9,7 +9,7 @@ const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // 1. Ambil status otentikasi dari Context
+    // Ambil status otentikasi dari Context
     const { isAuthenticated, user, logout } = useAuth();
 
     const [isScrolled, setIsScrolled] = useState(false);
