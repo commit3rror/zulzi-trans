@@ -27,7 +27,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
     ];
 
     return (
-        <aside className="w-64 bg-slate-800 text-white min-h-screen flex flex-col fixed h-full shadow-lg z-10">
+        <aside className="w-64 bg-slate-800 text-white min-h-screen flex flex-col fixed h-full shadow-lg">
             {/* Logo Area */}
             <div className="p-6 flex items-center gap-3.5 mb-4">
                 <div className="bg-teal-400 p-2 rounded-full h-10 w-10 flex items-center justify-center shadow-inner">
