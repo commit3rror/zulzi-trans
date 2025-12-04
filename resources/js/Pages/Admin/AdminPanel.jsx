@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import AdminLayout from '@/Layouts/AdminLayout.jsx';
 import DashboardPage from '@/Pages/Admin/DashboardPage.jsx';
 import ArmadaPage from '@/Pages/Admin/ArmadaPage.jsx';
@@ -9,50 +10,32 @@ import KelolaSupir from '@/Pages/Admin/KelolaSupir.jsx';
 import KelolaUlasan from '@/Pages/Admin/KelolaUlasan.jsx';
 
 /**
- * Ini adalah komponen App utama yang bertindak sebagai router
- * untuk menampilkan halaman yang sesuai berdasarkan state.
+ * AdminPanel dengan React Router (Nested Routes)
+ * Mengganti window.history.pushState dengan navigate dari React Router
  */
 const AdminPanel = () => {
-    const [activePage, setActivePage] = useState('dashboard');
+    const navigate = useNavigate();
+    const location = useLocation();
     const [headerAction, setHeaderAction] = useState(null);
 
-    // Cek URL saat pertama kali load untuk menentukan halaman aktif
-    useEffect(() => {
-        // Ambil path setelah /admin/
-        const path = window.location.pathname.split('/admin/')[1] || 'dashboard';
+    // Deteksi halaman aktif dari URL
+    const getActivePage = () => {
+        const pathAfterAdmin = location.pathname.split('/admin/')[1];
+        
+        // Jika tidak ada path setelah /admin/, return 'dashboard'
+        if (!pathAfterAdmin || pathAfterAdmin === '') {
+            return 'dashboard';
+        }
+        
         // Hapus trailing slash jika ada
-        setActivePage(path.replace(/\/$/, ''));
-    }, []);
-
-    // Handle navigasi saat menu sidebar di-klik
-    const handleNavigate = (pageId) => {
-        setActivePage(pageId);
-        // Update URL di browser tanpa me-reload halaman
-        window.history.pushState(null, '', `/admin/${pageId}`);
+        return pathAfterAdmin.replace(/\/$/, '');
     };
 
-    // Render halaman yang sesuai
-    const renderPage = () => {
-        const props = { setHeaderAction }; // Prop untuk dikirim ke setiap halaman
+    const activePage = getActivePage();
 
-        switch (activePage) {
-            case 'dashboard':
-                return <DashboardPage {...props} />;
-            case 'armada':
-                return <ArmadaPage {...props} />;
-            case 'pengguna':
-                return <PenggunaPage {...props} />;
-            case 'pembayaran':
-                return <PembayaranPage {...props} />;
-            case 'pesanan' :
-                return <PesananPage {...props} />;
-            case 'supir':
-                return <KelolaSupir {...props} />;
-            case 'ulasan':
-                return <KelolaUlasan {...props} />;
-            default:
-                return <div className="p-10 text-center text-gray-400">Halaman "{activePage}" belum dibuat.</div>;
-        }
+    // Handle navigasi menggunakan React Router
+    const handleNavigate = (pageId) => {
+        navigate(`/admin/${pageId}`);
     };
 
     // Metadata untuk header
@@ -66,8 +49,8 @@ const AdminPanel = () => {
                 return { title: 'Pengelolaan Pengguna', subtitle: 'Kelola data pengguna sistem' };
             case 'pembayaran':
                 return { title: 'Verifikasi Pembayaran', subtitle: 'Verifikasi Pembayaran dari Pelanggan' };
-            case 'pesanan' :
-                return {title : 'Pengelolaan Pesanan dan Jadwal', subtitle: 'Kelola Pesanan dan Jadwal Perjalanan'};
+            case 'pesanan':
+                return { title: 'Pengelolaan Pesanan dan Jadwal', subtitle: 'Kelola Pesanan dan Jadwal Perjalanan' };
             case 'supir':
                 return { title: 'Pengelolaan Supir', subtitle: 'Kelola data supir untuk armada' };
             case 'ulasan':
@@ -84,7 +67,26 @@ const AdminPanel = () => {
             meta={getPageMeta()}
             headerAction={headerAction}
         >
-            {renderPage()}
+            <Routes>
+                {/* Default route: redirect /admin ke /admin/dashboard */}
+                <Route path="/" element={<Navigate to="dashboard" replace />} />
+                
+                {/* Nested routes untuk setiap halaman admin */}
+                <Route path="dashboard" element={<DashboardPage setHeaderAction={setHeaderAction} />} />
+                <Route path="armada" element={<ArmadaPage setHeaderAction={setHeaderAction} />} />
+                <Route path="pengguna" element={<PenggunaPage setHeaderAction={setHeaderAction} />} />
+                <Route path="pembayaran" element={<PembayaranPage setHeaderAction={setHeaderAction} />} />
+                <Route path="pesanan" element={<PesananPage setHeaderAction={setHeaderAction} />} />
+                <Route path="supir" element={<KelolaSupir setHeaderAction={setHeaderAction} />} />
+                <Route path="ulasan" element={<KelolaUlasan setHeaderAction={setHeaderAction} />} />
+                
+                {/* 404 route */}
+                <Route path="*" element={
+                    <div className="p-10 text-center text-gray-400">
+                        Halaman tidak ditemukan.
+                    </div>
+                } />
+            </Routes>
         </AdminLayout>
     );
 };
