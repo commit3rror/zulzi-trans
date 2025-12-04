@@ -9,6 +9,7 @@ import LandingPage from './Pages/public/LandingPage';
 import AboutPage from './Pages/AboutPage';
 import ReviewForm from './Pages/Review/ReviewForm';
 import ReviewSuccess from './Pages/Review/ReviewSuccess';
+import ResetPasswordPage from './Pages/Auth/ResetPasswordPage';
 
 // Disini kita daftarkan URL-nya
 const router = createBrowserRouter([
@@ -45,6 +46,18 @@ const router = createBrowserRouter([
         element: <OAuthCallback />
     },
     // Nanti tambah path lain disini (misal /login, /admin)
+    {
+        path: "/login",
+        element: <LoginPage />,
+    },
+    {
+        path: "/forgot-password", // Rute untuk halaman meminta reset link
+        element: <ForgotPasswordPage />,
+    },
+    {
+        path: "/reset-password", 
+        element: <ResetPasswordPage />,
+    },
 ]);
 
 export default router;

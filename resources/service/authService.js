@@ -48,6 +48,28 @@ const authService = {
         } catch (error) {
             throw error.response?.data || error;
         }
+    },
+
+    // ✅ BARU: Kirim email lupa password
+    forgotPassword: async (data) => {
+        try {
+            await authService.getCsrfToken();
+            const response = await api.post('/auth/forgot-password', data);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+    
+    // ✅ BARU: Reset password dengan token
+    resetPassword: async (data) => {
+        try {
+            await authService.getCsrfToken();
+            const response = await api.post('/auth/reset-password', data);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
     }
 };
 
