@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FormInput, Alert, LoadingButton } from '@/components/ReusableUI';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mail } from 'lucide-react';
 import authService from '../../../service/authService'; // Import service
 
 const ForgotPasswordPage = () => {
@@ -50,6 +50,27 @@ const ForgotPasswordPage = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4">
+            {/* Loading Overlay */}
+            {loading && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12 max-w-md w-full mx-4 text-center">
+                        <div className="flex justify-center mb-4">
+                            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800 mb-2">
+                            Mengirim Link Reset Password
+                        </h3>
+                        <p className="text-gray-600 text-sm">
+                            Silakan tunggu sebentar...
+                        </p>
+                        <div className="mt-4 flex items-center justify-center gap-2 text-blue-600">
+                            <Mail className="w-4 h-4" />
+                            <span className="text-xs">Email sedang dikirim</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="w-full max-w-md">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12 border border-gray-100">
                     <Link 
