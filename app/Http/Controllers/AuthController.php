@@ -15,6 +15,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Password; // ✅ PERBAIKAN: Import Facade Password untuk Forgot Password
 use Illuminate\Validation\ValidationException; // ✅ PERBAIKAN: Import ValidationException (jika dibutuhkan, optional)
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -189,8 +190,16 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            // Ambil data user dari Google
-            $googleUser = Socialite::driver('google')->stateless()->user(); 
+            // --- PERBAIKAN DI SINI ---
+            // Kita beri tahu VS Code bahwa driver ini adalah 'AbstractProvider'
+            // yang memiliki method stateless()
+            
+            /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+            $driver = Socialite::driver('google');
+
+            // Sekarang panggil stateless() dari variabel $driver
+            $googleUser = $driver->stateless()->user(); 
+            // -------------------------
 
             // Cari user berdasarkan google_id ATAU email
             $user = User::where('google_id', $googleUser->getId())
@@ -219,28 +228,19 @@ class AuthController extends Controller
                 }
             }
 
-            // ============================================================
-            // PERBAIKAN: Generate Token dan Redirect ke Frontend Callback
-            // ============================================================
-            
-            // 1. Buat token Sanctum (sama seperti login manual)
-            // Hapus token lama yang mungkin ada dari Socialite
+            // Generate Token
             $user->tokens()->delete();
             $token = $user->createToken('auth_token')->plainTextToken;
             
-            // 2. Redirect ke halaman callback khusus dengan token dan data user
-            // Kita kirim token dan data user yang di-encode
+            // Redirect ke Frontend
             $userDataEncoded = urlencode(json_encode(new UserResource($user)));
             
-            // NOTE: Kami akan menggunakan logic di /auth/callback untuk memprosesnya
             return redirect('/auth/callback?token=' . $token . '&user=' . $userDataEncoded);
-            
-            // ============================================================
 
         } catch (\Exception $e) {
-            \Log::error('Google OAuth Error: ' . $e->getMessage());
+            // Pastikan Anda sudah menambahkan: use Illuminate\Support\Facades\Log; di atas
+            Log::error('Google OAuth Error: ' . $e->getMessage());
             
-            // Jika gagal, redirect ke halaman callback dengan error
             return redirect('/auth/callback?error=' . urlencode('Gagal login dengan Google: ' . $e->getMessage()));
         }
     }
