@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-// use App\Models\Fleet; // Uncomment setelah Anda membuat model
-// use App\Models\Order; // Uncomment setelah Anda membuat model
-// use App\Models\Payment; // Uncomment setelah Anda membuat model
+use App\Models\Armada;
+use App\Models\Pemesanan;
+use App\Models\Pembayaran;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -14,40 +14,32 @@ class DashboardController extends Controller
     /**
      * Mengambil data statistik untuk dashboard admin.
      */
-    public function getStats(Request $request)
+    public function stats(Request $request)
     {
-        // --- DATA MOCK (TIRUAN) ---
-        // Ganti ini dengan query database asli Anda
+        // Query real data dari database
+        $totalFleet = Armada::count();
+        $fleetAvailable = Armada::where('status_ketersediaan', 'Tersedia')->count();
         
-        $totalFleet = 12; // Ganti dengan: Fleet::count();
-        $fleetAvailable = 8; // Ganti dengan: Fleet::where('status', 'available')->count();
-        
-        $ordersThisMonth = 48; // Ganti dengan: Order::whereMonth('created_at', Carbon::now()->month)->count();
-        $ordersInProgress = 12; // Ganti dengan: Order::where('status', 'in_progress')->count();
+        $ordersThisMonth = Pemesanan::whereMonth('tgl_pesan', Carbon::now()->month)
+            ->whereYear('tgl_pesan', Carbon::now()->year)
+            ->count();
+        $ordersInProgress = Pemesanan::where('status_pemesanan', 'Berlangsung')->count();
 
-        $pendingPayments = 8; // Ganti dengan: Payment::where('status', 'pending')->count();
-        $pendingVerification = 8; // Ganti dengan: Payment::where('status', 'pending')->count();
+        $pendingPayments = Pembayaran::whereNull('id_admin')->count();
 
-        $recentOrders = [
-            ['id' => 'ORD-001', 'customer' => 'Citra Dewi', 'route' => 'Bandung', 'date' => '15 Okt 2025'],
-            ['id' => 'ORD-002', 'customer' => 'Doni Pratama', 'route' => 'Yogyakarta', 'date' => '20 Okt 2025'],
-            ['id' => 'ORD-003', 'customer' => 'Eka Putri', 'route' => 'Bali', 'date' => '10 Okt 2025'],
-        ];
-        // Ganti dengan: 
-        // $recentOrders = Order::with('customer') // Asumsi ada relasi
-        //     ->orderBy('created_at', 'desc')
-        //     ->take(3)
-        //     ->get()
-        //     ->map(function($order) {
-        //         return [
-        //             'id' => $order->order_code, // ganti sesuai kolom Anda
-        //             'customer' => $order->customer->name, // ganti sesuai relasi Anda
-        //             'route' => $order->destination_city, // ganti sesuai kolom Anda
-        //             'date' => $order->created_at->format('d M Y'),
-        //         ];
-        //     });
-        
-        // -------------------------
+        // Recent orders dengan relasi
+        $recentOrdersData = Pemesanan::with(['pengguna', 'layanan'])
+            ->orderBy('tgl_pesan', 'desc')
+            ->take(3)
+            ->get()
+            ->map(function($order) {
+                return [
+                    'id' => 'ZT-' . str_pad($order->id_pemesanan, 4, '0', STR_PAD_LEFT),
+                    'customer' => $order->pengguna?->nama ?? 'N/A',
+                    'route' => ($order->lokasi_jemput ?? 'N/A') . ' → ' . ($order->lokasi_tujuan ?? 'N/A'),
+                    'date' => Carbon::parse($order->tgl_pesan)->format('d M Y'),
+                ];
+            });
 
         return response()->json([
             'totalFleet' => $totalFleet,
@@ -55,8 +47,7 @@ class DashboardController extends Controller
             'ordersThisMonth' => $ordersThisMonth,
             'ordersInProgress' => $ordersInProgress,
             'pendingPayments' => $pendingPayments,
-            'pendingVerification' => $pendingVerification,
-            'recentOrders' => $recentOrders,
+            'recentOrders' => $recentOrdersData,
         ]);
     }
 }

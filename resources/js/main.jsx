@@ -15,7 +15,9 @@ import AdminRouteGuard from '@/Components/AdminRouteGuard.jsx';
 // Import halaman Public
 import LandingPage from '@/Pages/public/LandingPage';
 import AboutPage from '@/Pages/AboutPage';
-import ReviewPage from '@/Pages/ReviewPage'; 
+import ReviewPage from '@/Pages/ReviewPage';
+import ReviewForm from '@/Pages/Review/ReviewForm';
+import ReviewSuccess from '@/Pages/Review/ReviewSuccess';
 import PemesananPage from '@/Pages/Pemesanan/Index';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
 
@@ -29,6 +31,7 @@ import PaymentSuccessPage from '@/Pages/Pemesanan/PaymentSuccess';
 import LoginPage from '@/Pages/Auth/LoginPage.jsx';
 import RegisterPage from '@/Pages/Auth/RegisterPage.jsx';
 import ForgotPasswordPage from '@/Pages/Auth/ForgotPasswordPage.jsx';
+import ResetPasswordPage from '@/Pages/Auth/ResetPasswordPage.jsx';
 import EditProfile from '@/Pages/Auth/EditProfile.jsx';
 
 // Import halaman Admin
@@ -90,6 +93,12 @@ root.render(
           <Route path="/about" element={<AboutPage />} /> 
           <Route path="/pemesanan" element={<PemesananPage />} />
           <Route path="/review/:id" element={<ReviewPage />} />
+          
+          {/* ===================================== */}
+          {/* ROUTE REVIEW SYSTEM (dari develop)   */}
+          {/* ===================================== */}
+          <Route path="/review-form/:id" element={<ReviewForm />} />
+          <Route path="/review-success" element={<ReviewSuccess />} />
 
           {/* ===================================== */}
           {/* ROUTE AUTH (Login, Register, dsb)    */}
@@ -97,6 +106,7 @@ root.render(
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/callback" element={<OAuthCallback />} />
 
           {/* ===================================== */}

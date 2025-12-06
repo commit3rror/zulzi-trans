@@ -1,22 +1,35 @@
 // resources/js/Pages/Auth/LoginPage.jsx
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { FormInput, Alert, LoadingButton } from '@/Components/ReusableUI';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    // Ganti 'login' dari useAuth agar bisa menerima 'remember' flag (Asumsi useAuth akan meneruskannya)
+    const { login } = useAuth(); 
     
-    const [formData, setFormData] = useState({ email: '', password: '' });
+    // 1. Tambah state untuk 'remember' dan 'showPassword'
+    const [formData, setFormData] = useState({ 
+        email: '', 
+        password: '',
+        remember: false, // <-- BARU: State untuk Remember Me
+    });
+    const [showPassword, setShowPassword] = useState(false); // <-- BARU: State untuk toggle password
+
     const [errors, setErrors] = useState({});
     const [alert, setAlert] = useState(null);
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        const { name, value, type, checked } = e.target;
+        
+        // Handle input tipe checkbox (untuk remember)
+        const newValue = type === 'checkbox' ? checked : value;
+
+        setFormData({ ...formData, [name]: newValue });
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
@@ -27,22 +40,40 @@ const LoginPage = () => {
         setErrors({});
 
         try {
-            // ⚡ Response sekarang langsung return user data
+            // NOTE: Kami berasumsi fungsi login di AuthContext bisa menerima flag 'remember'
             const response = await login(formData);
             
+            // 1. Set notifikasi sukses
             setAlert({ type: 'success', message: 'Login berhasil!' });
             
-            // ⚡ Ambil role langsung dari response.user (sudah diperbaiki di AuthContext)
             const userRole = response.user?.role_pengguna;
             
-            console.log('User role setelah login:', userRole); // Untuk debugging
+            // 🐛 DEBUG: Log seluruh response untuk debugging
+            console.log('=== LOGIN DEBUG ===');
+            console.log('Response:', response);
+            console.log('User data:', response.user);
+            console.log('User role:', userRole);
+            console.log('Role type:', typeof userRole);
+            console.log('==================');
             
-            // ⚡ NAVIGATE TANPA DELAY - State sudah ter-update di AuthContext
-            if (userRole === 'admin') {
+            // ⚡ NAVIGATE BERDASARKAN ROLE - Normalize ke lowercase untuk safety
+            const normalizedRole = userRole?.toLowerCase();
+            
+            if (normalizedRole === 'admin') {
+                console.log('✅ Redirecting to /admin');
                 navigate('/admin', { replace: true });
             } else {
+                console.log('✅ Redirecting to /beranda');
                 navigate('/beranda', { replace: true }); 
             }
+            // 2. TUNDA NAVIGASI agar notifikasi terlihat
+            setTimeout(() => {
+                if (userRole === 'admin') {
+                    navigate('/admin', { replace: true });
+                } else {
+                    navigate('/beranda', { replace: true }); 
+                }
+            }, 1500);
             
         } catch (err) {
             console.error('Login error:', err);
@@ -60,6 +91,8 @@ const LoginPage = () => {
         <div className="min-h-screen flex bg-neutral-white font-sans">
             <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-24 py-12 bg-white">
                 <div className="max-w-md mx-auto w-full">
+                    {/* ... (Judul & Tombol Google) ... */}
+                    
                     <div className="mb-10">
                         <h1 className="text-4xl font-extrabold text-primary-dark mb-3">
                             Selamat Datang <br /> Kembali !
@@ -69,7 +102,7 @@ const LoginPage = () => {
                         </p>
                     </div>
 
-                    {/* TOMBOL GOOGLE OAUTH - Gunakan APP_URL */}
+                    {/* Tombol Google OAuth & Separator... */}
                 <a 
                     href={`${import.meta.env.VITE_APP_URL || 'http://localhost:8000'}/auth/google`}
                     className="w-full flex items-center justify-center gap-3 bg-[#5CBCE2] hover:bg-[#4aa8cc] text-white font-bold py-3 px-4 rounded-lg transition-all shadow-sm mb-6"
@@ -105,26 +138,67 @@ const LoginPage = () => {
                             className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                         />
 
+                        {/* =================================================== */}
+                        {/* ✅ PERUBAHAN: Custom Input untuk Password dengan Toggle */}
+                        {/* =================================================== */}
                         <div>
-                            <FormInput
-                                label="Password"
-                                name="password"
-                                type="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                error={errors.password}
-                                placeholder="Masukkan password"
-                                required
-                            />
-                            <div className="flex justify-end mt-2">
-                                <Link 
-                                    to="/forgot-password" 
-                                    className="text-sm text-neutral-gray hover:text-primary-dark transition-colors"
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                Password <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative mt-2">
+                                <input
+                                    type={showPassword ? "text" : "password"} // Ganti tipe input
+                                    id="password"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    placeholder="Masukkan password"
+                                    required
+                                    className={`w-full px-4 py-3 pr-12 rounded-lg border transition-all duration-300 outline-none ${
+                                        errors.password ? 'border-red-500 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-300 bg-white focus:border-primary focus:ring-1 focus:ring-primary'
+                                    }`}
+                                />
+                                {/* Tombol Toggle Password */}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(prev => !prev)}
+                                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors"
+                                    title={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                                 >
-                                    Lupa password?
-                                </Link>
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
+                            {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password[0]}</p>}
                         </div>
+
+                        {/* =================================================== */}
+                        {/* ✅ BARU: Checkbox "Ingat Saya" dan "Lupa Password" */}
+                        {/* =================================================== */}
+                        <div className="flex justify-between items-center mt-2">
+                            {/* Ingat Saya */}
+                            <div className="flex items-center">
+                                <input
+                                    id="remember"
+                                    name="remember"
+                                    type="checkbox"
+                                    checked={formData.remember}
+                                    onChange={handleChange}
+                                    className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                                />
+                                <label htmlFor="remember" className="ml-2 block text-sm text-neutral-gray">
+                                    Ingat Saya
+                                </label>
+                            </div>
+                            
+                            {/* Lupa Password */}
+                            <Link 
+                                to="/forgot-password" 
+                                className="text-sm text-neutral-gray hover:text-primary-dark transition-colors"
+                            >
+                                Lupa password?
+                            </Link>
+                        </div>
+                        {/* =================================================== */}
 
                         <LoadingButton 
                             type="submit" 
@@ -149,7 +223,7 @@ const LoginPage = () => {
                 </div>
             </div>
 
-            {/* Bagian Kanan - Hero Section */}
+            {/* Bagian Kanan - Hero Section (Tidak Berubah) */}
             <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary to-primary-dark items-center justify-center text-white p-12 relative overflow-hidden">
                  <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-white opacity-10 rounded-full blur-3xl"></div>
                  <div className="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-white opacity-10 rounded-full blur-3xl"></div>

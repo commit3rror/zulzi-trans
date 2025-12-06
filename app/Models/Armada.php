@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Model;
  * Model untuk Armada
  *
  * @property int $id_armada
- * @property string $nama_armada
  * @property string $no_plat
  * @property string $layanan
  * @property string $jenis_kendaraan
  * @property string $kapasitas
  * @property float $harga_sewa_per_hari
  * @property string $status_ketersediaan
+ * @property string|null $gambar
  */
 class Armada extends Model
 {
@@ -47,6 +47,7 @@ class Armada extends Model
         'kapasitas',
         'harga_sewa_per_hari',
         'status_ketersediaan',
+        'gambar',
     ];
 
     /**

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class PemesananController extends Controller
+class PesananController extends Controller
 {
     /**
      * Menampilkan daftar pemesanan
@@ -30,7 +30,7 @@ class PemesananController extends Controller
             ->leftJoin('armada', 'pemesanan.id_armada', '=', 'armada.id_armada')
             ->select(
                 'pemesanan.id_pemesanan',
-                DB::raw("CONCAT('RNT-', LPAD(pemesanan.id_pemesanan, 3, '0')) as kode_pesanan"),
+                DB::raw("CONCAT('ZT-', LPAD(pemesanan.id_pemesanan, 4, '0')) as kode_pesanan"),
                 'user.nama as nama_pelanggan',
                 'pemesanan.lokasi_jemput',
                 'pemesanan.lokasi_tujuan',
@@ -43,7 +43,8 @@ class PemesananController extends Controller
                 'pemesanan.est_berat_ton',
                 'pemesanan.lama_rental',
                 'supir.nama as nama_supir',
-                'armada.nama_armada',
+                'armada.jenis_kendaraan as nama_armada',
+                'armada.no_plat',
                 'layanan.nama_layanan'
             )
             ->where('layanan.nama_layanan', 'LIKE', '%' . $layananMap[$layanan] . '%');
@@ -55,8 +56,9 @@ class PemesananController extends Controller
                     ->orWhere('pemesanan.lokasi_tujuan', 'LIKE', "%{$search}%")
                     ->orWhere('pemesanan.lokasi_jemput', 'LIKE', "%{$search}%")
                     ->orWhere('supir.nama', 'LIKE', "%{$search}%")
-                    ->orWhere('armada.nama_armada', 'LIKE', "%{$search}%")
-                    ->orWhere(DB::raw("CONCAT('RNT-', LPAD(pemesanan.id_pemesanan, 3, '0'))"), 'LIKE', "%{$search}%");
+                    ->orWhere('armada.jenis_kendaraan', 'LIKE', "%{$search}%")
+                    ->orWhere('armada.no_plat', 'LIKE', "%{$search}%")
+                    ->orWhere(DB::raw("CONCAT('ZT-', LPAD(pemesanan.id_pemesanan, 4, '0'))"), 'LIKE', "%{$search}%");
             });
         }
 
@@ -92,7 +94,8 @@ class PemesananController extends Controller
                 'user.email',
                 'user.no_telepon',
                 'supir.nama as nama_supir',
-                'armada.nama_armada',
+                'armada.jenis_kendaraan as nama_armada',
+                'armada.no_plat',
                 'layanan.nama_layanan'
             )
             ->where('pemesanan.id_pemesanan', $id)
@@ -182,6 +185,31 @@ class PemesananController extends Controller
         }
 
         return response()->json(['message' => 'Pemesanan berhasil diupdate']);
+    }
+
+    /**
+     * Update status pemesanan
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:Menunggu,Dikonfirmasi,Berlangsung,Selesai,Dibatalkan'
+        ]);
+
+        $pemesanan = DB::table('pemesanan')->where('id_pemesanan', $id)->first();
+
+        if (!$pemesanan) {
+            return response()->json(['message' => 'Pemesanan tidak ditemukan'], 404);
+        }
+
+        DB::table('pemesanan')
+            ->where('id_pemesanan', $id)
+            ->update(['status_pemesanan' => $validated['status']]);
+
+        return response()->json([
+            'message' => 'Status pemesanan berhasil diupdate',
+            'new_status' => $validated['status']
+        ]);
     }
 
     /**

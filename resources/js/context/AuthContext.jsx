@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import authService from '../../service/authService'; 
-import api from '../../service/api'; 
+import authService from '@/services/authService'; 
+import api from '@/services/api'; 
 
 const AuthContext = createContext(null);
 
@@ -12,51 +12,72 @@ export function AuthProvider({ children }) {
     // ⚡ Initialize auth from localStorage
         useEffect(() => {
             const initAuth = async () => {
-                const token = localStorage.getItem('auth_token');
-                const storedUser = localStorage.getItem('user');
-                
-                console.log('🔐 Initializing auth...', { 
-                    hasToken: !!token, 
-                    hasStoredUser: !!storedUser 
-                });
-                
-                if (token) {
-                    // Set Authorization header
-                    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                try {
+                    const token = localStorage.getItem('auth_token');
+                    const storedUser = localStorage.getItem('user');
                     
-                    // ⚡ PRIORITAS 1: Load user dari localStorage dulu (untuk instant UI update)
-                    if (storedUser) {
-                        try {
-                            const userData = JSON.parse(storedUser);
-                            setUser(userData);
-                            console.log('✅ User loaded from localStorage:', userData.nama);
-                        } catch (e) {
-                            console.error('❌ Failed to parse stored user:', e);
+                    console.log('🔐 Initializing auth...', { 
+                        hasToken: !!token, 
+                        hasStoredUser: !!storedUser 
+                    });
+                    
+                    if (token) {
+                        // Set Authorization header
+                        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                        
+                        // ⚡ PRIORITAS 1: Load user dari localStorage dulu (untuk instant UI update)
+                        if (storedUser) {
+                            try {
+                                const userData = JSON.parse(storedUser);
+                                setUser(userData);
+                                console.log('✅ User loaded from localStorage:', userData.nama);
+                            } catch (e) {
+                                console.error('❌ Failed to parse stored user:', e);
+                            }
                         }
-                    }
-                    
-                    // ⚡ PRIORITAS 2: Validate token dengan API
-                    try {
-                        const res = await authService.me(); 
-                        const freshUserData = res.data.data || res.data; 
                         
-                        setUser(freshUserData);
-                        localStorage.setItem('user', JSON.stringify(freshUserData));
-                        console.log('✅ User verified from API:', freshUserData.nama);
-                        
-                    } catch (error) {
-                        console.error('❌ Token invalid or expired:', error);
-                        // Clear everything if token is invalid
-                        localStorage.removeItem('user');
-                        localStorage.removeItem('auth_token');
-                        api.defaults.headers.common['Authorization'] = null;
-                        setUser(null);
+                        // ⚡ PRIORITAS 2: Validate token dengan API dengan timeout
+                        // Jangan clear data jika validate gagal - biarkan user tetap login
+                        // hanya jika ada error 401 unauthorized baru clear
+                        try {
+                            // Create a promise race untuk timeout
+                            const timeout = new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+                            );
+                            
+                            const res = await Promise.race([
+                                authService.me(),
+                                timeout
+                            ]);
+                            
+                            // Response dari /auth/me adalah { success: true, data: UserResource }
+                            const freshUserData = res.data; 
+                            
+                            setUser(freshUserData);
+                            localStorage.setItem('user', JSON.stringify(freshUserData));
+                            console.log('✅ User verified from API:', freshUserData.nama);
+                            
+                        } catch (error) {
+                            console.error('❌ Auth check error:', error);
+                            // Hanya clear jika 401 Unauthorized, untuk error lain biarkan tetap login
+                            if (error.response?.status === 401) {
+                                console.log('❌ Unauthorized - clearing auth');
+                                localStorage.removeItem('auth_token');
+                                localStorage.removeItem('user');
+                                api.defaults.headers.common['Authorization'] = null;
+                                setUser(null);
+                            } else {
+                                // Untuk error lain (timeout, network, dll), tetap maintain user session
+                                console.log('⚠️ Auth check failed but keeping user session:', error.message);
+                            }
+                        }
+                    } else {
+                        console.log('ℹ️ No auth token found');
                     }
-                } else {
-                    console.log('ℹ️ No auth token found');
+                } finally {
+                    // SELALU set loading ke false, bahkan jika ada error
+                    setLoading(false);
                 }
-                
-                setLoading(false);
             };
 
             initAuth();
@@ -100,8 +121,30 @@ export function AuthProvider({ children }) {
         try {
             const response = await authService.login(credentials);
             
-            const loginData = response.data.data || response.data;
-            const { token, user: userData } = loginData; 
+            // Response dari backend:
+            // {
+            //   success: true,
+            //   message: "Login berhasil",
+            //   data: {
+            //     user: {...},
+            //     token: "...",
+            //     role: "..."
+            //   }
+            // }
+            // authService.login() return response.data, jadi:
+            // response = { success, message, data: {user, token, role} }
+            
+            console.log('📊 Login response:', response);
+            
+            const loginData = response.data;
+            const { token, user: userData } = loginData;
+            
+            console.log('🔑 Token:', token);
+            console.log('👤 User:', userData);
+            
+            if (!token || !userData) {
+                throw new Error('Invalid response structure: missing token or user data');
+            }
             
             // 1. Simpan ke localStorage
             localStorage.setItem('auth_token', token); 
@@ -115,11 +158,11 @@ export function AuthProvider({ children }) {
             
             console.log('✅ Login successful:', userData.nama);
             
-            // 4. Return user data
+            // 4. Return user data untuk LoginPage
             return { 
                 success: true, 
                 user: userData,
-                data: loginData
+                token: token
             }; 
             
         } catch(error) {

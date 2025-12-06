@@ -109,23 +109,32 @@ class PemesananController extends Controller
         }
     }
 
-    /**
-     * 2. SHOW: Melihat Detail Pesanan (Untuk Refresh Status)
-     */
     public function show($id)
     {
-        // Ambil data pesanan beserta detail Armada, Supir, dan Pembayaran
-        $pemesanan = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran'])->find($id);
+        try {
+            // Ambil data pesanan beserta detail Armada, Supir, Pembayaran, Layanan, dan Pengguna
+            $pemesanan = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran', 'pengguna'])
+                ->find($id);
 
-        if (!$pemesanan) {
-            return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+            if (!$pemesanan) {
+                return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+            }
+
+            // Verify user owns this order
+            if ($pemesanan->id_pengguna != auth()->id()) {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $pemesanan
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengambil pesanan: ' . $e->getMessage()], 500);
         }
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $pemesanan
-        ]);
     }
+<<<<<<< HEAD
 
     /**
      * 2B. STATUS PAGE: Halaman status pemesanan (frontend route)

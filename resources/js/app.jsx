@@ -30,6 +30,7 @@ function App() {
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     
+                    
                     {/* ===================================== */}
                     {/* ROUTE KHUSUS USER (Private - Customer/Admin) */}
                     {/* ===================================== */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import GuestLayout from '@/layouts/GuestLayout';
+import GuestLayout from '@/Layouts/GuestLayout';
 import { getReviewTarget, submitReview } from '@/services/reviewService';
 import { 
     CheckCircle, 
