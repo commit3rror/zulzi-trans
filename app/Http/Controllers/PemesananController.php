@@ -134,7 +134,6 @@ class PemesananController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Gagal mengambil pesanan: ' . $e->getMessage()], 500);
         }
     }
-<<<<<<< HEAD
 
     /**
      * 2B. STATUS PAGE: Halaman status pemesanan (frontend route)
