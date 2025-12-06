@@ -89,10 +89,10 @@ const FormSampah = ({ onBack, onSuccess }) => {
                     {/* Jenis & Volume */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Jenis Sampah</label>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Jenis Sampah <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <Trash2 className="absolute left-3 top-3 text-gray-400" size={20} />
-                                <select name="jenis_sampah" value={formData.jenis_sampah} onChange={handleChange} className={inputStyle('jenis_sampah')}>
+                                <select name="jenis_sampah" value={formData.jenis_sampah} onChange={handleChange} className={inputStyle('jenis_sampah')} required>
                                     <option value="">Pilih Jenis...</option>
                                     <option value="Puing Bangunan">Puing Bangunan</option>
                                     <option value="Sampah Rumah Tangga">Sampah Rumah Tangga</option>
@@ -102,7 +102,7 @@ const FormSampah = ({ onBack, onSuccess }) => {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Volume (m³)</label>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Volume (m³) <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <Layers className="absolute left-3 top-3 text-gray-400" size={20} />
                                 <input 
@@ -115,6 +115,7 @@ const FormSampah = ({ onBack, onSuccess }) => {
                                     step="0.1"
                                     min="0.1"
                                     max="100"
+                                    required
                                 />
                             </div>
                             <p className="text-xs text-gray-500 mt-1 ml-1">Masukkan volume dalam meter kubik (m³)</p>
@@ -124,7 +125,7 @@ const FormSampah = ({ onBack, onSuccess }) => {
 
                     {/* Foto Sampah */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Foto Tumpukan (Opsional)</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Foto Tumpukan <span className="text-red-500">*</span></label>
                         {imagePreview ? (
                             <div className="relative bg-green-50 rounded-xl border-2 border-green-200 p-4">
                                 <img 
@@ -156,6 +157,7 @@ const FormSampah = ({ onBack, onSuccess }) => {
                                     onChange={handleChange} 
                                     className="opacity-0 absolute inset-0 w-full h-full cursor-pointer" 
                                     accept="image/jpeg,image/png,image/jpg"
+                                    required
                                 />
                             </div>
                         )}
@@ -163,19 +165,19 @@ const FormSampah = ({ onBack, onSuccess }) => {
 
                     {/* Lokasi */}
                     <div>
-                         <label className="block text-sm font-bold text-gray-700 mb-2">Lokasi Angkut</label>
+                         <label className="block text-sm font-bold text-gray-700 mb-2">Lokasi Angkut <span className="text-red-500">*</span></label>
                          <div className="relative">
                             <MapPin className="absolute left-3 top-3 text-gray-400" size={20} />
-                            <input type="text" name="lokasi_jemput" value={formData.lokasi_jemput} onChange={handleChange} className={inputStyle('lokasi_jemput')} placeholder="Alamat lengkap pengambilan..." />
+                            <input type="text" name="lokasi_jemput" value={formData.lokasi_jemput} onChange={handleChange} className={inputStyle('lokasi_jemput')} placeholder="Alamat lengkap pengambilan..." required />
                         </div>
                     </div>
 
                     {/* Tanggal */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Tanggal</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Tanggal <span className="text-red-500">*</span></label>
                         <div className="relative">
                             <Calendar className="absolute left-3 top-3 text-gray-400" size={20} />
-                            <input type="date" name="tgl_mulai" value={formData.tgl_mulai} onChange={handleChange} className={inputStyle('tgl_mulai')} />
+                            <input type="date" name="tgl_mulai" value={formData.tgl_mulai} onChange={handleChange} className={inputStyle('tgl_mulai')} required />
                         </div>
                         {errors.tgl_mulai && <p className="text-red-500 text-xs mt-1">{errors.tgl_mulai[0]}</p>}
                     </div>

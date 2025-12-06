@@ -32,7 +32,6 @@ import LoginPage from '@/Pages/Auth/LoginPage.jsx';
 import RegisterPage from '@/Pages/Auth/RegisterPage.jsx';
 import ForgotPasswordPage from '@/Pages/Auth/ForgotPasswordPage.jsx';
 import ResetPasswordPage from '@/Pages/Auth/ResetPasswordPage.jsx';
-import EditProfile from '@/Pages/Auth/EditProfile.jsx';
 
 // Import halaman Admin
 import AdminPanel from '@/Pages/Admin/AdminPanel.jsx';
@@ -98,7 +97,7 @@ root.render(
           {/* ROUTE REVIEW SYSTEM (dari develop)   */}
           {/* ===================================== */}
           <Route path="/review-form/:id" element={<ReviewForm />} />
-          <Route path="/review-success" element={<ReviewSuccess />} />
+          <Route path="/review-success/:id" element={<ReviewSuccess />} />
 
           {/* ===================================== */}
           {/* ROUTE AUTH (Login, Register, dsb)    */}
@@ -115,10 +114,6 @@ root.render(
           <Route 
             path="/profile" 
             element={<AdminRouteGuard element={<ProfilePage />} isAdminOnly={false} />} 
-          />
-          <Route 
-            path="/edit-profile" 
-            element={<AdminRouteGuard element={<EditProfile />} isAdminOnly={false} />} 
           />
 
           {/* ===================================== */}

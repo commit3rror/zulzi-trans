@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../Layouts/MainLayout';
 import { useAuth } from '../../context/AuthContext';
-import { User, Mail, Phone, MapPin, Calendar, Package, CheckCircle, Clock, XCircle, AlertTriangle, Eye, ArrowLeft, Wallet } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Package, CheckCircle, Clock, XCircle, AlertTriangle, Eye, ArrowLeft, Wallet, Star } from 'lucide-react';
 
 const ProfilePage = () => {
     const { user, isAuthenticated, updateUser } = useAuth();
@@ -171,10 +171,14 @@ const ProfilePage = () => {
         const statusConfig = {
             'Menunggu': { bg: 'bg-orange-100', text: 'text-orange-700', icon: Clock },
             'Dikonfirmasi': { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
+            'Berlangsung': { bg: 'bg-blue-100', text: 'text-blue-700', icon: Package },
+            'Menunggu Pembayaran': { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock },
             'Menunggu Verifikasi': { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock },
             'Pembayaran Ditolak': { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
+            'DP Dibayar': { bg: 'bg-orange-100', text: 'text-orange-700', icon: AlertTriangle },
+            'Lunas': { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle },
             'Selesai': { bg: 'bg-blue-100', text: 'text-blue-700', icon: CheckCircle },
-            'Lunas': { bg: 'bg-blue-100', text: 'text-blue-700', icon: CheckCircle }
+            'Dibatalkan': { bg: 'bg-gray-100', text: 'text-gray-700', icon: XCircle }
         };
 
         const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-700', icon: AlertTriangle };
@@ -238,20 +242,59 @@ const ProfilePage = () => {
 
     // Render Tab Orders
     const renderOrdersTab = () => {
-        // Filter orders berdasarkan status
+        // Helper: Group status untuk simplifikasi UI
+        const getStatusGroup = (status) => {
+            // Group 1: Menunggu admin proses order (belum ada harga)
+            if (status === 'Menunggu') return 'menunggu-konfirmasi';
+            
+            // Group 2: Admin sudah konfirmasi, menunggu customer bayar atau admin verifikasi bukti bayar
+            if (['Dikonfirmasi', 'Menunggu Verifikasi', 'Pembayaran Ditolak'].includes(status)) return 'menunggu-pembayaran';
+            
+            // Group 3: Pembayaran sudah diverifikasi, order sedang dikerjakan
+            if (['DP Dibayar', 'Lunas', 'Berlangsung'].includes(status)) return 'sedang-diproses';
+            
+            // Group 4: Order selesai
+            if (status === 'Selesai') return 'selesai';
+            
+            return 'lainnya';
+        };
+
+        // Filter orders berdasarkan group status
         const filteredOrders = selectedStatus === 'all' 
             ? orders 
-            : orders.filter(order => order.status_pemesanan === selectedStatus);
+            : orders.filter(order => getStatusGroup(order.status_pemesanan) === selectedStatus);
         
-        // Status options dengan count
+        // Status options dengan count - SIMPLIFIED untuk customer
         const statusOptions = [
-            { value: 'all', label: 'Semua', count: orders.length },
-            { value: 'Menunggu', label: 'Menunggu', count: orders.filter(o => o.status_pemesanan === 'Menunggu').length },
-            { value: 'Dikonfirmasi', label: 'Dikonfirmasi', count: orders.filter(o => o.status_pemesanan === 'Dikonfirmasi').length },
-            { value: 'Menunggu Pembayaran', label: 'Menunggu Bayar', count: orders.filter(o => o.status_pemesanan === 'Menunggu Pembayaran').length },
-            { value: 'DP Dibayar', label: 'DP Dibayar', count: orders.filter(o => o.status_pemesanan === 'DP Dibayar').length },
-            { value: 'Pembayaran Ditolak', label: 'Ditolak', count: orders.filter(o => o.status_pemesanan === 'Pembayaran Ditolak').length },
-            { value: 'Lunas', label: 'Lunas', count: orders.filter(o => o.status_pemesanan === 'Lunas').length }
+            { value: 'all', label: 'Semua Pesanan', count: orders.length, icon: Package },
+            { 
+                value: 'menunggu-konfirmasi', 
+                label: 'Menunggu Konfirmasi', 
+                count: orders.filter(o => getStatusGroup(o.status_pemesanan) === 'menunggu-konfirmasi').length,
+                icon: Clock,
+                description: 'Pesanan sedang ditinjau admin'
+            },
+            { 
+                value: 'menunggu-pembayaran', 
+                label: 'Menunggu Pembayaran', 
+                count: orders.filter(o => getStatusGroup(o.status_pemesanan) === 'menunggu-pembayaran').length,
+                icon: AlertTriangle,
+                description: 'Siap dibayar atau menunggu verifikasi'
+            },
+            { 
+                value: 'sedang-diproses', 
+                label: 'Sedang Diproses', 
+                count: orders.filter(o => getStatusGroup(o.status_pemesanan) === 'sedang-diproses').length,
+                icon: Package,
+                description: 'Pembayaran terverifikasi, pesanan sedang dikerjakan'
+            },
+            { 
+                value: 'selesai', 
+                label: 'Selesai', 
+                count: orders.filter(o => getStatusGroup(o.status_pemesanan) === 'selesai').length,
+                icon: CheckCircle,
+                description: 'Pesanan telah selesai'
+            }
         ];
         
         return (
@@ -262,22 +305,38 @@ const ProfilePage = () => {
                         Riwayat Pemesanan
                     </h3>
 
-                    {/* Filter Tabs */}
+                    {/* Filter Tabs - SIMPLIFIED */}
                     {!isLoading && orders.length > 0 && (
-                        <div className="flex gap-2 overflow-x-auto pb-2 mb-6 border-b border-gray-200">
-                            {statusOptions.map(option => (
-                                <button
-                                    key={option.value}
-                                    onClick={() => setSelectedStatus(option.value)}
-                                    className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
-                                        selectedStatus === option.value
-                                            ? 'bg-[#003366] text-white shadow-md'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                                >
-                                    {option.label} {option.count > 0 && `(${option.count})`}
-                                </button>
-                            ))}
+                        <div className="mb-6">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                {statusOptions.map(option => {
+                                    const Icon = option.icon;
+                                    return (
+                                        <button
+                                            key={option.value}
+                                            onClick={() => setSelectedStatus(option.value)}
+                                            className={`p-4 rounded-xl font-medium transition-all text-left ${
+                                                selectedStatus === option.value
+                                                    ? 'bg-[#003366] text-white shadow-lg scale-105'
+                                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:shadow-md'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <Icon size={18} className={selectedStatus === option.value ? 'text-white' : 'text-[#00a3e0]'} />
+                                                <span className="text-xs font-bold">{option.label}</span>
+                                            </div>
+                                            <div className={`text-2xl font-bold ${selectedStatus === option.value ? 'text-white' : 'text-[#003366]'}`}>
+                                                {option.count}
+                                            </div>
+                                            {option.description && (
+                                                <p className={`text-xs mt-1 ${selectedStatus === option.value ? 'text-blue-100' : 'text-gray-500'}`}>
+                                                    {option.description}
+                                                </p>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
 
@@ -324,6 +383,13 @@ const ProfilePage = () => {
                                                         <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full inline-flex items-center gap-1">
                                                             <AlertTriangle size={12} />
                                                             Menunggu Pelunasan
+                                                        </span>
+                                                    )}
+                                                    {/* Badge Sudah Review */}
+                                                    {order.status_pemesanan === 'Selesai' && order.ulasan && (
+                                                        <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full inline-flex items-center gap-1">
+                                                            <CheckCircle size={12} />
+                                                            Sudah Direview
                                                         </span>
                                                     )}
                                                 </div>
@@ -382,17 +448,6 @@ const ProfilePage = () => {
                                             Lihat Detail
                                         </button>
                                     </div>
-                                    
-                                    {/* Button Lanjutkan Pelunasan jika DP Dibayar */}
-                                    {order.status_pemesanan === 'DP Dibayar' && order.total_biaya > 0 && (
-                                        <button 
-                                            onClick={() => navigate(`/pemesanan/${order.id_pemesanan}/status`)}
-                                            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 rounded-xl font-bold hover:from-orange-600 hover:to-orange-700 transition-all shadow-md flex items-center justify-center gap-2"
-                                        >
-                                            <AlertTriangle size={18} />
-                                            Lanjutkan Pelunasan ({formatRupiah(sisaPembayaran)})
-                                        </button>
-                                    )}
                                 </div>
                             </div>
                         );
@@ -637,6 +692,13 @@ const ProfilePage = () => {
                                                             <p className="text-xs text-gray-500">
                                                                 {payment.metode_pembayaran} • {formatDate(payment.tgl_bayar)}
                                                             </p>
+                                                            {/* Alasan penolakan jika ada */}
+                                                            {payment.status_pembayaran === 'Rejected' && payment.catatan && (
+                                                                <div className="mt-2 bg-red-50 border border-red-200 rounded p-2">
+                                                                    <p className="text-xs text-red-700 font-medium">Alasan Penolakan:</p>
+                                                                    <p className="text-xs text-red-600 mt-1">{payment.catatan}</p>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div className="text-right">
                                                             <p className={`font-bold ${
@@ -651,7 +713,8 @@ const ProfilePage = () => {
                                                                 payment.status_pembayaran === 'Rejected' ? 'bg-red-100 text-red-700' :
                                                                 'bg-orange-100 text-orange-700'
                                                             }`}>
-                                                                {payment.status_pembayaran}
+                                                                {payment.status_pembayaran === 'Verified' ? 'Terverifikasi' :
+                                                                 payment.status_pembayaran === 'Rejected' ? 'Ditolak' : 'Menunggu'}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -757,22 +820,65 @@ const ProfilePage = () => {
                                 >
                                     Tutup
                                 </button>
-                                {(selectedOrder.status_pemesanan === 'Dikonfirmasi' || selectedOrder.status_pemesanan === 'Menunggu Verifikasi') && (
-                                    <button 
-                                        onClick={() => {
-                                            setIsDetailModalOpen(false);
-                                            // Redirect dengan state data pesanan lengkap
-                                            navigate('/pemesanan', { 
-                                                state: { 
-                                                    orderData: selectedOrder,
-                                                    showPayment: true 
-                                                } 
-                                            });
-                                        }}
-                                        className="flex-1 px-6 py-3 bg-[#00a3e0] text-white font-bold rounded-xl hover:bg-[#0082b3] transition"
-                                    >
-                                        Lanjut Pembayaran
-                                    </button>
+                                
+                                {/* Button untuk status yang bisa bayar/upload pembayaran */}
+                                {(['Dikonfirmasi', 'Pembayaran Ditolak', 'DP Dibayar'].includes(selectedOrder.status_pemesanan)) && (() => {
+                                    const sisaPembayaran = getSisaPembayaran(selectedOrder);
+                                    
+                                    return (
+                                        <button 
+                                            onClick={() => {
+                                                setIsDetailModalOpen(false);
+                                                navigate(`/pemesanan/${selectedOrder.id_pemesanan}/status`);
+                                            }}
+                                            className={`flex-1 px-6 py-3 text-white font-bold rounded-xl transition inline-flex items-center justify-center gap-2 ${
+                                                selectedOrder.status_pemesanan === 'Pembayaran Ditolak' 
+                                                    ? 'bg-red-600 hover:bg-red-700' 
+                                                    : selectedOrder.status_pemesanan === 'DP Dibayar'
+                                                    ? 'bg-orange-600 hover:bg-orange-700'
+                                                    : 'bg-[#00a3e0] hover:bg-[#0082b3]'
+                                            }`}
+                                        >
+                                            {selectedOrder.status_pemesanan === 'Pembayaran Ditolak' && (
+                                                <>
+                                                    <XCircle size={20} />
+                                                    Upload Ulang Pembayaran
+                                                </>
+                                            )}
+                                            {selectedOrder.status_pemesanan === 'DP Dibayar' && (
+                                                <>
+                                                    <AlertTriangle size={20} />
+                                                    Lanjutkan Pelunasan ({formatRupiah(sisaPembayaran)})
+                                                </>
+                                            )}
+                                            {selectedOrder.status_pemesanan === 'Dikonfirmasi' && 'Bayar Sekarang'}
+                                        </button>
+                                    );
+                                })()}
+
+                                {/* Button "Beri Review" untuk order yang Selesai */}
+                                {selectedOrder.status_pemesanan === 'Selesai' && (
+                                    <>
+                                        {selectedOrder.ulasan ? (
+                                            // Jika sudah ada review, tampilkan badge
+                                            <div className="flex-1 px-6 py-3 bg-green-50 border-2 border-green-200 text-green-700 font-bold rounded-xl text-center inline-flex items-center justify-center gap-2">
+                                                <CheckCircle size={20} />
+                                                Sudah Direview
+                                            </div>
+                                        ) : (
+                                            // Jika belum ada review, tampilkan button
+                                            <button 
+                                                onClick={() => {
+                                                    setIsDetailModalOpen(false);
+                                                    navigate(`/review-form/${selectedOrder.id_pemesanan}`);
+                                                }}
+                                                className="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl hover:from-yellow-600 hover:to-orange-600 transition inline-flex items-center justify-center gap-2"
+                                            >
+                                                <Star size={20} />
+                                                Beri Review
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>

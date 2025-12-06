@@ -84,6 +84,8 @@ export default function LandingPage(props) {
   const [activeFeature, setActiveFeature] = useState(0);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [hoveredService, setHoveredService] = useState(null);
+  const [oauthAlert, setOauthAlert] = useState(null); // State untuk OAuth alert
+  const isInitialLoad = useRef(true); // Ref untuk tracking initial load
 
   // Data Armada Statis - Full Hardcode
   const ARMADA_DATA = [
@@ -492,14 +494,18 @@ export default function LandingPage(props) {
                                   <div className="flex-grow">
                                     <h4 className="font-bold text-gray-900 text-sm">{currentReview.pengguna?.nama || 'Pengguna'}</h4>
                                     <div className="flex text-yellow-400 mt-1 gap-0.5">
-                                      {[...Array(5)].map((_, i) => (
-                                        <Star 
-                                          key={i} 
-                                          size={12} 
-                                          fill="currentColor" 
-                                          className={i < (currentReview.rating || 5) ? "text-yellow-400" : "text-gray-200"} 
-                                        />
-                                      ))}
+                                      {[...Array(5)].map((_, i) => {
+                                        const avgRating = currentReview.rata_rata || 
+                                          Math.round((currentReview.rating_driver + currentReview.rating_kendaraan + currentReview.rating_pelayanan) / 3);
+                                        return (
+                                          <Star 
+                                            key={i} 
+                                            size={12} 
+                                            fill="currentColor" 
+                                            className={i < avgRating ? "text-yellow-400" : "text-gray-200"} 
+                                          />
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 </div>

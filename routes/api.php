@@ -119,8 +119,8 @@ Route::get('/reviews/target/{id_pemesanan}', [ReviewController::class, 'getRevie
 
 // TEST MODE: Public Review Routes (Uncomment auth:sanctum untuk production)
 Route::post('/reviews', [ReviewController::class, 'store']); // Create review
-Route::get('/ulasan/{id}', [ReviewController::class, 'show']); // Get single review
-Route::delete('/ulasan/{id}', [ReviewController::class, 'destroy']); // Delete review
+Route::get('/reviews/{id}', [ReviewController::class, 'show']); // Get single review detail
+Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']); // Delete review
 Route::get('/pemesanan/{id}', [PemesananController::class, 'show']); // Get order
 
 // PRODUCTION: Uncomment ini nanti saat integration

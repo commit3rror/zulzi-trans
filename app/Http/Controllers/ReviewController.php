@@ -36,50 +36,31 @@ class ReviewController extends Controller
 
     public function getReviewTarget($id_pemesanan)
     {
-        $pemesanan = Pemesanan::with(['armada', 'supir', 'pengguna'])
+        $pemesanan = Pemesanan::with(['armada', 'supir', 'pengguna', 'layanan'])
             ->find($id_pemesanan);
 
         if (!$pemesanan) {
-            // FALLBACK: Jika pemesanan tidak ada (karena tim lain belum selesai),
-            // ambil mock data dari ulasan terbaru dengan id_pemesanan yang sama
-            $ulasan = Ulasan::where('id_pemesanan', $id_pemesanan)
-                ->with('armada')
-                ->first();
-            
-            if ($ulasan && $ulasan->armada) {
-                return response()->json([
-                    'status' => 'success',
-                    'data' => [
-                        'id_pemesanan' => $id_pemesanan,
-                        'id_armada' => $ulasan->id_armada,
-                        'kode_pesanan' => 'ZT-2025-' . str_pad($id_pemesanan, 6, '0', STR_PAD_LEFT),
-                        'tgl_selesai_formatted' => Carbon::parse($ulasan->tgl_ulasan)->translatedFormat('d F Y'),
-                        'jam_selesai' => '13:30 WIB',
-                        'rute' => 'Jakarta → Bandung',
-                        'total_biaya' => '1.200.000',
-                        'nama_armada' => $ulasan->armada->jenis_kendaraan ?? 'Armada Tidak Dikenal',
-                        'nama_supir' => 'Supir Professional',
-                        'foto_armada' => null,
-                    ]
-                ]);
-            }
-            
-            // DEFAULT MOCK: Jika tidak ada ulasan sebelumnya, return mock data generik
             return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'id_pemesanan' => $id_pemesanan,
-                    'id_armada' => 1,
-                    'kode_pesanan' => 'ZT-2025-' . str_pad($id_pemesanan, 6, '0', STR_PAD_LEFT),
-                    'tgl_selesai_formatted' => Carbon::now()->translatedFormat('d F Y'),
-                    'jam_selesai' => '13:30 WIB',
-                    'rute' => 'Jakarta → Bandung',
-                    'total_biaya' => '1.200.000',
-                    'nama_armada' => 'Isuzu Elf Long',
-                    'nama_supir' => 'Supir Professional',
-                    'foto_armada' => null,
-                ]
-            ]);
+                'status' => 'error',
+                'message' => 'Pesanan tidak ditemukan'
+            ], 404);
+        }
+
+        // Validasi: order harus selesai sebelum bisa direview
+        if ($pemesanan->status_pemesanan !== 'Selesai') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pesanan belum selesai. Hanya pesanan selesai yang bisa direview.'
+            ], 400);
+        }
+
+        // Cek apakah sudah pernah direview
+        $existingReview = Ulasan::where('id_pemesanan', $id_pemesanan)->first();
+        if ($existingReview) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pesanan ini sudah direview'
+            ], 400);
         }
 
         $data = [
@@ -87,16 +68,15 @@ class ReviewController extends Controller
             'id_armada' => $pemesanan->id_armada,
             'id_pengguna' => $pemesanan->id_pengguna,
             'kode_pesanan' => 'ZT-2025-' . str_pad($pemesanan->id_pemesanan, 6, '0', STR_PAD_LEFT),
-            'tgl_selesai_formatted' => Carbon::parse($pemesanan->tgl_selesai)->translatedFormat('d F Y'),
-            'jam_selesai' => '13:30 WIB',
+            'layanan' => $pemesanan->layanan ? $pemesanan->layanan->nama_layanan : 'Layanan',
+            'tgl_pesan' => $pemesanan->tgl_pesan ? Carbon::parse($pemesanan->tgl_pesan)->translatedFormat('d F Y') : '-',
+            'tgl_selesai' => $pemesanan->tgl_selesai ? Carbon::parse($pemesanan->tgl_selesai)->translatedFormat('d F Y') : '-',
             'rute' => $pemesanan->lokasi_jemput . ' → ' . $pemesanan->lokasi_tujuan,
-            'total_biaya' => number_format($pemesanan->total_biaya, 0, ',', '.'),
-            
-            // PENTING: Menggunakan jenis_kendaraan karena kolom nama_armada tidak ada di tabel
-            'nama_armada' => $pemesanan->armada ? $pemesanan->armada->jenis_kendaraan : 'Armada Tidak Dikenal',
-            
-            'nama_supir' => $pemesanan->supir ? $pemesanan->supir->nama : 'Supir Tidak Dikenal',
-            'foto_armada' => null,
+            'total_biaya' => 'Rp ' . number_format($pemesanan->total_biaya, 0, ',', '.'),
+            'nama_armada' => $pemesanan->armada ? $pemesanan->armada->jenis_kendaraan : 'Belum ditentukan',
+            'no_plat' => $pemesanan->armada ? $pemesanan->armada->no_plat : '-',
+            'nama_supir' => $pemesanan->supir ? $pemesanan->supir->nama : 'Belum ditentukan',
+            'no_telepon_supir' => $pemesanan->supir ? $pemesanan->supir->no_telepon : '-',
         ];
 
         return response()->json([
@@ -108,7 +88,7 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id_pemesanan' => 'required|integer',
+            'id_pemesanan' => 'required|integer|exists:pemesanan,id_pemesanan',
             'id_armada' => 'required|exists:armada,id_armada',
             'rating_driver' => 'required|integer|min:1|max:5',
             'rating_kendaraan' => 'required|integer|min:1|max:5',
@@ -121,10 +101,27 @@ class ReviewController extends Controller
         }
 
         try {
-            // TEST MODE: Allow any user to submit review (akan di-restrict saat integration)
-            // Create ulasan tanpa constraint pemesanan - gunakan default user ID 1 untuk testing
+            // Cek pemesanan exist dan status selesai
+            $pemesanan = Pemesanan::find($request->id_pemesanan);
+            if (!$pemesanan) {
+                return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+            }
+
+            if ($pemesanan->status_pemesanan !== 'Selesai') {
+                return response()->json(['status' => 'error', 'message' => 'Hanya pesanan selesai yang bisa direview'], 400);
+            }
+
+            // Cek duplikasi review
+            $existingReview = Ulasan::where('id_pemesanan', $request->id_pemesanan)->first();
+            if ($existingReview) {
+                return response()->json(['status' => 'error', 'message' => 'Pesanan ini sudah direview'], 400);
+            }
+
+            // Get user ID from auth
+            $userId = auth()->id() ?? $pemesanan->id_pengguna;
+
             $ulasan = Ulasan::create([
-                'id_pengguna' => 1,
+                'id_pengguna' => $userId,
                 'id_armada' => $request->id_armada,
                 'id_pemesanan' => $request->id_pemesanan,
                 'rating_driver' => $request->rating_driver,
@@ -132,11 +129,12 @@ class ReviewController extends Controller
                 'rating_pelayanan' => $request->rating_pelayanan,
                 'komentar' => $request->komentar,
                 'tgl_ulasan' => now(),
+                'is_displayed' => false, // Default false, admin yang approve
             ]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Ulasan berhasil dikirim!',
+                'message' => 'Ulasan berhasil dikirim! Menunggu persetujuan admin.',
                 'data' => $ulasan
             ], 201);
 

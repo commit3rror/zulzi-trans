@@ -122,11 +122,11 @@ class Pemesanan extends Model
     }
 
     /**
-     * Relasi ke Ulasan (Satu Pemesanan bisa memiliki banyak Ulasan)
-     * (ERD menunjukkan Ulasan punya 1 FK ke Pemesanan, jadi relasinya hasMany)
+     * Relasi ke Ulasan (Satu Pemesanan hanya memiliki SATU Ulasan)
+     * Menggunakan hasOne karena ada UNIQUE constraint pada id_pemesanan di tabel ulasan
      */
     public function ulasan()
     {
-        return $this->hasMany(Ulasan::class, 'id_pemesanan', 'id_pemesanan');
+        return $this->hasOne(Ulasan::class, 'id_pemesanan', 'id_pemesanan');
     }
 }

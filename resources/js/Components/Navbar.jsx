@@ -47,7 +47,7 @@ const Navbar = () => {
             
             // Tentukan tujuan redirect berdasarkan Role (case-insensitive)
             const userRole = user.role_pengguna?.toLowerCase();
-            const profilePath = userRole === 'admin' ? '/admin' : '/edit-profile';
+            const profilePath = userRole === 'admin' ? '/admin' : '/profile';
 
             return (
                 <div 

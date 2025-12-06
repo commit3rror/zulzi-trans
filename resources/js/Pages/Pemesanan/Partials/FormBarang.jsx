@@ -92,7 +92,7 @@ const FormBarang = ({ onBack, onSuccess }) => {
                     {/* BARANG & BERAT */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Nama Barang</label>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Nama Barang <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <Package className="absolute left-3 top-3 text-gray-400" size={20} />
                                 <input
@@ -100,13 +100,15 @@ const FormBarang = ({ onBack, onSuccess }) => {
                                     name="deskripsi_barang"
                                     value={formData.deskripsi_barang}
                                     onChange={handleChange}
+                                    placeholder="Misal: Sofa, Kulkas, dll"
                                     className={inputStyle('deskripsi_barang')}
+                                    required
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Estimasi Berat (Ton)</label>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Estimasi Berat (Ton) <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <Scale className="absolute left-3 top-3 text-gray-400" size={20} />
                                 <input
@@ -115,7 +117,11 @@ const FormBarang = ({ onBack, onSuccess }) => {
                                     value={formData.est_berat_ton}
                                     onChange={handleChange}
                                     step="0.1"
+                                    min="0.1"
+                                    max="50"
+                                    placeholder="Misal: 0.5 atau 2"
                                     className={inputStyle('est_berat_ton')}
+                                    required
                                 />
                             </div>
                         </div>
@@ -123,7 +129,7 @@ const FormBarang = ({ onBack, onSuccess }) => {
 
                     {/* FOTO BARANG */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Foto Barang</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Foto Barang <span className="text-red-500">*</span></label>
 
                         {imagePreview ? (
                             <div className="relative bg-gray-50 rounded-xl border-2 border-gray-200 p-4">
@@ -155,6 +161,7 @@ const FormBarang = ({ onBack, onSuccess }) => {
                                     onChange={handleChange}
                                     accept="image/jpeg,image/png,image/jpg"
                                     className="hidden"
+                                    required
                                 />
                             </label>
                         )}
@@ -170,8 +177,9 @@ const FormBarang = ({ onBack, onSuccess }) => {
                                 name="lokasi_jemput"
                                 value={formData.lokasi_jemput}
                                 onChange={handleChange}
-                                placeholder="Lokasi Jemput"
+                                placeholder="Lokasi Jemput *"
                                 className={inputStyle('lokasi_jemput')}
+                                required
                             />
                         </div>
 
@@ -182,21 +190,23 @@ const FormBarang = ({ onBack, onSuccess }) => {
                                 name="lokasi_tujuan"
                                 value={formData.lokasi_tujuan}
                                 onChange={handleChange}
-                                placeholder="Lokasi Tujuan"
+                                placeholder="Lokasi Tujuan *"
                                 className={inputStyle('lokasi_tujuan')}
+                                required
                             />
                         </div>
                     </div>
 
                     {/* TANGGAL */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Tanggal</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Tanggal <span className="text-red-500">*</span></label>
                         <input
                             type="date"
                             name="tgl_mulai"
                             value={formData.tgl_mulai}
                             onChange={handleChange}
                             className={inputStyle('tgl_mulai')}
+                            required
                         />
                         {errors.tgl_mulai && <p className="text-red-500 text-xs mt-1">{errors.tgl_mulai[0]}</p>}
                     </div>

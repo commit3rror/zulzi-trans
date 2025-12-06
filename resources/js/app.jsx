@@ -13,7 +13,6 @@ import AdminRouteGuard from './Components/AdminRouteGuard.jsx';
 import LoginPage from './Pages/Auth/LoginPage.jsx';
 import RegisterPage from './Pages/Auth/RegisterPage.jsx';
 import ForgotPasswordPage from './Pages/Auth/ForgotPasswordPage.jsx';
-import EditProfile from './Pages/Auth/EditProfile.jsx';
 import AdminPanel from './Pages/Admin/AdminPanel.jsx';
 
 import '../css/app.css';
@@ -30,16 +29,6 @@ function App() {
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     
-                    
-                    {/* ===================================== */}
-                    {/* ROUTE KHUSUS USER (Private - Customer/Admin) */}
-                    {/* ===================================== */}
-                    {/* Gunakan AdminRouteGuard, tapi set isAdminOnly=false. 
-                        Artinya: User harus LOGIN, tapi role apapun (customer/admin) boleh. */}
-                    <Route 
-                        path="/edit-profile" 
-                        element={<AdminRouteGuard element={<EditProfile />} isAdminOnly={false} />} 
-                    />
                     
                     {/* ===================================== */}
                     {/* ROUTE ADMIN (Admin Only)              */}

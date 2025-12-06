@@ -39,6 +39,14 @@ class Ulasan extends Model
         'tgl_ulasan',
     ];
 
+    // Computed property untuk rata-rata rating
+    protected $appends = ['rata_rata'];
+
+    public function getRataRataAttribute()
+    {
+        return round(($this->rating_driver + $this->rating_kendaraan + $this->rating_pelayanan) / 3, 1);
+    }
+
     protected $casts = [
         'rating_driver' => 'integer',
         'rating_kendaraan' => 'integer',

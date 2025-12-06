@@ -60,6 +60,12 @@ class PemesananController extends Controller
             $deskripsi = "Jenis: {$jenis}, Volume: {$volume} m³";
         }
 
+        // Logic Lokasi Tujuan berdasarkan jenis layanan
+        $lokasiTujuan = match($request->layanan) {
+            'sampah' => 'TPA (Ditentukan Zulzi Trans)', // Sampah tidak butuh input tujuan dari user
+            default => $request->lokasi_tujuan ?? $request->lokasi_jemput, // Rental & Barang butuh tujuan
+        };
+
         // Siapkan Data
         $data = [
             'id_pengguna' => auth()->id(), // PERBAIKAN: Hapus fallback, user HARUS login
@@ -69,7 +75,7 @@ class PemesananController extends Controller
             'tgl_selesai' => $request->tgl_selesai ?? null,
             
             'lokasi_jemput' => $request->lokasi_jemput,
-            'lokasi_tujuan' => $request->lokasi_tujuan ?? $request->lokasi_jemput,
+            'lokasi_tujuan' => $lokasiTujuan,
             
             'status_pemesanan' => 'Menunggu', // Status awal
             'total_biaya' => 0, // Harga 0 menunggu admin
@@ -172,8 +178,8 @@ class PemesananController extends Controller
         // Debug: Log user ID
         \Log::info('🔍 Fetching orders for user ID: ' . $userId);
 
-        // Ambil pesanan user dengan relasi dan pagination
-        $orders = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran'])
+        // Ambil pesanan user dengan relasi dan pagination (termasuk ulasan untuk cek sudah review atau belum)
+        $orders = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran', 'ulasan'])
             ->where('id_pengguna', $userId)
             ->orderBy('tgl_pesan', 'desc')
             ->paginate($perPage);
