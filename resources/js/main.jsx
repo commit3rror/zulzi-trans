@@ -19,6 +19,12 @@ import ReviewPage from '@/Pages/ReviewPage';
 import PemesananPage from '@/Pages/Pemesanan/Index';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
 
+// Import halaman Payment Flow (New Architecture)
+import StatusPage from '@/Pages/Pemesanan/Status';
+import PaymentNewPage from '@/Pages/Pemesanan/PaymentNew';
+import PaymentUploadPage from '@/Pages/Pemesanan/PaymentUpload';
+import PaymentSuccessPage from '@/Pages/Pemesanan/PaymentSuccess';
+
 // Import halaman Auth
 import LoginPage from '@/Pages/Auth/LoginPage.jsx';
 import RegisterPage from '@/Pages/Auth/RegisterPage.jsx';
@@ -103,6 +109,26 @@ root.render(
           <Route 
             path="/edit-profile" 
             element={<AdminRouteGuard element={<EditProfile />} isAdminOnly={false} />} 
+          />
+
+          {/* ===================================== */}
+          {/* ROUTE PAYMENT FLOW (Harus Login)     */}
+          {/* ===================================== */}
+          <Route 
+            path="/pemesanan/:id/status" 
+            element={<AdminRouteGuard element={<StatusPage />} isAdminOnly={false} />} 
+          />
+          <Route 
+            path="/pemesanan/:id/payment/new" 
+            element={<AdminRouteGuard element={<PaymentNewPage />} isAdminOnly={false} />} 
+          />
+          <Route 
+            path="/pemesanan/:id/payment/upload" 
+            element={<AdminRouteGuard element={<PaymentUploadPage />} isAdminOnly={false} />} 
+          />
+          <Route 
+            path="/pemesanan/:id/payment/success" 
+            element={<AdminRouteGuard element={<PaymentSuccessPage />} isAdminOnly={false} />} 
           />
           
           {/* ===================================== */}

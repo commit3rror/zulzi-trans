@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Import axios untuk request ke API
 import MainLayout from '../../Layouts/MainLayout';
 import Stepper from '../../Components/Pemesanan/Stepper';
@@ -11,6 +11,7 @@ import { Car, Truck, Trash2, ArrowLeft } from 'lucide-react';
 
 const PemesananPage = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     
     // State Management
     const [step, setStep] = useState(1); // 1: Form Input, 2: Payment Wizard
@@ -20,11 +21,10 @@ const PemesananPage = () => {
     // Check jika ada data pesanan dari navigation state (dari profile)
     useEffect(() => {
         if (location.state?.orderData && location.state?.showPayment) {
-            setOrderData(location.state.orderData);
-            setStep(2); // Langsung ke payment wizard
-            window.scrollTo(0, 0);
+            // Redirect ke halaman status baru
+            navigate(`/pemesanan/${location.state.orderData.id_pemesanan}/status`, { replace: true });
         }
-    }, [location]);
+    }, [location, navigate]);
 
     // Data pilihan layanan
     const services = [
@@ -35,9 +35,8 @@ const PemesananPage = () => {
 
     // Callback saat form input (Step 1) berhasil disubmit
     const handleOrderSuccess = (data) => {
-        setOrderData(data); // Simpan data pesanan yang baru dibuat
-        setStep(2); // Pindah ke Step 2 (Proses Pembayaran)
-        window.scrollTo(0, 0); // Scroll ke paling atas
+        // Redirect langsung ke halaman status
+        navigate(`/pemesanan/${data.id_pemesanan}/status`);
     };
 
     // Fungsi untuk mengambil status terbaru pesanan dari Backend

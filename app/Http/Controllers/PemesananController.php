@@ -26,6 +26,8 @@ class PemesananController extends Controller
             'lama_rental' => 'nullable|integer',
             'foto_barang' => 'nullable|file|image|max:10240',
             'foto_sampah' => 'nullable|file|image|max:10240',
+            'volume_sampah' => 'nullable|numeric|min:0.1|max:100', // Validasi volume dalam m³
+            'est_berat_ton' => 'nullable|numeric|min:0.1|max:50', // Validasi berat dalam ton
         ]);
 
         if ($validator->fails()) {
@@ -54,8 +56,8 @@ class PemesananController extends Controller
         } 
         elseif ($request->layanan === 'sampah') {
             $jenis = $request->jenis_sampah ?? '-';
-            $volume = $request->perkiraan_volume ?? '-';
-            $deskripsi = "Jenis: {$jenis}, Volume: {$volume}";
+            $volume = $request->volume_sampah ?? '-';
+            $deskripsi = "Jenis: {$jenis}, Volume: {$volume} m³";
         }
 
         // Siapkan Data
@@ -78,6 +80,7 @@ class PemesananController extends Controller
             
             'deskripsi_barang' => $deskripsi,
             'est_berat_ton' => $request->est_berat_ton ?? null,
+            'volume_sampah' => $request->volume_sampah ?? null,
             'jumlah_orang' => $request->jumlah_orang ?? null,
             'lama_rental' => $request->lama_rental ?? null,
             'foto_barang' => null
@@ -111,8 +114,8 @@ class PemesananController extends Controller
      */
     public function show($id)
     {
-        // Ambil data pesanan beserta detail Armada dan Supir (jika sudah dipilih admin)
-        $pemesanan = Pemesanan::with(['layanan', 'armada', 'supir'])->find($id);
+        // Ambil data pesanan beserta detail Armada, Supir, dan Pembayaran
+        $pemesanan = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran'])->find($id);
 
         if (!$pemesanan) {
             return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
@@ -122,6 +125,16 @@ class PemesananController extends Controller
             'status' => 'success',
             'data' => $pemesanan
         ]);
+    }
+
+    /**
+     * 2B. STATUS PAGE: Halaman status pemesanan (frontend route)
+     * Method ini tidak perlu return JSON, karena semua handled by React Router
+     */
+    public function status($id)
+    {
+        // Cukup return view app.blade, React Router akan handle routing
+        return view('app');
     }
 
     /**
@@ -144,24 +157,32 @@ class PemesananController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        // Pagination parameters
+        $perPage = $request->input('per_page', 10);
+        $page = $request->input('page', 1);
+
         // Debug: Log user ID
         \Log::info('🔍 Fetching orders for user ID: ' . $userId);
 
-        // Ambil semua pesanan user dengan relasi layanan, armada, supir, pembayaran
+        // Ambil pesanan user dengan relasi dan pagination
         $orders = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran'])
             ->where('id_pengguna', $userId)
             ->orderBy('tgl_pesan', 'desc')
-            ->get();
+            ->paginate($perPage);
 
         // Debug: Log hasil query
-        \Log::info('📦 Found ' . $orders->count() . ' orders');
+        \Log::info('📦 Found ' . $orders->total() . ' total orders, showing page ' . $page);
 
         return response()->json([
             'status' => 'success',
-            'data' => $orders,
-            'debug' => [
-                'user_id' => $userId,
-                'total_orders' => $orders->count()
+            'data' => $orders->items(),
+            'pagination' => [
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total(),
+                'from' => $orders->firstItem(),
+                'to' => $orders->lastItem()
             ]
         ]);
     }

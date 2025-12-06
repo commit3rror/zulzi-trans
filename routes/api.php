@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemesananController;
 use App\Http\Controllers\PembayaranController;
+use App\Http\Controllers\Admin\PembayaranController as AdminPembayaranController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ReviewController;
@@ -111,6 +112,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/supir/{id}', [SupirController::class, 'show']);
         Route::put('/supir/{id}', [SupirController::class, 'update']);
         Route::delete('/supir/{id}', [SupirController::class, 'destroy']);
+
+        // Pembayaran Management (Admin)
+        Route::get('/pembayaran', [AdminPembayaranController::class, 'index']);
+        Route::get('/pembayaran/{id}', [AdminPembayaranController::class, 'show']);
+        Route::post('/pembayaran/{id}/verify', [AdminPembayaranController::class, 'verify']);
     });
 
 });

@@ -24,6 +24,7 @@ class Pembayaran extends Model
         'metode_bayar',
         'jenis_pembayaran',
         'bukti_transfer',
+        'status_pembayaran',
     ];
 
     // Konversi tipe data otomatis saat diambil dari DB

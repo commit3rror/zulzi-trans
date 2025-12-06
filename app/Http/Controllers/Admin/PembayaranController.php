@@ -55,12 +55,45 @@ class PembayaranController extends Controller
         $action = $request->input('action'); // 'approve' atau 'reject'
         
         if ($action === 'approve') {
+            // Update status pembayaran menjadi Verified dan save dulu
+            $pembayaran->status_pembayaran = 'Verified';
             $pembayaran->id_admin = auth()->id() ?? 1; // Set admin yang verifikasi
-            $pembayaran->save();
+            $pembayaran->save(); // SAVE DULU sebelum query verified payments
 
-            // Update status pemesanan jika perlu
+            // Update status pemesanan berdasarkan jenis pembayaran
             if ($pembayaran->pemesanan) {
-                $pembayaran->pemesanan->status_pemesanan = 'Selesai';
+                $pemesanan = $pembayaran->pemesanan;
+                
+                // Hitung ulang total pembayaran yang terverifikasi (termasuk yang baru di-save)
+                $totalTagihan = $pemesanan->total_biaya;
+                $verifiedPayments = $pemesanan->pembayaran()
+                    ->where('status_pembayaran', 'Verified')
+                    ->get();
+                $totalBayar = $verifiedPayments->sum('jumlah_bayar');
+                
+                // Cek apakah ini DP atau LUNAS
+                if ($pembayaran->jenis_pembayaran === 'DP') {
+                    $pemesanan->status_pemesanan = 'DP Dibayar';
+                } else {
+                    // LUNAS - cek apakah sudah bayar semua
+                    if ($totalBayar >= $totalTagihan) {
+                        $pemesanan->status_pemesanan = 'Lunas';
+                    } else {
+                        $pemesanan->status_pemesanan = 'DP Dibayar'; // Jika belum lunas, masih DP Dibayar
+                    }
+                }
+                
+                $pemesanan->save();
+            }
+        } elseif ($action === 'reject') {
+            // Update status pembayaran menjadi Rejected
+            $pembayaran->status_pembayaran = 'Rejected';
+            $pembayaran->id_admin = auth()->id() ?? 1;
+            $pembayaran->save();
+            
+            // Update status pemesanan menjadi Pembayaran Ditolak
+            if ($pembayaran->pemesanan) {
+                $pembayaran->pemesanan->status_pemesanan = 'Pembayaran Ditolak';
                 $pembayaran->pemesanan->save();
             }
         }

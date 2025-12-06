@@ -5,11 +5,9 @@ import { CheckCircle, Clock, CreditCard, Upload, ChevronRight, Copy, User, Home,
 const PaymentWizard = ({ orderData, refreshOrder }) => {
     const [screen, setScreen] = useState('invoice'); 
     
-    // Form Data
+    // Form Data - Default DP
     const [form, setForm] = useState({
-        nama_pengirim: '',
-        bank_pengirim: '',
-        jenis_pembayaran: 'DP', // Default DP sesuai gambar
+        jenis_pembayaran: 'DP',
         bukti_transfer: null,
         metode_bayar: 'BCA' // Default BCA
     });
@@ -21,28 +19,92 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
     const [copied, setCopied] = useState(false);
 
     // --- LOGIKA STATUS & HARGA ---
-    const status = orderData.status_pemesanan; // 'Menunggu', 'Dikonfirmasi', 'Menunggu Verifikasi', 'Pembayaran Ditolak', 'Selesai'
+    const status = orderData.status_pemesanan;
     
     // Hitung Nominal
-    const totalTagihan = Number(orderData.total_biaya);
-    const nominalBayar = form.jenis_pembayaran === 'DP' ? (totalTagihan * 0.5) : totalTagihan;
+    const totalTagihan = Number(orderData.total_biaya) || 0;
+    const nominalDP = Number(orderData.nominal_dp) || 0;
+    
+    // Cek sudah bayar berapa (dari tabel pembayaran) - HANDLE JIKA BUKAN ARRAY
+    const pembayaranList = Array.isArray(orderData.pembayaran) 
+        ? orderData.pembayaran 
+        : (orderData.pembayaran ? [orderData.pembayaran] : []);
+    
+    // LOGIKA PEMBAYARAN BERDASARKAN STATUS PEMESANAN:
+    // - "Menunggu" / "Dikonfirmasi" / "Pembayaran Ditolak" = Belum ada pembayaran verified (0)
+    // - "Menunggu Verifikasi" = Ada pembayaran sedang diverifikasi (belum count)
+    // - "DP Dibayar" = DP sudah verified (count DP saja)
+    // - "Lunas" / "Selesai" = Semua pembayaran sudah verified
+    
+    let sudahDibayar = 0;
+    
+    if (status === 'DP Dibayar') {
+        // Hanya hitung DP yang sudah diverifikasi
+        sudahDibayar = nominalDP;
+    } else if (status === 'Lunas' || status === 'Selesai') {
+        // Hitung semua pembayaran
+        sudahDibayar = pembayaranList.reduce((sum, p) => sum + Number(p.jumlah_bayar || 0), 0);
+        console.log('🔍 DEBUG LUNAS - Pembayaran List:', pembayaranList);
+        console.log('🔍 Total dari reduce:', sudahDibayar);
+    }
+    // Untuk status lainnya, sudahDibayar = 0
+    
+    const sisaPembayaran = Math.max(0, totalTagihan - sudahDibayar);
+    
+    // Tentukan nominal yang harus dibayar
+    const nominalBayar = form.jenis_pembayaran === 'DP' ? nominalDP : sisaPembayaran;
 
     const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
     const adminPhone = "6281234567890"; 
     const waLink = `https://wa.me/${adminPhone}?text=${encodeURIComponent(`Halo Admin, saya ingin diskusi harga untuk Order #${orderData.id_pemesanan}`)}`;
 
+    // --- EFEK SET JENIS PEMBAYARAN BERDASARKAN KONDISI ---
+    useEffect(() => {
+        // LOGIKA:
+        // 1. Jika status "DP Dibayar" -> Set ke LUNAS (untuk pelunasan)
+        // 2. Jika status "Pembayaran Ditolak" -> Cek pembayaran terakhir, gunakan jenis yang sama
+        // 3. Jika status "Dikonfirmasi" -> Default DP (bisa pilih)
+        
+        if (status === 'DP Dibayar') {
+            // DP sudah dibayar, sekarang harus bayar LUNAS
+            setForm(prev => ({
+                ...prev,
+                jenis_pembayaran: 'LUNAS'
+            }));
+        } else if (status === 'Pembayaran Ditolak') {
+            // Gunakan jenis pembayaran yang sama dengan yang ditolak
+            const pembayaranTerakhir = pembayaranList[pembayaranList.length - 1];
+            if (pembayaranTerakhir) {
+                setForm(prev => ({
+                    ...prev,
+                    jenis_pembayaran: pembayaranTerakhir.jenis_pembayaran
+                }));
+            }
+        } else if (status === 'Dikonfirmasi') {
+            // Default DP untuk pembayaran pertama
+            setForm(prev => ({
+                ...prev,
+                jenis_pembayaran: 'DP'
+            }));
+        }
+    }, [status]);
+
     // --- EFEK OTOMATIS GANTI LAYAR BERDASARKAN STATUS ---
     useEffect(() => {
-        // Jika status berubah jadi 'Menunggu Verifikasi', otomatis pindah ke layar sukses
-        if (status === 'Menunggu Verifikasi' || status === 'Selesai' || status === 'Lunas') {
+        // Jika status 'Lunas' atau 'Selesai', otomatis pindah ke layar sukses
+        if (status === 'Lunas' || status === 'Selesai') {
             setScreen('success');
         } 
-        // Jika status 'Pembayaran Ditolak', user harus melihat invoice lagi (untuk melihat alert merah)
+        // Jika status 'Menunggu Verifikasi', tetap di invoice tapi show message
+        else if (status === 'Menunggu Verifikasi') {
+            setScreen('invoice');
+        }
+        // Jika status 'Pembayaran Ditolak', user harus melihat invoice lagi
         else if (status === 'Pembayaran Ditolak') {
             setScreen('invoice');
         }
-        // Jika status 'Dikonfirmasi', tetap di invoice agar user bisa klik "Lanjut Bayar"
-        else if (status === 'Dikonfirmasi') {
+        // Jika status 'Dikonfirmasi' atau 'DP Dibayar', tetap di invoice agar user bisa bayar
+        else if (status === 'Dikonfirmasi' || status === 'DP Dibayar') {
             setScreen('invoice');
         }
     }, [status]);
@@ -55,25 +117,66 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
         
         // Tentukan apakah tombol bayar harus muncul
         const showPayButton = status === 'Dikonfirmasi' || status === 'Pembayaran Ditolak';
+        
+        // Tombol pelunasan hanya muncul jika:
+        // 1. Status = "DP Dibayar" DAN
+        // 2. Ada pembayaran DP yang sudah diverifikasi (sudahDibayar > 0)
+        const showPelunasanButton = status === 'DP Dibayar' && sudahDibayar > 0;
+        
         const showDiscussButton = status === 'Menunggu';
         const showVerifyMessage = status === 'Menunggu Verifikasi';
         
         console.log('Show Pay Button:', showPayButton);
+        console.log('Show Pelunasan Button:', showPelunasanButton);
         console.log('Show Discuss Button:', showDiscussButton);
 
         return (
             <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden max-w-4xl mx-auto animate-fade-in-up">
                 {/* HEADER STATUS DINAMIS */}
-                <div className={`p-4 text-center flex items-center justify-center gap-2 font-bold ${
+                <div className={`p-4 text-center flex flex-col items-center justify-center gap-1 font-bold ${
                     status === 'Dikonfirmasi' ? 'bg-green-50 text-green-700' :
+                    status === 'DP Dibayar' ? 'bg-blue-50 text-blue-700' :
                     status === 'Pembayaran Ditolak' ? 'bg-red-50 text-red-700' :
                     status === 'Menunggu Verifikasi' ? 'bg-yellow-50 text-yellow-700' :
                     'bg-orange-50 text-orange-700'
                 }`}>
-                    {status === 'Dikonfirmasi' && <><CheckCircle size={18}/> Pesanan Dikonfirmasi - Silakan Bayar</>}
-                    {status === 'Pembayaran Ditolak' && <><XCircle size={18}/> Pembayaran Ditolak - Silakan Upload Ulang</>}
-                    {status === 'Menunggu Verifikasi' && <><Clock size={18}/> Menunggu Verifikasi Admin</>}
-                    {status === 'Menunggu' && <><Clock size={18}/> Menunggu Konfirmasi Admin</>}
+                    {status === 'Dikonfirmasi' && (
+                        <div className="flex items-center gap-2">
+                            <CheckCircle size={18}/> Pesanan Dikonfirmasi - Silakan Bayar
+                        </div>
+                    )}
+                    {status === 'DP Dibayar' && (
+                        <div className="flex items-center gap-2">
+                            <CheckCircle size={18}/> DP Sudah Dibayar - Silakan Lunasi
+                        </div>
+                    )}
+                    {status === 'Pembayaran Ditolak' && (
+                        <div className="flex items-center gap-2">
+                            <XCircle size={18}/> Pembayaran Ditolak - Silakan Upload Ulang
+                        </div>
+                    )}
+                    {status === 'Menunggu Verifikasi' && (
+                        <>
+                            <div className="flex items-center gap-2">
+                                <Clock size={18}/> Sedang Diverifikasi Admin
+                            </div>
+                            {pembayaranList.length > 0 && (
+                                <div className="text-xs font-normal opacity-90 mt-1">
+                                    Pembayaran {pembayaranList[pembayaranList.length - 1].jenis_pembayaran} sebesar {formatRupiah(pembayaranList[pembayaranList.length - 1].jumlah_bayar)}
+                                </div>
+                            )}
+                        </>
+                    )}
+                    {status === 'Menunggu' && (
+                        <>
+                            <div className="flex items-center gap-2">
+                                <Clock size={18}/> Menunggu Konfirmasi Pemesanan
+                            </div>
+                            <div className="text-xs font-normal opacity-90 mt-1">
+                                Admin sedang memeriksa detail pesanan Anda
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -175,14 +278,51 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                             {showPayButton && (
                                 <button 
                                     onClick={() => {
-                                        if(status === 'Pembayaran Ditolak') setScreen('upload');
-                                        else setScreen('methods');
+                                        if(status === 'Pembayaran Ditolak') {
+                                            // Upload ulang dengan jenis pembayaran yang sama
+                                            setScreen('upload');
+                                        } else {
+                                            // Pembayaran baru, mulai dari pilih metode
+                                            setScreen('methods');
+                                        }
                                     }}
                                     className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold shadow-lg transition flex justify-center items-center gap-2"
                                 >
                                     {status === 'Pembayaran Ditolak' ? 'Upload Ulang Bukti' : 'Lanjut Pembayaran'} 
                                     <ChevronRight size={18}/>
                                 </button>
+                            )}
+
+                            {/* 1B. TOMBOL PELUNASAN (Khusus untuk DP Dibayar) */}
+                            {showPelunasanButton && (
+                                <div className="space-y-4">
+                                    {/* Info Box DP Dibayar */}
+                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                        <p className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
+                                            <CheckCircle size={16} />
+                                            DP Anda telah diverifikasi!
+                                        </p>
+                                        <div className="text-xs text-blue-700 space-y-1">
+                                            <div className="flex justify-between">
+                                                <span>DP yang sudah dibayar:</span>
+                                                <span className="font-bold">{formatRupiah(sudahDibayar)}</span>
+                                            </div>
+                                            <div className="flex justify-between font-bold text-orange-600">
+                                                <span>Sisa yang harus dibayar:</span>
+                                                <span className="text-lg">{formatRupiah(sisaPembayaran)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Button Bayar Pelunasan */}
+                                    <button 
+                                        onClick={() => setScreen('methods')}
+                                        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 rounded-xl font-bold shadow-lg transition flex justify-center items-center gap-2 text-lg"
+                                    >
+                                        <CreditCard size={20}/>
+                                        Bayar Sisa Pelunasan ({formatRupiah(sisaPembayaran)})
+                                    </button>
+                                </div>
                             )}
 
                             {/* 2. PESAN MENUNGGU VERIFIKASI */}
@@ -203,14 +343,16 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                                 </button>
                             )}
 
-                            {/* 4. TOMBOL REFRESH (Selalu muncul) */}
-                            <button 
-                                onClick={refreshOrder}
-                                className="w-full bg-white border border-blue-200 text-blue-600 py-2 rounded-xl font-medium text-sm hover:bg-blue-50 flex justify-center items-center gap-2"
-                            >
-                                <RefreshCw size={16} />
-                                Cek Update Status (Refresh)
-                            </button>
+                            {/* 4. TOMBOL REFRESH (Selalu muncul kecuali Lunas) */}
+                            {status !== 'Lunas' && status !== 'Selesai' && (
+                                <button 
+                                    onClick={refreshOrder}
+                                    className="w-full bg-white border border-blue-200 text-blue-600 py-2 rounded-xl font-medium text-sm hover:bg-blue-50 flex justify-center items-center gap-2"
+                                >
+                                    <RefreshCw size={16} />
+                                    Cek Update Status (Refresh)
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -370,8 +512,6 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
             const data = new FormData();
             data.append('id_pemesanan', orderData.id_pemesanan);
             data.append('jumlah_bayar', nominalBayar);
-            data.append('nama_pengirim', form.nama_pengirim);
-            data.append('bank_pengirim', form.bank_pengirim);
             data.append('jenis_pembayaran', form.jenis_pembayaran);
             data.append('bukti_transfer', form.bukti_transfer);
             data.append('metode_bayar', form.metode_bayar); // Kirim metode yang dipilih (BCA/QRIS) 
@@ -384,7 +524,9 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                refreshOrder(); 
+                // Tunggu sebentar sebelum refresh agar user lihat success screen
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await refreshOrder();
                 setScreen('success'); 
             } catch (err) {
                 console.error(err);
@@ -403,28 +545,65 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                     
                     <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
                         <label className="block text-sm font-bold text-blue-900 mb-3">Jenis Pembayaran</label>
+                        
+                        {/* Alert jika upload ulang */}
+                        {status === 'Pembayaran Ditolak' && pembayaranDitolak && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-700">
+                                <p className="font-bold">Upload ulang untuk pembayaran: {pembayaranDitolak.jenis_pembayaran}</p>
+                                <p className="text-xs mt-1">Nominal: {formatRupiah(pembayaranDitolak.jumlah_bayar)}</p>
+                            </div>
+                        )}
+                        
+                        {/* Info Pembayaran */}
+                        <div className="bg-white rounded-lg p-4 mb-4 text-sm space-y-2">
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Total Tagihan:</span>
+                                <span className="font-bold text-gray-800">{formatRupiah(totalTagihan)}</span>
+                            </div>
+                            {sudahDibayar > 0 && (
+                                <>
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Sudah Dibayar:</span>
+                                        <span className="font-bold">- {formatRupiah(sudahDibayar)}</span>
+                                    </div>
+                                    <div className="flex justify-between border-t pt-2">
+                                        <span className="text-gray-600">Sisa Pembayaran:</span>
+                                        <span className="font-bold text-orange-600">{formatRupiah(sisaPembayaran)}</span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        
+                        {/* Radio buttons - disable jika upload ulang */}
                         <div className="flex gap-6 mb-6">
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            {/* Tampilkan opsi DP hanya jika belum pernah bayar dan nominalDP > 0 */}
+                            {sudahDibayar === 0 && nominalDP > 0 && (
+                                <label className={`flex items-center gap-2 ${status === 'Pembayaran Ditolak' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+                                    <input 
+                                        type="radio" 
+                                        name="jenis_pembayaran" 
+                                        value="DP" 
+                                        checked={form.jenis_pembayaran === 'DP'} 
+                                        onChange={e => setForm({...form, jenis_pembayaran: e.target.value})}
+                                        disabled={status === 'Pembayaran Ditolak'}
+                                        className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                    />
+                                    <span className="text-gray-700 font-medium">DP ({formatRupiah(nominalDP)})</span>
+                                </label>
+                            )}
+                            <label className={`flex items-center gap-2 ${status === 'Pembayaran Ditolak' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                                 <input 
                                     type="radio" 
                                     name="jenis_pembayaran" 
                                     value="LUNAS" 
                                     checked={form.jenis_pembayaran === 'LUNAS'} 
                                     onChange={e => setForm({...form, jenis_pembayaran: e.target.value})}
+                                    disabled={status === 'Pembayaran Ditolak'}
                                     className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
                                 />
-                                <span className="text-gray-700 font-medium">Lunas (Full)</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input 
-                                    type="radio" 
-                                    name="jenis_pembayaran" 
-                                    value="DP" 
-                                    checked={form.jenis_pembayaran === 'DP'} 
-                                    onChange={e => setForm({...form, jenis_pembayaran: e.target.value})}
-                                    className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
-                                />
-                                <span className="text-gray-700 font-medium">DP (50%)</span>
+                                <span className="text-gray-700 font-medium">
+                                    {sudahDibayar > 0 ? 'Pelunasan' : 'Lunas (Full)'}
+                                </span>
                             </label>
                         </div>
                         
@@ -434,30 +613,7 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-800 mb-2">Nama Pengirim</label>
-                            <input 
-                                type="text" 
-                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-gray-50" 
-                                placeholder="Nama Pemilik Rekening"
-                                value={form.nama_pengirim}
-                                onChange={e => setForm({...form, nama_pengirim: e.target.value})}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold text-gray-800 mb-2">Bank Pengirim</label>
-                            <input 
-                                type="text" 
-                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-gray-50" 
-                                placeholder="Contoh: BCA / BRI"
-                                value={form.bank_pengirim}
-                                onChange={e => setForm({...form, bank_pengirim: e.target.value})}
-                                required
-                            />
-                        </div>
-                    </div>
+                    {/* Field nama pengirim & bank pengirim dihapus karena tidak disimpan di database */}
                     
                     <div>
                         <label className="block text-sm font-bold text-gray-800 mb-2">Upload Bukti Transfer</label>
@@ -518,51 +674,104 @@ const PaymentWizard = ({ orderData, refreshOrder }) => {
         );
     }
 
-    // --- SCREEN 4: SELESAI / MENUNGGU VERIFIKASI ---
+    // --- SCREEN 4: SUCCESS ---
     if (screen === 'success') {
+        // LOGIKA SCREEN SUCCESS:
+        // Status "Lunas" atau "Selesai" -> Tampilkan success final
+        // Jangan tampilkan "Pembayaran DP Terkirim" kalau sudah lunas!
+        
+        const isLunas = status === 'Lunas' || status === 'Selesai';
+        
         return (
             <div className="bg-white rounded-3xl shadow-xl border border-green-100 max-w-md mx-auto p-8 text-center animate-fade-in-up">
                 
-                {status === 'Menunggu Verifikasi' ? (
-                    <>
-                        <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-                            <Clock className="text-yellow-600 w-10 h-10" />
+                <div className={`w-20 h-20 ${isLunas ? 'bg-green-100' : 'bg-yellow-100'} rounded-full flex items-center justify-center mx-auto mb-6 ${isLunas ? 'animate-bounce' : 'animate-pulse'}`}>
+                    {isLunas ? (
+                        <CheckCircle className="text-green-600 w-10 h-10" />
+                    ) : (
+                        <Clock className="text-yellow-600 w-10 h-10" />
+                    )}
+                </div>
+                
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                    {isLunas ? 'Pembayaran Lunas!' : 'Menunggu Verifikasi Admin'}
+                </h3>
+                
+                <p className="text-gray-500 mb-6">
+                    {isLunas 
+                        ? 'Semua pembayaran telah terverifikasi. Pesanan Anda akan segera diproses!'
+                        : 'Bukti pembayaran Anda telah kami terima. Admin akan segera memverifikasi.'
+                    }
+                </p>
+                
+                {/* Info Pembayaran */}
+                <div className="bg-blue-50 p-5 rounded-xl mb-6 border border-blue-100 text-left">
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Total Tagihan</span>
+                            <span className="font-bold text-gray-800">{formatRupiah(totalTagihan)}</span>
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Menunggu Verifikasi</h3>
-                        <p className="text-gray-500 mb-6">
-                            Bukti pembayaran Anda telah kami terima. Admin akan segera memverifikasi data Anda.
-                            <br/><span className="text-xs text-gray-400">(Estimasi: 10-30 Menit)</span>
-                        </p>
                         
-                        <div className="bg-yellow-50 p-4 rounded-xl mb-6 border border-yellow-100">
-                            <p className="text-xs text-yellow-700 font-semibold">Silakan refresh berkala atau cek dashboard.</p>
+                        {/* Detail Pembayaran - Tampilkan jika ada lebih dari 1 pembayaran ATAU jika lunas */}
+                        {pembayaranList.length > 0 && (
+                            <div className="pt-2 border-t border-blue-200 space-y-2">
+                                {pembayaranList.map((p, idx) => (
+                                    <div key={idx} className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-500">
+                                            {p.jenis_pembayaran === 'DP' ? '✓ DP' : 
+                                             p.jenis_pembayaran === 'LUNAS' && pembayaranList.some(pay => pay.jenis_pembayaran === 'DP') ? '✓ Pelunasan' : 
+                                             '✓ Lunas Langsung'}
+                                        </span>
+                                        <span className="font-medium text-green-600">{formatRupiah(Number(p.jumlah_bayar))}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
+                        <div className="flex justify-between items-center pt-2 border-t border-blue-200">
+                            <span className="text-sm font-bold text-gray-700">
+                                {isLunas ? 'Total Terbayar' : 'Sudah Dibayar'}
+                            </span>
+                            <span className="font-bold text-green-600">{formatRupiah(sudahDibayar)}</span>
                         </div>
+                        
+                        {!isLunas && sisaPembayaran > 0 && (
+                            <div className="flex justify-between items-center pt-2 border-t border-blue-200">
+                                <span className="text-sm font-bold text-blue-600">Sisa yang Harus Dibayar</span>
+                                <span className="font-extrabold text-lg text-orange-600">{formatRupiah(sisaPembayaran)}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-                        <button 
-                            onClick={refreshOrder} 
-                            className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition mb-3"
-                        >
-                            <RefreshCw size={16} className="inline mr-2"/> Cek Status Terbaru
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle className="text-green-600 w-10 h-10" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Pembayaran Berhasil!</h3>
-                        <p className="text-gray-500 mb-6">
-                            Terima kasih, pesanan Anda telah lunas dan armada siap diberangkatkan sesuai jadwal.
+                {!isLunas && (
+                    <div className="bg-yellow-50 p-4 rounded-xl mb-6 border border-yellow-100">
+                        <p className="text-xs text-yellow-700 font-semibold flex items-center justify-center gap-2">
+                            <Clock size={16} />
+                            Estimasi verifikasi: 10-30 menit
                         </p>
-                    </>
+                    </div>
                 )}
 
-                <button 
-                    onClick={() => window.location.href = '/'} 
-                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition"
-                >
-                    Kembali ke Beranda
-                </button>
+                {/* Buttons */}
+                <div className="space-y-3">
+                    {!isLunas && (
+                        <button 
+                            onClick={refreshOrder} 
+                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg flex items-center justify-center gap-2"
+                        >
+                            <RefreshCw size={18} />
+                            Cek Status Verifikasi
+                        </button>
+                    )}
+                    
+                    <button 
+                        onClick={() => window.location.href = '/'} 
+                        className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition"
+                    >
+                        Kembali ke Beranda
+                    </button>
+                </div>
             </div>
         );
     }

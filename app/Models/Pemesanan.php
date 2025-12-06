@@ -50,6 +50,7 @@ class Pemesanan extends Model
         'lokasi_jemput',
         'lokasi_tujuan',
         'total_biaya',
+        'nominal_dp',
         'status_pemesanan',
         'id_supir',
         'deskripsi_barang',
@@ -57,6 +58,7 @@ class Pemesanan extends Model
         'foto_barang',
         'jumlah_orang',
         'lama_rental',
+        'volume_sampah', // Tambahan untuk angkut sampah
     ];
 
     /**
@@ -112,11 +114,11 @@ class Pemesanan extends Model
     }
 
     /**
-     * Relasi ke Pembayaran (Satu Pemesanan memiliki satu Pembayaran)
+     * Relasi ke Pembayaran (Satu Pemesanan memiliki banyak Pembayaran - DP + Pelunasan)
      */
     public function pembayaran()
     {
-        return $this->hasOne(Pembayaran::class, 'id_pemesanan', 'id_pemesanan');
+        return $this->hasMany(Pembayaran::class, 'id_pemesanan', 'id_pemesanan');
     }
 
     /**

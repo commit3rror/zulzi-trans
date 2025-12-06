@@ -166,6 +166,21 @@ class PemesananController extends Controller
             return response()->json(['message' => 'Pemesanan tidak ditemukan'], 404);
         }
 
+        // PENTING: Jika admin mengubah status ke "Lunas" atau "DP Dibayar",
+        // otomatis approve semua pembayaran yang masih Pending
+        if (isset($validated['status_pemesanan']) && 
+            in_array($validated['status_pemesanan'], ['Lunas', 'DP Dibayar'])) {
+            
+            DB::table('pembayaran')
+                ->where('id_pemesanan', $id)
+                ->where('status_pembayaran', 'Pending')
+                ->update([
+                    'status_pembayaran' => 'Verified',
+                    'id_admin' => auth()->id() ?? 1,
+                    'updated_at' => now()
+                ]);
+        }
+
         return response()->json(['message' => 'Pemesanan berhasil diupdate']);
     }
 

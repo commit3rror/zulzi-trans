@@ -1,26 +1,39 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Trash2, MapPin, Calendar, Camera, Layers, Truck } from 'lucide-react';
+import { Trash2, MapPin, Calendar, Camera, Layers } from 'lucide-react';
 
 const FormSampah = ({ onBack, onSuccess }) => {
     // State form
     const [formData, setFormData] = useState({
         layanan: 'sampah',
         jenis_sampah: '', 
-        perkiraan_volume: '',
-        preferensi_armada: '', // GANTI: Bukan id_armada lagi
+        volume_sampah: '',
         foto_sampah: null,
         tgl_mulai: '',
         lokasi_jemput: '',
     });
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [imagePreview, setImagePreview] = useState(null);
 
     // Handle perubahan input
     const handleChange = (e) => {
         const { name, value, type, files } = e.target;
-        if (type === 'file') setFormData(prev => ({ ...prev, [name]: files[0] }));
-        else setFormData(prev => ({ ...prev, [name]: value }));
+        if (type === 'file') {
+            const file = files[0];
+            setFormData(prev => ({ ...prev, [name]: file }));
+            
+            // Generate preview untuk gambar
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setImagePreview(reader.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     // Handle submit
@@ -92,26 +105,60 @@ const FormSampah = ({ onBack, onSuccess }) => {
                             <label className="block text-sm font-bold text-gray-700 mb-2">Volume (m³)</label>
                             <div className="relative">
                                 <Layers className="absolute left-3 top-3 text-gray-400" size={20} />
-                                <input type="text" name="perkiraan_volume" value={formData.perkiraan_volume} onChange={handleChange} className={inputStyle('perkiraan_volume')} placeholder="Contoh: 1 Pickup / 2 Kubik" />
+                                <input 
+                                    type="number" 
+                                    name="volume_sampah" 
+                                    value={formData.volume_sampah} 
+                                    onChange={handleChange} 
+                                    className={inputStyle('volume_sampah')} 
+                                    placeholder="Contoh: 5 atau 2.5" 
+                                    step="0.1"
+                                    min="0.1"
+                                    max="100"
+                                />
                             </div>
+                            <p className="text-xs text-gray-500 mt-1 ml-1">Masukkan volume dalam meter kubik (m³)</p>
+                            {errors.volume_sampah && <p className="text-red-500 text-xs mt-1">{errors.volume_sampah[0]}</p>}
                         </div>
                     </div>
 
                     {/* Foto Sampah */}
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-2">Foto Tumpukan (Opsional)</label>
-                        <div className="border-2 border-dashed border-green-200 rounded-xl p-4 text-center relative overflow-hidden hover:bg-green-50 transition cursor-pointer group">
-                            <Camera className="mx-auto text-green-500 mb-2" size={24} />
-                            <span className="text-sm text-gray-500">{formData.foto_sampah ? formData.foto_sampah.name : 'Upload foto sampah'}</span>
-                            
-                            <input 
-                                type="file" 
-                                name="foto_sampah" 
-                                onChange={handleChange} 
-                                className="opacity-0 absolute inset-0 w-full h-full cursor-pointer" 
-                                accept="image/*"
-                            />
-                        </div>
+                        {imagePreview ? (
+                            <div className="relative bg-green-50 rounded-xl border-2 border-green-200 p-4">
+                                <img 
+                                    src={imagePreview} 
+                                    alt="Preview" 
+                                    className="w-full h-64 object-contain rounded-lg" 
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setFormData(prev => ({ ...prev, foto_sampah: null }));
+                                        setImagePreview(null);
+                                    }}
+                                    className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-red-600 shadow-md"
+                                >
+                                    Hapus
+                                </button>
+                                <p className="text-xs text-gray-500 text-center mt-2">{formData.foto_sampah?.name}</p>
+                            </div>
+                        ) : (
+                            <div className="border-2 border-dashed border-green-200 rounded-xl p-4 text-center relative overflow-hidden hover:bg-green-50 transition cursor-pointer group">
+                                <Camera className="mx-auto text-green-500 mb-2" size={24} />
+                                <span className="text-sm text-gray-500">Upload foto sampah</span>
+                                <p className="text-xs text-gray-400 mt-1">JPG, PNG, JPEG (Max 5MB)</p>
+                                
+                                <input 
+                                    type="file" 
+                                    name="foto_sampah" 
+                                    onChange={handleChange} 
+                                    className="opacity-0 absolute inset-0 w-full h-full cursor-pointer" 
+                                    accept="image/jpeg,image/png,image/jpg"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     {/* Lokasi */}
@@ -123,29 +170,14 @@ const FormSampah = ({ onBack, onSuccess }) => {
                         </div>
                     </div>
 
-                    {/* Tanggal & Preferensi Armada */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Tanggal</label>
-                            <div className="relative">
-                                <Calendar className="absolute left-3 top-3 text-gray-400" size={20} />
-                                <input type="date" name="tgl_mulai" value={formData.tgl_mulai} onChange={handleChange} className={inputStyle('tgl_mulai')} />
-                            </div>
+                    {/* Tanggal */}
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Tanggal</label>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-3 text-gray-400" size={20} />
+                            <input type="date" name="tgl_mulai" value={formData.tgl_mulai} onChange={handleChange} className={inputStyle('tgl_mulai')} />
                         </div>
-                        <div>
-                             <label className="block text-sm font-bold text-gray-700 mb-2">Request Truk (Opsional)</label>
-                            <div className="relative">
-                                <Truck className="absolute left-3 top-3 text-gray-400" size={20} />
-                                {/* Value di sini STRING deskriptif, bukan ID database */}
-                                <select name="preferensi_armada" value={formData.preferensi_armada} onChange={handleChange} className={inputStyle('preferensi_armada')}>
-                                    <option value="">-- Serahkan ke Admin --</option>
-                                    <option value="Pickup Bak">Pickup Bak (Kecil)</option>
-                                    <option value="Dump Truck">Dump Truck (Besar)</option>
-                                    <option value="Engkel">Truk Engkel</option>
-                                </select>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1 ml-1">*Admin akan menyesuaikan dengan volume sampah.</p>
-                        </div>
+                        {errors.tgl_mulai && <p className="text-red-500 text-xs mt-1">{errors.tgl_mulai[0]}</p>}
                     </div>
 
                     <button type="submit" disabled={isLoading} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition shadow-lg mt-4">
