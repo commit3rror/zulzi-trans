@@ -20,9 +20,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $lokasi_jemput
  * @property string $lokasi_tujuan
  * @property float $total_biaya
+ * @property float $dp_amount
  * @property string $status_pemesanan
  * @property string $deskripsi_barang
  * @property float $est_berat_ton
+ *
  * @property string $foto_barang
  * @property int $jumlah_orang
  * @property int $lama_rental
@@ -50,11 +52,13 @@ class Pemesanan extends Model
         'lokasi_jemput',
         'lokasi_tujuan',
         'total_biaya',
+        'dp_amount',
         'harga_lama',
         'status_pemesanan',
         'id_supir',
         'deskripsi_barang',
         'est_berat_ton',
+        'volume_sampah',
         'foto_barang',
         'jumlah_orang',
         'lama_rental',
@@ -70,12 +74,14 @@ class Pemesanan extends Model
         'tgl_mulai' => 'date',
         'tgl_selesai' => 'date',
         'total_biaya' => 'float',
+        'dp_amount' => 'float',
         'est_berat_ton' => 'float',
+        'volume_sampah' => 'float',
         'jumlah_orang' => 'integer',
         'lama_rental' => 'integer',
     ];
 
-    public $timestamps = false; // ERD tidak menunjukkannya
+    public $timestamps = true; // ERD tidak menunjukkannya
 
     // --- RELASI SESUAI ERD ---
 
@@ -113,11 +119,11 @@ class Pemesanan extends Model
     }
 
     /**
-     * Relasi ke Pembayaran (Satu Pemesanan memiliki satu Pembayaran)
+     * Relasi ke Pembayaran (Satu Pemesanan memiliki banyak Pembayaran)
      */
     public function pembayaran()
     {
-        return $this->hasOne(Pembayaran::class, 'id_pemesanan', 'id_pemesanan');
+        return $this->hasMany(Pembayaran::class, 'id_pemesanan', 'id_pemesanan');
     }
 
     /**

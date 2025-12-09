@@ -29,7 +29,7 @@ class PembayaranController extends Controller
             'pembayaran.jenis_pembayaran',
             'pembayaran.bukti_transfer',
             'pembayaran.id_admin',
-            'pembayaran.status'   // <-- WAJIB TAMBAH INI
+            'pembayaran.status_pembayaran'   // <-- WAJIB TAMBAH INI
         );
 
     if (!empty($search)) {
@@ -44,7 +44,14 @@ class PembayaranController extends Controller
         });
     }
 
-    $pembayaran = $query->orderBy('pembayaran.id_pemesanan', 'asc')->get();
+    $pembayaran = $query
+        ->orderBy('pembayaran.created_at', 'desc') // urut berdasarkan tanggal terbaru
+        ->orderByRaw("CASE
+                            WHEN pembayaran.status_pembayaran = 'Menunggu' THEN 1
+                            WHEN pembayaran.status_pembayaran = 'Terverfikasi' THEN 2
+                            ELSE 3
+                        END ASC") // urutkan status khusus
+        ->get();
 
     // Tambahkan informasi tambahan seperti rekening tujuan dan waktu transfer
     $pembayaran = $pembayaran->map(function($item) {
@@ -97,53 +104,97 @@ class PembayaranController extends Controller
      * Verifikasi pembayaran (approve/reject)
      */
     public function verify(Request $request, $id)
-{
-    $request->validate([
-        'action' => 'required|in:approve,reject'
-    ]);
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject'
+        ]);
 
-    $adminId = Auth::id();
+        $adminId = Auth::id();
 
-    // Ambil pembayaran
-    $pembayaran = DB::table('pembayaran')->where('id_pembayaran', $id)->first();
+        // Ambil pembayaran
+        $pembayaran = DB::table('pembayaran')->where('id_pembayaran', $id)->first();
 
-    if (!$pembayaran) {
-        return response()->json(['message' => 'Pembayaran tidak ditemukan'], 404);
+        if (!$pembayaran) {
+            return response()->json(['message' => 'Pembayaran tidak ditemukan'], 404);
+        }
+
+        // Ambil data pemesanan terkait
+        $pemesanan = DB::table('pemesanan')->where('id_pemesanan', $pembayaran->id_pemesanan)->first();
+
+        if (!$pemesanan) {
+            return response()->json(['message' => 'Pemesanan tidak ditemukan'], 404);
+        }
+
+        if ($request->action === 'approve') {
+            // ✨ UPDATE STATUS PEMBAYARAN → Terverifikasi
+            DB::table('pembayaran')
+                ->where('id_pembayaran', $id)
+                ->update([
+                    'id_admin' => $adminId,
+                    'status_pembayaran' => 'Terverifikasi'
+                ]);
+
+            // ✨ TENTUKAN STATUS PEMESANAN BERDASARKAN JENIS PEMBAYARAN
+            $newOrderStatus = 'Lunas'; // default
+
+            if ($pembayaran->jenis_pembayaran === 'LUNAS') {
+                // Bayar LUNAS langsung → Status "Lunas"
+                $newOrderStatus = 'Lunas';
+
+            } elseif ($pembayaran->jenis_pembayaran === 'DP') {
+                // Bayar DP → Status "DP Dibayar"
+                $newOrderStatus = 'DP Dibayar';
+
+            } elseif ($pembayaran->jenis_pembayaran === 'PELUNASAN') {
+                // Bayar Pelunasan → Cek total pembayaran terverifikasi
+                $totalTerbayar = DB::table('pembayaran')
+                    ->where('id_pemesanan', $pembayaran->id_pemesanan)
+                    ->where('status_pembayaran', 'Terverifikasi')
+                    ->sum('jumlah_bayar');
+
+                // Jika total terbayar >= total biaya → "Lunas"
+                // Jika belum, tetap "DP Dibayar"
+                if ($totalTerbayar >= $pemesanan->total_biaya) {
+                    $newOrderStatus = 'Lunas';
+                } else {
+                    $newOrderStatus = 'DP Dibayar';
+                }
+            }
+
+            DB::table('pemesanan')
+                ->where('id_pemesanan', $pembayaran->id_pemesanan)
+                ->update(['status_pemesanan' => $newOrderStatus]);
+
+            return response()->json([
+                'message' => 'Pembayaran berhasil disetujui',
+                'status_pembayaran' => 'Terverifikasi',
+                'order_status' => $newOrderStatus
+            ]);
+
+        } else {
+            // ✨ REJECT: Status pembayaran → "Ditolak"
+            // Status pemesanan → "Pembayaran Ditolak"
+            DB::table('pembayaran')
+                ->where('id_pembayaran', $id)
+                ->update([
+                    'id_admin' => $adminId,
+                    'status_pembayaran' => 'Ditolak'
+                ]);
+
+            DB::table('pemesanan')
+                ->where('id_pemesanan', $pembayaran->id_pemesanan)
+                ->update(['status_pemesanan' => 'Pembayaran Ditolak']);
+
+            return response()->json([
+                'message' => 'Pembayaran ditolak',
+                'status_pembayaran' => 'Ditolak',
+                'order_status' => 'Pembayaran Ditolak'
+            ]);
+        }
     }
 
-    // Tentukan status baru pembayaran
-    $newStatus = $request->action === 'approve'
-        ? 'Terverifikasi'
-        : 'Ditolak';
 
-    // Update pembayaran: id_admin + status
-    DB::table('pembayaran')
-        ->where('id_pembayaran', $id)
-        ->update([
-            'id_admin' => $adminId,
-            'status' => $newStatus
-        ]);
-
-    // Update status pemesanan terkait
-    $newOrderStatus = $request->action === 'approve'
-        ? 'Berlangsung'
-        : 'Pembayaran Ditolak';
-
-    DB::table('pemesanan')
-        ->where('id_pemesanan', $pembayaran->id_pemesanan)
-        ->update([
-            'status_pemesanan' => $newOrderStatus
-        ]);
-
-    return response()->json([
-        'message' => 'Status pembayaran diperbarui',
-        'status' => $newStatus,
-        'order_status' => $newOrderStatus
-    ]);
-}
-
-
-    // FUNGSI DELETE YANG HILANG SEBELUMNYA
+    // FUNGSI DELETE
     public function destroy($id)
     {
         $pembayaran = DB::table('pembayaran')->where('id_pembayaran', $id)->first();

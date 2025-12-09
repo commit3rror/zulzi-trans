@@ -32,6 +32,16 @@ class PembayaranController extends Controller
             $path = Storage::url($path);
         }
 
+        // 2B. Cek apakah ini upload ulang (status = Pembayaran Ditolak)
+        $pemesanan = Pemesanan::find($request->id_pemesanan);
+        if ($pemesanan->status_pemesanan === 'Pembayaran Ditolak') {
+            // Hapus pembayaran yang ditolak (Rejected)
+            Pembayaran::where('id_pemesanan', $request->id_pemesanan)
+                ->where('jenis_pembayaran', $request->jenis_pembayaran)
+                ->where('status_pembayaran', 'Ditolak')
+                ->delete();
+        }
+
         // 3. Simpan ke Tabel Pembayaran
         try {
             $pembayaran = Pembayaran::create([
@@ -41,17 +51,18 @@ class PembayaranController extends Controller
                 'metode_bayar' => $request->metode_bayar,
                 'jenis_pembayaran' => $request->jenis_pembayaran,
                 'bukti_transfer' => $path,
+                'status_pembayaran' => 'Menunggu', // Default Menunggu
                 'id_admin' => null,
             ]);
 
             // --- PERUBAHAN: UPDATE STATUS PEMESANAN ---
-            // Agar status berubah dari 'Dikonfirmasi' -> 'Menunggu Verifikasi'
-            $pemesanan = Pemesanan::find($request->id_pemesanan);
+            // Agar status berubah dari 'Dikonfirmasi' atau 'Pembayaran Ditolak' -> 'Menunggu Verifikasi'
             $pemesanan->status_pemesanan = 'Menunggu Verifikasi';
             $pemesanan->save();
             // ------------------------------------------
 
             return response()->json([
+                'status' => 'success',
                 'message' => 'Pembayaran berhasil dikirim! Menunggu verifikasi Admin.',
                 'data' => $pembayaran
             ], 201);

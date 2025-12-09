@@ -34,6 +34,7 @@ class PemesananController extends Controller
                 'pemesanan.id_supir',
                 'pemesanan.id_armada',
                 'pemesanan.foto_barang',
+                'pemesanan.dp_amount',
                 DB::raw("CONCAT('RNT-', LPAD(pemesanan.id_pemesanan, 3, '0')) as kode_pesanan"),
                 'user.nama as nama_pelanggan',
                 'pemesanan.lokasi_jemput',
@@ -46,6 +47,7 @@ class PemesananController extends Controller
                 'pemesanan.status_pemesanan',
                 'pemesanan.jumlah_orang',
                 'pemesanan.est_berat_ton',
+                'pemesanan.volume_sampah',
                 'pemesanan.lama_rental',
                 'supir.nama as nama_supir',
                 'armada.jenis_kendaraan',
@@ -65,7 +67,18 @@ class PemesananController extends Controller
             });
         }
 
-        $pemesanan = $query->orderBy('pemesanan.tgl_pesan', 'desc')->get();
+        $pemesanan = $query
+            ->orderBy('pemesanan.created_at', 'desc') // urut berdasarkan tanggal terbaru
+            ->orderByRaw("CASE
+                            WHEN pemesanan.status_pemesanan = 'Menunggu' THEN 1
+                            WHEN pemesanan.status_pemesanan = 'Dikonfirmasi' THEN 2
+                            WHEN pemesanan.status_pemesanan = 'Pembayaran Ditolak' THEN 3
+                            WHEN pemesanan.status_pemesanan = 'DP Dibayar' THEN 4
+                            WHEN pemesanan.status_pemesanan = 'Lunas' THEN 5
+                            WHEN pemesanan.status_pemesanan = 'Selesai' THEN 6
+                            ELSE 7
+                        END ASC") // urutkan status khusus
+            ->get();
 
         // Tambahkan harga diskon jika ada (contoh logika diskon)
         $pemesanan->transform(function ($item) {
@@ -129,6 +142,7 @@ class PemesananController extends Controller
             'status_pemesanan' => 'required|string|max:20',
             'deskripsi_barang' => 'nullable|string',
             'est_berat_ton' => 'nullable|numeric',
+            'volume_sampah' => 'nullable|numeric',
             'foto_barang' => 'nullable|string',
             'jumlah_orang' => 'nullable|integer',
             'lama_rental' => 'nullable|integer',
@@ -155,9 +169,11 @@ class PemesananController extends Controller
             'lokasi_jemput' => 'sometimes|string|max:255',
             'lokasi_tujuan' => 'sometimes|string|max:255',
             'total_biaya' => 'sometimes|numeric|min:0',
+            'dp_amount' => 'nullable|numeric|min:0',
             'status_pemesanan' => 'sometimes|string|max:20',
             'deskripsi_barang' => 'nullable|string',
             'est_berat_ton' => 'nullable|numeric',
+            'volume_sampah' => 'nullable|numeric',
             'foto_barang' => 'nullable|string',
             'jumlah_orang' => 'nullable|integer',
             'lama_rental' => 'nullable|integer',
@@ -186,7 +202,7 @@ class PemesananController extends Controller
     /**
      * Verifikasi pemesanan (ubah status)
      */
-    public function verifikasi($id)
+    public function verifikasi(Request $request, $id)
     {
         $pemesanan = DB::table('pemesanan')->where('id_pemesanan', $id)->first();
 
@@ -194,11 +210,26 @@ class PemesananController extends Controller
             return response()->json(['message' => 'Pemesanan tidak ditemukan'], 404);
         }
 
+        // Ambil status baru jika dikirim FE (misal "Selesai")
+        $requestedStatus = $request->input('status_pemesanan');
+
+        // Jika tombol "Selesai" diklik (FE kirim "status_pemesanan": "Selesai")
+        if ($requestedStatus === 'Selesai') {
+            DB::table('pemesanan')
+                ->where('id_pemesanan', $id)
+                ->update(['status_pemesanan' => 'Selesai']);
+
+            return response()->json([
+                'message' => 'Status pemesanan berhasil diubah ke Selesai',
+                'new_status' => 'Selesai'
+            ]);
+        }
+
         // Logika perubahan status
         $newStatus = match ($pemesanan->status_pemesanan) {
             'Menunggu' => 'Dikonfirmasi',
-            'Dikonfirmasi' => 'Berlangsung',
-            'Berlangsung' => 'Selesai',
+            'Dikonfirmasi' => 'Lunas',
+            'Lunas' => 'Selesai',
             default => $pemesanan->status_pemesanan
         };
 

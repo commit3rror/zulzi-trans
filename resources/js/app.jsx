@@ -7,7 +7,7 @@ import { AuthProvider } from '@/context/AuthContext.jsx';
 // PERBAIKAN: Import AdminRouteGuard
 // Pastikan path ini benar sesuai lokasi file baru Anda
 // ********************************************
-import AdminRouteGuard from './Components/AdminRouteGuard.jsx'; 
+import AdminRouteGuard from './Components/AdminRouteGuard.jsx';
 
 // Import Pages
 import LoginPage from './Pages/Auth/LoginPage.jsx';
@@ -29,28 +29,29 @@ function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
                     
                     {/* ===================================== */}
                     {/* ROUTE KHUSUS USER (Private - Customer/Admin) */}
                     {/* ===================================== */}
-                    {/* Gunakan AdminRouteGuard, tapi set isAdminOnly=false. 
+                    {/* Gunakan AdminRouteGuard, tapi set isAdminOnly=false.
                         Artinya: User harus LOGIN, tapi role apapun (customer/admin) boleh. */}
-                    <Route 
-                        path="/edit-profile" 
-                        element={<AdminRouteGuard element={<EditProfile />} isAdminOnly={false} />} 
+                    <Route
+                        path="/edit-profile"
+                        element={<AdminRouteGuard element={<EditProfile />} isAdminOnly={false} />}
                     />
-                    
+
                     {/* ===================================== */}
                     {/* ROUTE ADMIN (Admin Only)              */}
                     {/* ===================================== */}
-                    {/* Gunakan AdminRouteGuard dengan isAdminOnly=true. 
-                        Artinya: User harus LOGIN DAN role-nya WAJIB 'admin'. 
+                    {/* Gunakan AdminRouteGuard dengan isAdminOnly=true.
+                        Artinya: User harus LOGIN DAN role-nya WAJIB 'admin'.
                         Jika bukan admin, akan di-redirect ke /beranda. */}
-                    <Route 
-                        path="/admin/*" 
-                        element={<AdminRouteGuard element={<AdminPanel />} isAdminOnly={true} />} 
+                    <Route
+                        path="/admin/*"
+                        element={<AdminRouteGuard element={<AdminPanel />} isAdminOnly={true} />}
                     />
-                    
+
                     {/* Default Redirect: Arahkan ke /login jika tidak ada route yang cocok */}
                     <Route path="/" element={<Navigate to="/login" replace />} />
                 </Routes>

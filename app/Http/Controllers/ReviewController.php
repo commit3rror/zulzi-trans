@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ulasan; 
+use App\Models\Ulasan;
 use App\Models\Pemesanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,10 +13,10 @@ class ReviewController extends Controller
     public function getPublicReviews()
     {
         try {
-            $ulasan = Ulasan::with('pengguna') 
+            $ulasan = Ulasan::with('pengguna')
                             ->where('is_displayed', true)  // Filter hanya review yang ditampilkan
-                            ->latest('tgl_ulasan') 
-                            ->limit(5)            
+                            ->latest('tgl_ulasan')
+                            ->limit(5)
                             ->get();
 
             return response()->json([
@@ -36,11 +36,31 @@ class ReviewController extends Controller
 
     public function getReviewTarget($id_pemesanan)
     {
-        $pemesanan = Pemesanan::with(['armada', 'supir', 'pengguna'])
+        $pemesanan = Pemesanan::with(['armada', 'supir', 'pengguna', 'layanan'])
             ->find($id_pemesanan);
 
         if (!$pemesanan) {
-            return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pesanan tidak ditemukan'
+            ], 404);
+        }
+
+        // Validasi: order harus selesai sebelum bisa direview
+        if ($pemesanan->status_pemesanan !== 'Selesai') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pesanan belum selesai. Hanya pesanan selesai yang bisa direview.'
+            ], 400);
+        }
+
+        // Cek apakah sudah pernah direview
+        $existingReview = Ulasan::where('id_pemesanan', $id_pemesanan)->first();
+        if ($existingReview) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pesanan ini sudah direview'
+            ], 400);
         }
 
         $data = [
@@ -48,16 +68,15 @@ class ReviewController extends Controller
             'id_armada' => $pemesanan->id_armada,
             'id_pengguna' => $pemesanan->id_pengguna,
             'kode_pesanan' => 'ZT-2025-' . str_pad($pemesanan->id_pemesanan, 6, '0', STR_PAD_LEFT),
-            'tgl_selesai_formatted' => Carbon::parse($pemesanan->tgl_selesai)->translatedFormat('d F Y'),
-            'jam_selesai' => '13:30 WIB',
+            'layanan' => $pemesanan->layanan ? $pemesanan->layanan->nama_layanan : 'Layanan',
+            'tgl_pesan' => $pemesanan->tgl_pesan ? Carbon::parse($pemesanan->tgl_pesan)->translatedFormat('d F Y') : '-',
+            'tgl_selesai' => $pemesanan->tgl_selesai ? Carbon::parse($pemesanan->tgl_selesai)->translatedFormat('d F Y') : '-',
             'rute' => $pemesanan->lokasi_jemput . ' → ' . $pemesanan->lokasi_tujuan,
-            'total_biaya' => number_format($pemesanan->total_biaya, 0, ',', '.'),
-            
-            // PENTING: Menggunakan jenis_kendaraan karena kolom nama_armada tidak ada di tabel
-            'nama_armada' => $pemesanan->armada ? $pemesanan->armada->jenis_kendaraan : 'Armada Tidak Dikenal',
-            
-            'nama_supir' => $pemesanan->supir ? $pemesanan->supir->nama : 'Supir Tidak Dikenal',
-            'foto_armada' => null,
+            'total_biaya' => 'Rp ' . number_format($pemesanan->total_biaya, 0, ',', '.'),
+            'nama_armada' => $pemesanan->armada ? $pemesanan->armada->jenis_kendaraan : 'Belum ditentukan',
+            'no_plat' => $pemesanan->armada ? $pemesanan->armada->no_plat : '-',
+            'nama_supir' => $pemesanan->supir ? $pemesanan->supir->nama : 'Belum ditentukan',
+            'no_telepon_supir' => $pemesanan->supir ? $pemesanan->supir->no_telepon : '-',
         ];
 
         return response()->json([
@@ -69,13 +88,12 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id_pemesanan' => 'required|exists:pemesanan,id_pemesanan',
+            'id_pemesanan' => 'required|integer|exists:pemesanan,id_pemesanan',
             'id_armada' => 'required|exists:armada,id_armada',
-            'id_pengguna' => 'required|exists:user,id_pengguna',
             'rating_driver' => 'required|integer|min:1|max:5',
             'rating_kendaraan' => 'required|integer|min:1|max:5',
             'rating_pelayanan' => 'required|integer|min:1|max:5',
-            'komentar' => 'nullable|string|max:500',
+            'komentar' => 'required|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -83,8 +101,27 @@ class ReviewController extends Controller
         }
 
         try {
+            // Cek pemesanan exist dan status selesai
+            $pemesanan = Pemesanan::find($request->id_pemesanan);
+            if (!$pemesanan) {
+                return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+            }
+
+            if ($pemesanan->status_pemesanan !== 'Selesai') {
+                return response()->json(['status' => 'error', 'message' => 'Hanya pesanan selesai yang bisa direview'], 400);
+            }
+
+            // Cek duplikasi review
+            $existingReview = Ulasan::where('id_pemesanan', $request->id_pemesanan)->first();
+            if ($existingReview) {
+                return response()->json(['status' => 'error', 'message' => 'Pesanan ini sudah direview'], 400);
+            }
+
+            // Get user ID from auth
+            $userId = auth()->id() ?? $pemesanan->id_pengguna;
+
             $ulasan = Ulasan::create([
-                'id_pengguna' => $request->id_pengguna,
+                'id_pengguna' => $userId,
                 'id_armada' => $request->id_armada,
                 'id_pemesanan' => $request->id_pemesanan,
                 'rating_driver' => $request->rating_driver,
@@ -92,16 +129,60 @@ class ReviewController extends Controller
                 'rating_pelayanan' => $request->rating_pelayanan,
                 'komentar' => $request->komentar,
                 'tgl_ulasan' => now(),
+                'is_displayed' => false, // Default false, admin yang approve
             ]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Ulasan berhasil dikirim!',
+                'message' => 'Ulasan berhasil dikirim! Menunggu persetujuan admin.',
                 'data' => $ulasan
             ], 201);
 
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Gagal menyimpan ulasan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $ulasan = Ulasan::with(['pemesanan.armada', 'pengguna'])
+                ->find($id);
+
+            if (!$ulasan) {
+                return response()->json(['status' => 'error', 'message' => 'Ulasan tidak ditemukan'], 404);
+            }
+
+            // TEST MODE: Allow anyone to view ulasan for demo
+            return response()->json([
+                'status' => 'success',
+                'data' => $ulasan
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengambil ulasan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $ulasan = Ulasan::find($id);
+
+            if (!$ulasan) {
+                return response()->json(['status' => 'error', 'message' => 'Ulasan tidak ditemukan'], 404);
+            }
+
+            // TEST MODE: Allow anyone to delete ulasan for demo
+            $ulasan->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ulasan berhasil dihapus!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal menghapus ulasan: ' . $e->getMessage()], 500);
         }
     }
 }

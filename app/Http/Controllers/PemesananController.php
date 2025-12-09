@@ -19,13 +19,15 @@ class PemesananController extends Controller
     {
         // Validasi Input
         $validator = Validator::make($request->all(), [
-            'layanan' => 'required|in:Sewa Kendaraan,Angkut Barang, Angkut Sampah',
+            'layanan' => 'required|in:Sewa Kendaraan,Angkut Barang,Angkut Sampah',
             'tgl_mulai' => 'required|date',
             'lokasi_jemput' => 'required|string',
             // id_armada kita buat nullable agar admin yang menentukan nanti
             'lama_rental' => 'nullable|integer',
             'foto_barang' => 'nullable|file|image|max:10240',
             'foto_sampah' => 'nullable|file|image|max:10240',
+            'volume_sampah' => 'nullable|numeric|min:0.1|max:100', // Validasi volume dalam m³
+            'est_berat_ton' => 'nullable|numeric|min:0.1|max:50', // Validasi berat dalam ton
         ]);
 
         if ($validator->fails()) {
@@ -34,9 +36,9 @@ class PemesananController extends Controller
 
         // Tentukan ID Layanan
         $layananId = match($request->layanan) {
-            'Sewa Kendaraan' => 3,
             'Angkut Barang' => 1,
             'Angkut Sampah' => 2,
+            'Sewa Kendaraan' => 3,
             default => 1,
         };
 
@@ -54,9 +56,15 @@ class PemesananController extends Controller
         }
         elseif ($request->layanan === 'Angkut Sampah') {
             $jenis = $request->jenis_sampah ?? '-';
-            $volume = $request->perkiraan_volume ?? '-';
-            $deskripsi = "Jenis: {$jenis}, Volume: {$volume}";
+            $volume = $request->volume_sampah ?? '-';
+            $deskripsi = "Jenis: {$jenis}, Volume: {$volume} m³";
         }
+
+        // Logic Lokasi Tujuan berdasarkan jenis layanan
+        $lokasiTujuan = match($request->layanan) {
+            'Angkut Sampah' => 'TPA (Ditentukan Zulzi Trans)', // Sampah tidak butuh input tujuan dari user
+            default => $request->lokasi_tujuan ?? $request->lokasi_jemput, // Rental & Barang butuh tujuan
+        };
 
         // Siapkan Data
         $data = [
@@ -67,7 +75,7 @@ class PemesananController extends Controller
             'tgl_selesai' => $request->tgl_selesai ?? null,
 
             'lokasi_jemput' => $request->lokasi_jemput,
-            'lokasi_tujuan' => $request->lokasi_tujuan ?? $request->lokasi_jemput,
+            'lokasi_tujuan' => $lokasiTujuan,
 
             'status_pemesanan' => 'Menunggu', // Status awal
             'total_biaya' => 0, // Harga 0 menunggu admin
@@ -78,6 +86,7 @@ class PemesananController extends Controller
 
             'deskripsi_barang' => $deskripsi,
             'est_berat_ton' => $request->est_berat_ton ?? null,
+            'volume_sampah' => $request->volume_sampah ?? null,
             'jumlah_orang' => $request->jumlah_orang ?? null,
             'lama_rental' => $request->lama_rental ?? null,
             'foto_barang' => null
@@ -106,22 +115,40 @@ class PemesananController extends Controller
         }
     }
 
-    /**
-     * 2. SHOW: Melihat Detail Pesanan (Untuk Refresh Status)
-     */
     public function show($id)
     {
-        // Ambil data pesanan beserta detail Armada dan Supir (jika sudah dipilih admin)
-        $pemesanan = Pemesanan::with(['layanan', 'armada', 'supir'])->find($id);
+        try {
+            // Ambil data pesanan beserta detail Armada, Supir, Pembayaran, Layanan, dan Pengguna
+            $pemesanan = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran', 'pengguna'])
+                ->find($id);
 
-        if (!$pemesanan) {
-            return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+            if (!$pemesanan) {
+                return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+            }
+
+            // Verify user owns this order
+            if ($pemesanan->id_pengguna != auth()->id()) {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $pemesanan
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengambil pesanan: ' . $e->getMessage()], 500);
         }
+    }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $pemesanan
-        ]);
+    /**
+     * 2B. STATUS PAGE: Halaman status pemesanan (frontend route)
+     * Method ini tidak perlu return JSON, karena semua handled by React Router
+     */
+    public function status($id)
+    {
+        // Cukup return view app.blade, React Router akan handle routing
+        return view('app');
     }
 
     /**
@@ -144,24 +171,32 @@ class PemesananController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        // Pagination parameters
+        $perPage = $request->input('per_page', 10);
+        $page = $request->input('page', 1);
+
         // Debug: Log user ID
         \Log::info('🔍 Fetching orders for user ID: ' . $userId);
 
-        // Ambil semua pesanan user dengan relasi layanan, armada, supir, pembayaran
-        $orders = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran'])
+        // Ambil pesanan user dengan relasi dan pagination (termasuk ulasan untuk cek sudah review atau belum)
+        $orders = Pemesanan::with(['layanan', 'armada', 'supir', 'pembayaran', 'ulasan'])
             ->where('id_pengguna', $userId)
             ->orderBy('tgl_pesan', 'desc')
-            ->get();
+            ->paginate($perPage);
 
         // Debug: Log hasil query
-        \Log::info('📦 Found ' . $orders->count() . ' orders');
+        \Log::info('📦 Found ' . $orders->total() . ' total orders, showing page ' . $page);
 
         return response()->json([
             'status' => 'success',
-            'data' => $orders,
-            'debug' => [
-                'user_id' => $userId,
-                'total_orders' => $orders->count()
+            'data' => $orders->items(),
+            'pagination' => [
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total(),
+                'from' => $orders->firstItem(),
+                'to' => $orders->lastItem()
             ]
         ]);
     }

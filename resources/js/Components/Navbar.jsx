@@ -18,6 +18,7 @@ const Navbar = () => {
     // State untuk Dropdown Profile
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
+
     // Efek untuk mendeteksi scroll
     useEffect(() => {
         const handleScroll = () => {
@@ -52,7 +53,9 @@ const Navbar = () => {
                 <div
                     className="relative"
                     onMouseEnter={() => setIsProfileDropdownOpen(true)}
-                    onMouseLeave={() => setIsProfileDropdownOpen(false)}
+                    onMouseLeave={() => {
+                        setTimeout(() => setIsProfileDropdownOpen(false), 300); // delay 300ms
+                    }}
                 >
                     <button
                         className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-colors shadow-md"
@@ -68,7 +71,10 @@ const Navbar = () => {
                             <Link
                                 to={profilePath}
                                 className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                                onClick={() => { setIsProfileDropdownOpen(false); setMobileMenuOpen(false); }}
+                                onClick={() => {
+                                    setIsProfileDropdownOpen(false);
+                                    setTimeout(() => setIsProfileDropdownOpen(false), 300);
+                                    setMobileMenuOpen(false); }}
                             >
                                 {user.role_pengguna === 'admin' ? 'Dashboard Admin' : 'Lihat Profil'}
                             </Link>

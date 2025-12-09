@@ -36,6 +36,7 @@ return new class extends Migration
             // Kita gunakan yang presisi tinggi (15 digit, 2 desimal).
             $table->decimal('total_biaya', 15, 2)->default(0);
             $table->decimal('harga_lama', 15, 2)->nullable();
+            $table->decimal('dp_amount', 15, 2)->default(0);
 
             $table->string('status_pemesanan', 20)->default('Menunggu');
 

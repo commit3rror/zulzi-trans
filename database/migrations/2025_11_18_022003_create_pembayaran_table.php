@@ -32,8 +32,10 @@ return new class extends Migration
             $table->string('bukti_transfer', 255)->nullable();
 
             //status pembayaran
-            $table->enum('status', ['Menunggu', 'Terverifikasi', 'Ditolak'])
+            $table->enum('status_pembayaran', ['Menunggu', 'Terverifikasi', 'Ditolak'])
                   ->default('Menunggu');
+
+            $table->timestamps();
         });
     }
 

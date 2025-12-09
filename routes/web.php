@@ -21,6 +21,15 @@ use App\Http\Controllers\Admin\DashboardController;
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
+// ✅ BARU: Rute bernama untuk Reset Password (Diperlukan oleh Laravel Mailer)
+Route::get('/reset-password/{token}', function ($token) {
+    // Ambil FRONTEND_URL dari .env
+    $frontendUrl = env('APP_URL', 'http://localhost:8000');
+
+    // Redirect ke halaman reset password di frontend
+    return redirect($frontendUrl . '/reset-password?token=' . $token . '&email=' . request('email'));
+})->name('password.reset');
+
 
 // =====================================================
 // API ROUTES

@@ -74,17 +74,30 @@ const PembayaranPage = ({ setHeaderAction }) => {
     };
 
     const handleVerify = (id, action) => {
+        const actionText = action === 'approve' ? 'menyetujui' : 'menolak';
+
+        if (!confirm(`Apakah Anda yakin ingin ${actionText} pembayaran ini?`)) {
+            return;
+        }
+
         api.post(`/api/admin/pembayaran/${id}/verify`, { action })
-            .then(() => {
-                fetchPayments(); // refresh daftar pembayaran untuk mengambil status terbaru
+            .then((response) => {
+                fetchPayments();
                 setDetailModal(null);
-                alert(`Pembayaran berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}`);
+
+                // ✨ Tampilkan info status pemesanan juga
+                const orderStatus = response.data.order_status;
+                alert(
+                    `✓ Pembayaran berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}!\n` +
+                    `Status Pemesanan: ${orderStatus}`
+                );
             })
             .catch(err => {
                 console.error("Gagal memverifikasi pembayaran:", err.response?.data || err.message);
-                alert("Gagal memverifikasi pembayaran. Cek console untuk detail.");
+                alert("❌ Gagal memverifikasi pembayaran. Cek console untuk detail.");
             });
     };
+
 
 
 
@@ -101,14 +114,31 @@ const PembayaranPage = ({ setHeaderAction }) => {
         return new Date(dateString).toLocaleDateString('id-ID', options);
     };
 
-    const getStatusBadge = (status) => {
-    const statusConfig = {
-        'Menunggu': 'bg-yellow-100 text-yellow-800',
-        'Terverifikasi': 'bg-green-100 text-green-800',
-        'Ditolak': 'bg-red-100 text-red-800'
+    const getStatusBadge = (status_pembayaran) => {
+        const statusConfig = {
+            'Menunggu': 'bg-yellow-100 text-yellow-800',
+            'Terverifikasi': 'bg-green-100 text-green-800',
+            'Ditolak': 'bg-red-100 text-red-800'
+        };
+    return statusConfig[status_pembayaran] || 'bg-gray-100 text-gray-800';
     };
-    return statusConfig[status] || 'bg-gray-100 text-gray-800';
-};
+
+    // ✨ BARU: Helper untuk format jenis pembayaran
+    const formatJenisPembayaran = (jenis) => {
+        const jenisMap = {
+            // 'LUNAS': '💰 Bayar Penuh',
+            // 'DP': '📝 Down Payment',
+            // 'PELUNASAN': '✅ Pelunasan'
+            'LUNAS' : 'LUNAS',
+            'DP' : 'DP',
+        };
+        return jenisMap[jenis] || jenis;
+    };
+
+    // ✨ BARU: Helper untuk cek apakah tombol verifikasi harus ditampilkan
+    const showVerifyButtons = (status) => {
+        return status === 'Menunggu' || status === 'Pending';
+    };
 
 
     return (
@@ -130,6 +160,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
                             <th className="py-4 px-4 text-center">Jumlah</th>
                             <th className="py-4 px-4 text-center">Tanggal</th>
                             <th className="py-4 px-4 text-center">Metode</th>
+                            <th className="py-4 px-4 text-center">Jenis Pembayaran</th>
                             <th className="py-4 px-4 text-center">Status</th>
                             <th className="py-4 px-4 text-center">Aksi</th>
                         </tr>
@@ -145,9 +176,10 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                     <td className="py-3.5 px-4 text-center text-slate-600">{formatRupiah(payment.jumlah_bayar)}</td>
                                     <td className="py-3.5 px-4 text-center text-slate-600">{formatDate(payment.tgl_bayar)}</td>
                                     <td className="py-3.5 px-4 text-center text-slate-600">{payment.metode_bayar}</td>
+                                    <td className="py-3.5 px-4 text-center text-slate-600">{formatJenisPembayaran(payment.jenis_pembayaran)}</td>
                                     <td className="py-3.5 px-4 text-center">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(payment.status)}`}>
-                                            {payment.status}
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(payment.status_pembayaran)}`}>
+                                            {payment.status_pembayaran}
                                         </span>
 
                                     </td>
@@ -161,11 +193,13 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                             />
 
                                             {/* Tombol Delete */}
-                                            <ActionButton
-                                                type="delete"    // ikon Trash dari ReusableUI
-                                                onClick={() => setDeleteConfirm(payment)} // fungsi menghapus
-                                                title="Hapus"
-                                            />
+                                            {payment.status_pembayaran === 'Ditolak' && (
+                                                <ActionButton
+                                                    type="delete"    // ikon Trash dari ReusableUI
+                                                    onClick={() => setDeleteConfirm(payment)} // fungsi menghapus
+                                                    title="Hapus"
+                                                />
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
@@ -182,22 +216,35 @@ const PembayaranPage = ({ setHeaderAction }) => {
                 {detailModal && (
                     <>
                         <div className="p-6">
-                            <div className="grid grid-cols-2 gap-6 mb-6 mx-auto w-[80%]">
-                                <div>
-                                    <p className="text-xs text-slate-500 mb-1">ID Pesanan</p>
-                                    <p className="text-sm font-semibold text-slate-900">{detailModal.id_pemesanan}</p>
+                            {/* Header Info */}
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-6 border border-blue-100">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-slate-500 mb-1">ID Pesanan</p>
+                                        <p className="text-lg font-bold text-slate-900">#{detailModal.id_pemesanan}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-slate-500 mb-1">Status</p>
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(detailModal.status_pembayaran)}`}>
+                                            {detailModal.status_pembayaran}
+                                        </span>
+                                    </div>
                                 </div>
+                            </div>
+
+                            {/* Detail Grid */}
+                            <div className="grid grid-cols-2 gap-6 mb-6">
                                 <div>
                                     <p className="text-xs text-slate-500 mb-1">Nama Pelanggan</p>
                                     <p className="text-sm font-semibold text-slate-900">{detailModal.nama}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-500 mb-1">Jumlah</p>
-                                    <p className="text-sm font-semibold text-slate-900">{formatRupiah(detailModal.jumlah_bayar)}</p>
+                                    <p className="text-xs text-slate-500 mb-1">Tanggal Pembayaran</p>
+                                    <p className="text-sm font-semibold text-slate-900">{formatDate(detailModal.tgl_bayar)}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-500 mb-1">Tanggal</p>
-                                    <p className="text-sm font-semibold text-slate-900">{formatDate(detailModal.tgl_bayar)}</p>
+                                    <p className="text-xs text-slate-500 mb-1">Jumlah Bayar</p>
+                                    <p className="text-lg font-bold text-green-600">{formatRupiah(detailModal.jumlah_bayar)}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500 mb-1">Metode Pembayaran</p>
@@ -205,17 +252,13 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500 mb-1">Rekening Tujuan</p>
-                                    <p className="text-sm font-semibold text-slate-900">{detailModal.rekening_tujuan || '-'}</p>
+                                    <p className="text-sm font-semibold text-slate-900">{detailModal.rekening_tujuan || 'BCA - 1234567890'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-500 mb-1">Waktu Transfer</p>
-                                    <p className="text-sm font-semibold text-slate-900">{detailModal.waktu_transfer || '-'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-slate-500 mb-1">Status</p>
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(detailModal.status)}`}>
-                                        {detailModal.status}
-                                    </span>
+                                    <p className="text-xs text-slate-500 mb-1">Jenis Pembayaran</p>
+                                    <p className="text-sm font-semibold text-slate-900">
+                                        {formatJenisPembayaran(detailModal.jenis_pembayaran)}
+                                    </p>
                                 </div>
                             </div>
 
@@ -224,7 +267,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                 <div className="bg-black rounded-lg overflow-hidden">
                                     {detailModal.bukti_transfer ? (
                                         <img
-                                            src={`/storage/${detailModal.bukti_transfer}`}
+                                            src={detailModal.bukti_transfer}
                                             alt="Bukti Pembayaran"
                                             className="w-full h-auto object-contain"
                                         />
@@ -236,29 +279,50 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex justify-between gap-3 p-5 bg-slate-50 border-t border-slate-100 rounded-b-xl">
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleVerify(detailModal.id_pembayaran, 'reject');
-                                }}
-                                className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-                            >
-                                Tolak Pembayaran
-                            </button>
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleVerify(detailModal.id_pembayaran, 'approve');
-                                }}
-                                className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
-                            >
-                                Setujui Pembayaran
-                            </button>
+                        {/* ✨ CONDITIONAL: Footer buttons hanya muncul jika status Menunggu */}
+                        {showVerifyButtons(detailModal.status_pembayaran) && (
+                            <div className="flex justify-between gap-3 p-5 bg-slate-50 border-t border-slate-100 rounded-b-xl">
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleVerify(detailModal.id_pembayaran, 'reject');
+                                    }}
+                                    className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Tolak Pembayaran
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleVerify(detailModal.id_pembayaran, 'approve');
+                                    }}
+                                    className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Setujui Pembayaran
+                                </button>
+                            </div>
+                        )}
 
-                        </div>
+                        {/* ✨ BARU: Info jika sudah diverifikasi/ditolak */}
+                        {!showVerifyButtons(detailModal.status_pembayaran) && (
+                            <div className="p-5 bg-slate-50 border-t border-slate-100 rounded-b-xl">
+                                <p className="text-center text-sm text-slate-600">
+                                    {detailModal.status_pembayaran === 'Terverifikasi' ? (
+                                        <span className="text-green-600 font-semibold">✓ Pembayaran sudah diverifikasi</span>
+                                    ) : (
+                                        <span className="text-red-600 font-semibold">✗ Pembayaran ditolak</span>
+                                    )}
+                                </p>
+                            </div>
+                        )}
                     </>
                 )}
             </Modal>

@@ -1,6 +1,6 @@
 // resources/service/authService.js
 import api from './api';
-import axios from 'axios'; 
+import axios from 'axios';
 
 const authService = {
     getCsrfToken: async () => {
@@ -33,7 +33,7 @@ const authService = {
         try {
             await api.post('/auth/logout');
         } catch (error) {
-            console.error('Logout request error:', error); 
+            console.error('Logout request error:', error);
         } finally {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('user');
@@ -43,7 +43,29 @@ const authService = {
     // ✅ PERBAIKAN: Tambahkan prefix /auth
     me: async () => {
         try {
-            const response = await api.get('/auth/me'); 
+            const response = await api.get('/auth/me');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+
+    // ✅ BARU: Kirim email lupa password
+    forgotPassword: async (data) => {
+        try {
+            await authService.getCsrfToken();
+            const response = await api.post('/auth/forgot-password', data);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+
+    // ✅ BARU: Reset password dengan token
+    resetPassword: async (data) => {
+        try {
+            await authService.getCsrfToken();
+            const response = await api.post('/auth/reset-password', data);
             return response.data;
         } catch (error) {
             throw error.response?.data || error;

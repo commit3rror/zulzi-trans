@@ -6,7 +6,6 @@ import {
     Modal,
     FormInput,
     FormSelect,
-    FormTextarea,
 } from '@/Components/ReusableUI';
 
 const PemesananPage = ({ setHeaderAction }) => {
@@ -24,8 +23,14 @@ const PemesananPage = ({ setHeaderAction }) => {
         id_supir: '',
         id_armada: '',
         total_biaya: '',
+        dp_amount: '',
         catatan: ''
     });
+    // Kondisi Modal verifikasi
+    const verifiedStatuses = ["Dikonfirmasi", "DP Dibayar", "Selesai"];
+    const isVerified = verifiedStatuses.includes(editItem?.status_pemesanan);
+    const isPaid = editItem?.status_pemesanan === "Lunas";
+
 
     const api = axios.create({
     baseURL: '/',
@@ -82,6 +87,7 @@ const PemesananPage = ({ setHeaderAction }) => {
             id_supir: item.id_supir ? String(item.id_supir) : "",
             id_armada: item.id_armada ? String(item.id_armada) : "",
             total_biaya: item.total_biaya || '',
+            dp_amount: item.dp_amount || '',
             catatan: item.deskripsi_barang || ''
         });
     };
@@ -93,6 +99,7 @@ const PemesananPage = ({ setHeaderAction }) => {
             id_supir: formData.id_supir,
             id_armada: formData.id_armada,
             total_biaya: Number(formData.total_biaya),
+            dp_amount: Number(formData.dp_amount) || null,
             deskripsi_barang: formData.catatan,
             status_pemesanan: 'Dikonfirmasi'
         };
@@ -141,10 +148,13 @@ const PemesananPage = ({ setHeaderAction }) => {
         const statusConfig = {
             'Menunggu': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
             'Dikonfirmasi': { bg: 'bg-blue-100', text: 'text-blue-800' },
-            'Berlangsung': { bg: 'bg-purple-100', text: 'text-purple-800' },
+            'Menunggu Verifikasi': { bg: 'bg-purple-100', text: 'text-purple-800' },
+            'Pembayaran Ditolak': { bg: 'bg-red-100', text: 'text-red-800'},
+            'DP Dibayar': { bg: 'bg-orange-100', text: 'text-orange-800' },
+            'Lunas': { bg: 'bg-emerald-100', text: 'text-emerald-800' },
             'Selesai': { bg: 'bg-green-100', text: 'text-green-800' },
-            'Dibatalkan': { bg: 'bg-red-100', text: 'text-red-800' },
-            'Pembayaran Ditolak': { bg: 'bg-red-100', text: 'text-red-800'}
+            'Dibatalkan': { bg: 'bg-red-100', text: 'text-red-800' }
+
         };
         const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800' };
         return (
@@ -159,6 +169,21 @@ const PemesananPage = ({ setHeaderAction }) => {
         { key: 'angkutan', label: 'Layanan Angkutan' },
         { key: 'sampah', label: 'Layanan Sampah' }
     ];
+
+    const updateToSelesai = (item) => {
+        // Update ke server pakai fetch/axios
+        fetch(`/api/admin/pemesanan/${item.id_pemesanan}/verifikasi`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status_pemesanan: "Selesai" }),
+        })
+        .then(() => {
+            // refresh state/UI
+            fetchPemesanan();
+            setEditItem(null);
+        });
+    };
+
 
     return (
         <>
@@ -202,7 +227,15 @@ const PemesananPage = ({ setHeaderAction }) => {
                             <th className="py-4 px-2 text-center">Tujuan</th>
                             )}
                             <th className="py-4 px-2 text-center">Keberangkatan</th>
-                            <th className="py-4 px-2 text-center">{activeTab === 'rental' ? 'Penumpang' : 'Muatan'}</th>
+                            <th className="py-4 px-2 text-center">
+                            {activeTab === 'rental'
+                                ? 'Penumpang'
+                                : activeTab === 'angkutan'
+                                ? 'Muatan'
+                                : activeTab === 'sampah'
+                                ? 'Volume'
+                                : ''}
+                            </th>
                             <th className="py-4 px-2 text-center">Harga</th>
                             <th className="py-4 px-2 text-center">Sopir</th>
                             <th className="py-4 px-2 text-center">Armada</th>
@@ -226,7 +259,7 @@ const PemesananPage = ({ setHeaderAction }) => {
                                     <td className="py-3.5 px-4 text-slate-600">
                                         {activeTab === 'rental' ? `${item.jumlah_orang} orang` :
                                          activeTab === 'angkutan' ? `${item.est_berat_ton} ton` :
-                                         activeTab === 'sampah' ? `${item.est_berat_ton} ton` : '-'}
+                                         activeTab === 'sampah' ? `${item.volume_sampah} m³` : '-'}
                                     </td>
                                     <td className="py-3.5 px-4 text-slate-600">
                                         {item.harga_lama && item.harga_lama !== item.total_biaya ? (
@@ -251,9 +284,7 @@ const PemesananPage = ({ setHeaderAction }) => {
                                     <td className="py-3.5 px-4">{getStatusBadge(item.status_pemesanan)}</td>
                                     <td className="py-3.5 px-4 text-center">
                                         <div className="flex items-center justify-center gap-2">
-                                            {item.status_pemesanan === 'Menunggu' || item.status_pemesanan === 'Dikonfirmasi' ? (
-                                                <ActionButton type="edit2" onClick={() => handleEditClick(item)} />
-                                            ) : null}
+                                            <ActionButton type="edit2" onClick={() => handleEditClick(item)} />
                                             <ActionButton type="delete" onClick={() => setDeleteConfirm(item)} />
                                         </div>
                                     </td>
@@ -303,6 +334,7 @@ const PemesananPage = ({ setHeaderAction }) => {
                                 name="id_supir"
                                 value={String(formData.id_supir)}
                                 onChange={(e) => setFormData({...formData, id_supir: e.target.value})}
+                                disabled={isVerified || isPaid}
                             >
                                 <option value="">-- Pilih Supir --</option>
                                 {supirList.map(supir => (
@@ -317,6 +349,7 @@ const PemesananPage = ({ setHeaderAction }) => {
                                 name="id_armada"
                                 value={String(formData.id_armada)}
                                 onChange={(e) => setFormData({...formData, id_armada: e.target.value})}
+                                disabled={isVerified || isPaid}
                             >
                                 <option value="">-- Pilih Armada --</option>
                                 {armadaList.map(armada => (
@@ -329,17 +362,30 @@ const PemesananPage = ({ setHeaderAction }) => {
                             {/* Harga Info & Edit */}
                             <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-slate-500">Harga Awal:</span>
+                                    <span className="text-sm text-slate-500">Harga Sementara:</span>
                                     <span className="text-sm font-medium text-slate-800">{formatCurrency(editItem.total_biaya)}</span>
                                 </div>
                                 <FormInput
-                                    label="Harga Setelah Negosiasi"
+                                    label="Harga Total Setelah Negosiasi"
                                     name="total_biaya"
                                     type="number"
                                     value={formData.total_biaya}
                                     onChange={(e) => setFormData({...formData, total_biaya: e.target.value})}
-                                    placeholder="Masukkan harga deal"
+                                    disabled={isVerified || isPaid}
+                                    placeholder="Masukkan Harga Total"
                                 />
+                                <FormInput
+                                    label="Nominal DP (Opsional)"
+                                    name="dp_amount"
+                                    type="number"
+                                    value={formData.dp_amount}
+                                    onChange={(e) => setFormData({...formData, dp_amount: e.target.value})}
+                                    disabled={isVerified || isPaid}
+                                    placeholder="Masukkan DP"
+                                />
+                                <p className="text-xs text-slate-500 italic">
+                                    * Kosongkan jika tidak ada DP.
+                                </p>
                             </div>
 
                             {/* Gambar Barang */}
@@ -357,20 +403,50 @@ const PemesananPage = ({ setHeaderAction }) => {
 
                         {/* Footer Action */}
                         <div className="flex justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl">
-                            <button
-                                type="button"
-                                onClick={() => setEditItem(null)}
-                                className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleUpdateSubmit}
-                                className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-200"
-                            >
-                                Verifikasi
-                            </button>
+
+                            {/* CASE 1: status DIKONFIRMASI */}
+                            {isVerified && !isPaid && (
+                                <p className="text-sm font-medium text-green-600">
+                                    Pesanan sudah diverifikasi
+                                </p>
+                            )}
+
+                            {/* CASE 2: status LUNAS — tampilkan tombol selesai */}
+                            {isPaid && (
+                                <div className="flex items-center gap-3">
+                                    <p className="text-sm font-medium text-green-600">
+                                        Pesanan sudah diverifikasi
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => updateToSelesai(editItem)}
+                                        className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                                    >
+                                        Selesai
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* CASE 3: status masih MENUNGGU */}
+                            {!isVerified && !isPaid && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditItem(null)}
+                                        className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleUpdateSubmit}
+                                        className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+                                    >
+                                        Verifikasi
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

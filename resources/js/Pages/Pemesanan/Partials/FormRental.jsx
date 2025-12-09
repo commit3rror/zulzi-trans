@@ -111,7 +111,7 @@ const FormRental = ({ onBack, onSuccess }) => {
 
                     {/* Jumlah Orang */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Jumlah Orang</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Jumlah Orang <span className="text-red-500">*</span></label>
                         <div className="relative">
                             <User className="absolute left-3 top-3 text-gray-400" size={20} />
                             <input
@@ -123,6 +123,7 @@ const FormRental = ({ onBack, onSuccess }) => {
                                 onChange={handleChange}
                                 className={inputStyle('jumlah_orang')}
                                 placeholder="Masukkan jumlah penumpang"
+                                required
                             />
                         </div>
                         {errors.jumlah_orang && <p className="text-red-500 text-xs mt-1">{errors.jumlah_orang[0]}</p>}
@@ -132,7 +133,7 @@ const FormRental = ({ onBack, onSuccess }) => {
                     {/* Tanggal & Durasi */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Tanggal Mulai</label>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Tanggal Mulai <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-3 text-gray-400" size={20} />
                                 <input
@@ -141,13 +142,14 @@ const FormRental = ({ onBack, onSuccess }) => {
                                     value={formData.tgl_mulai}
                                     onChange={handleChange}
                                     className={inputStyle('tgl_mulai')}
+                                    required
                                 />
                             </div>
                             {errors.tgl_mulai && <p className="text-red-500 text-xs mt-1">{errors.tgl_mulai[0]}</p>}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Durasi (Hari)</label>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Durasi (Hari) <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <Clock className="absolute left-3 top-3 text-gray-400" size={20} />
                                 <input
@@ -157,6 +159,8 @@ const FormRental = ({ onBack, onSuccess }) => {
                                     value={formData.lama_rental}
                                     onChange={handleChange}
                                     className={inputStyle('lama_rental')}
+                                    placeholder="Misal: 1 atau 3 hari"
+                                    required
                                 />
                             </div>
                             {errors.lama_rental && <p className="text-red-500 text-xs mt-1">{errors.lama_rental[0]}</p>}
@@ -165,7 +169,7 @@ const FormRental = ({ onBack, onSuccess }) => {
 
                     {/* Lokasi Jemput */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Lokasi Jemput</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Lokasi Jemput <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             name="lokasi_jemput"
@@ -173,6 +177,7 @@ const FormRental = ({ onBack, onSuccess }) => {
                             onChange={handleChange}
                             className={inputStyle('lokasi_jemput')}
                             placeholder="Alamat lengkap..."
+                            required
                         />
                         {errors.lokasi_jemput && <p className="text-red-500 text-xs mt-1">{errors.lokasi_jemput[0]}</p>}
                     </div>

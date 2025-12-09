@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import axios from 'axios'; // Import axios untuk request ke API
+import { useLocation, useNavigate } from 'react-router-dom';
 import MainLayout from '../../Layouts/MainLayout';
 import Stepper from '../../Components/Pemesanan/Stepper';
 import FormRental from './Partials/FormRental';
 import FormBarang from './Partials/FormBarang';
 import FormSampah from './Partials/FormSampah';
-import PaymentWizard from './Partials/PaymentWizard'; // Komponen baru untuk pembayaran
 import { Car, Truck, Trash2, ArrowLeft } from 'lucide-react';
 
 const PemesananPage = () => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     // State Management
-    const [step, setStep] = useState(1); // 1: Form Input, 2: Payment Wizard
+    const [step, setStep] = useState(1); // 1: Form Input
     const [selectedService, setSelectedService] = useState(null);
-    const [orderData, setOrderData] = useState(null); // Menyimpan data pesanan dari database
 
-    // Check jika ada data pesanan dari navigation state (dari profile)
+    // Redirect jika ada data pesanan dari profile
     useEffect(() => {
         if (location.state?.orderData && location.state?.showPayment) {
-            setOrderData(location.state.orderData);
-            setStep(2); // Langsung ke payment wizard
-            window.scrollTo(0, 0);
+            navigate(`/pemesanan/${location.state.orderData.id_pemesanan}/status`, { replace: true });
         }
-    }, [location]);
+    }, [location, navigate]);
 
     // Data pilihan layanan
     const services = [
@@ -33,52 +29,14 @@ const PemesananPage = () => {
         { id: 'sampah', title: 'ANGKUT SAMPAH', icon: Trash2, color: 'bg-green-600', borderColor: 'border-green-600' },
     ];
 
-    // Callback saat form input (Step 1) berhasil disubmit
+    // Callback saat form berhasil disubmit - redirect ke halaman status
     const handleOrderSuccess = (data) => {
-        setOrderData(data); // Simpan data pesanan yang baru dibuat
-        setStep(2); // Pindah ke Step 2 (Proses Pembayaran)
-        window.scrollTo(0, 0); // Scroll ke paling atas
+        navigate(`/pemesanan/${data.id_pemesanan}/status`);
     };
 
-    // Fungsi untuk mengambil status terbaru pesanan dari Backend
-    // Dipanggil saat tombol 'Refresh Status' diklik di PaymentWizard
-    const refreshOrderStatus = async () => {
-        if (!orderData?.id_pemesanan) return;
-
-        try {
-            const token = localStorage.getItem('auth_token');
-            const res = await axios.get(`/api/pemesanan/${orderData.id_pemesanan}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (res.data.status === 'success') {
-                setOrderData(res.data.data); // Update state dengan data terbaru dari DB
-                // Opsional: Beri notifikasi kecil/console log
-                console.log("Status pesanan berhasil diperbarui:", res.data.data.status_pemesanan);
-            }
-        } catch (err) {
-            console.error("Gagal refresh status:", err);
-            alert("Gagal mengambil data terbaru. Pastikan koneksi internet lancar.");
-        }
-    };
-
-    // Fungsi Render Konten Berdasarkan Step & State
+    // Render konten berdasarkan state
     const renderContent = () => {
-        // --- STEP 2: PAYMENT WIZARD ---
-        // Menangani logika Menunggu Konfirmasi -> Invoice -> Upload Bukti -> Selesai
-        if (step === 2) {
-            return (
-                <div className="py-4 animate-fade-in-up">
-                    <PaymentWizard
-                        orderData={orderData}
-                        refreshOrder={refreshOrderStatus}
-                    />
-                </div>
-            );
-        }
-
-        // --- STEP 1: PILIH LAYANAN (Tampilan Awal) ---
+        // Pilih layanan (tampilan awal)
         if (!selectedService) {
             return (
                 <div className="bg-white rounded-3xl shadow-xl p-10 max-w-5xl mx-auto mt-6 border border-gray-100 min-h-[450px] flex flex-col items-center justify-center animate-fade-in-up">
@@ -126,11 +84,8 @@ const PemesananPage = () => {
             {/* Judul Halaman */}
             <div className="text-center mb-10">
                 <h2 className="text-3xl font-extrabold text-blue-900">Halaman Pemesanan</h2>
-                <p className="text-gray-500 mt-2">Lengkapi data pemesanan & lakukan pembayaran</p>
+                <p className="text-gray-500 mt-2">Pilih layanan dan lengkapi data pemesanan</p>
             </div>
-
-            {/* Indikator Step (Stepper) */}
-            <Stepper currentStep={step} orderData={orderData} />
 
             {/* Konten Utama */}
             <div className="mb-20">

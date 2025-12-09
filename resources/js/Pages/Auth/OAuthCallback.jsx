@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import api from '../../../service/api';
-import authService from '../../../service/authService';
 
 export default function OAuthCallback() {
     const navigate = useNavigate();
@@ -12,64 +11,85 @@ export default function OAuthCallback() {
     useEffect(() => {
         const handleCallback = async () => {
             const token = searchParams.get('token');
+            const userDataEncoded = searchParams.get('user');
             const error = searchParams.get('error');
 
-            // Jika ada error dari backend
+            // 1. Jika ada error dari backend
             if (error) {
                 console.error('❌ OAuth Error:', error);
-                alert(error);
-                navigate('/login');
+
+                const notification = {
+                    type: 'error',
+                    message: decodeURIComponent(error) || 'Gagal login Google, silakan coba lagi.'
+                };
+                localStorage.setItem('oauth_alert', JSON.stringify(notification));
+
+                window.location.replace('/login');
                 return;
             }
 
-            // Jika tidak ada token
-            if (!token) {
-                console.error('❌ No token received');
-                navigate('/login');
+            // 2. Jika data tidak lengkap
+            if (!token || !userDataEncoded) {
+                console.error('❌ No token or user data received');
+
+                const notification = {
+                    type: 'error',
+                    message: 'Gagal memproses login. Data otentikasi tidak lengkap.'
+                };
+                localStorage.setItem('oauth_alert', JSON.stringify(notification));
+
+                window.location.replace('/login');
                 return;
             }
 
             try {
-                console.log('🔑 Token received from OAuth:', token.substring(0, 20) + '...');
+                // Parse user data
+                const userData = JSON.parse(decodeURIComponent(userDataEncoded));
 
-                // 1. Simpan token ke localStorage
+                // 3. Simpan token & user data ke localStorage
                 localStorage.setItem('auth_token', token);
-
-                // 2. Set Authorization header
-                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-                // 3. Fetch user data menggunakan token
-                const response = await authService.me();
-                const userData = response.data.data || response.data;
-
-                // 4. Simpan user data ke localStorage
                 localStorage.setItem('user', JSON.stringify(userData));
+
+                // 4. Set Authorization header di Axios instance
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
                 // 5. Update AuthContext
                 updateUser(userData);
 
-                console.log('✅ OAuth login successful:', userData.nama);
+                // ============================================================
+                // ✅ PERBAIKAN 1: Simpan Notifikasi Sukses ke localStorage
+                // ============================================================
+                const notification = {
+                    type: 'success',
+                    message: `Login Berhasil! Selamat datang, ${userData.nama.split(' ')[0]}!`
+                };
+                localStorage.setItem('oauth_alert', JSON.stringify(notification));
 
-                // 6. Redirect ke beranda
-                setTimeout(() => {
-                    navigate('/beranda', { replace: true });
-                }, 100);
+                // 6. Redirect keras ke halaman tujuan
+                const targetPath = userData.role_pengguna?.toLowerCase() === 'admin' ? '/admin' : '/beranda';
+
+                window.location.replace(targetPath);
 
             } catch (error) {
                 console.error('❌ Failed to process OAuth callback:', error);
-                
+
                 // Clear everything if failed
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('user');
                 api.defaults.headers.common['Authorization'] = null;
-                
-                alert('Gagal memproses login. Silakan coba lagi.');
-                navigate('/login');
+
+                const notification = {
+                    type: 'error',
+                    message: 'Terjadi kesalahan saat memproses data user.'
+                };
+                localStorage.setItem('oauth_alert', JSON.stringify(notification));
+
+                window.location.replace('/login');
             }
         };
 
         handleCallback();
-    }, [searchParams, navigate, updateUser]);
+    }, [searchParams, updateUser]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
