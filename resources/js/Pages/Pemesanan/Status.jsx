@@ -56,7 +56,36 @@ const Status = () => {
     };
 
     const adminPhone = "6283195559334";
-    const waLink = `https://wa.me/${adminPhone}?text=${encodeURIComponent(`Halo Admin, saya ingin diskusi harga untuk Order #${id}`)}`;
+    
+    // Generate WhatsApp message dengan data pesanan
+    const generateWAMessage = () => {
+        if (!order) return '';
+        
+        // Ambil nama pelanggan dari user atau order
+        const namaPelanggan = order.nama_pelanggan || order.user?.nama || order.pelanggan?.nama || 'Customer';
+        
+        // Ambil nama layanan - cek apakah object atau string
+        let namaLayanan = 'Layanan';
+        if (typeof order.layanan === 'string') {
+            namaLayanan = order.layanan;
+        } else if (order.layanan?.nama_layanan) {
+            namaLayanan = order.layanan.nama_layanan;
+        } else if (order.nama_layanan) {
+            namaLayanan = order.nama_layanan;
+        }
+        
+        const message = `Halo Admin, saya ingin diskusi harga untuk Order #${order.id_pemesanan}
+
+ID Pesanan: ${order.id_pemesanan}
+Nama: ${namaPelanggan}
+Layanan: ${namaLayanan}
+
+Terima kasih!`;
+
+        return encodeURIComponent(message);
+    };
+    
+    const waLink = `https://wa.me/${adminPhone}?text=${generateWAMessage()}`;
 
     if (loading) {
         return (

@@ -17,9 +17,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- 3. Load Vite Assets (pastikan me-load app.jsx) -->
+    <!-- 3. Load Vite Assets (pastikan me-load main.jsx) -->
     @viteReactRefresh
-    @vite('resources/js/app.jsx')
+    @vite(['resources/css/app.css', 'resources/js/main.jsx'])
 
     <!-- 4. Penyesuaian Font (Karena tidak ada tailwind.config.js) -->
     <style>
@@ -30,6 +30,6 @@
 </head>
 <body class="bg-slate-50 antialiased"> <!-- 'font-sans' dihapus, di-handle oleh <style> -->
     <!-- 5. Mount Point React -->
-    <div id="app"></div>
+    <div id="root"></div>
 </body>
 </html>
