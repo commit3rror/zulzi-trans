@@ -81,9 +81,9 @@ const Status = () => {
     const totalTagihan = Number(order.total_biaya) || 0;
     const nominalDP = Number(order.nominal_dp) || 0;
 
-    // Hitung total yang sudah dibayar (HANYA dari pembayaran yang Verified)
+    // Hitung total yang sudah dibayar (HANYA dari pembayaran yang Terverifikasi)
     const pembayaranList = Array.isArray(order.pembayaran) ? order.pembayaran : [];
-    const verifiedPayments = pembayaranList.filter(p => p.status_pembayaran === 'Verified');
+    const verifiedPayments = pembayaranList.filter(p => p.status_pembayaran === 'Terverifikasi');
     const sudahDibayar = verifiedPayments.reduce((sum, p) => sum + Number(p.jumlah_bayar || 0), 0);
     const sisaPembayaran = Math.max(0, totalTagihan - sudahDibayar);
 
