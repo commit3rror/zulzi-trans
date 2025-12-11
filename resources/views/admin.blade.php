@@ -7,7 +7,10 @@
     <!-- 1. Meta CSRF Token (PENTING UNTUK AXIOS) -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Zulzi Trans Admin</title>
+    <title>Zulzi Trans</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="{{ asset('images/logozulzi.png') }}">
 
     <!-- 2. Import Font Montserrat -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

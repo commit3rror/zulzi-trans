@@ -215,10 +215,10 @@ const PembayaranPage = ({ setHeaderAction }) => {
             <Modal isOpen={!!detailModal} onClose={() => setDetailModal(null)} title="Detail Pembayaran">
                 {detailModal && (
                     <>
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {/* Header Info */}
-                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-6 border border-blue-100">
-                                <div className="flex items-center justify-between">
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-blue-100">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                     <div>
                                         <p className="text-xs text-slate-500 mb-1">ID Pesanan</p>
                                         <p className="text-lg font-bold text-slate-900">#{detailModal.id_pemesanan}</p>
@@ -233,7 +233,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
                             </div>
 
                             {/* Detail Grid */}
-                            <div className="grid grid-cols-2 gap-6 mb-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                                 <div>
                                     <p className="text-xs text-slate-500 mb-1">Nama Pelanggan</p>
                                     <p className="text-sm font-semibold text-slate-900">{detailModal.nama}</p>
@@ -281,14 +281,14 @@ const PembayaranPage = ({ setHeaderAction }) => {
                         </div>
                         {/* ✨ CONDITIONAL: Footer buttons hanya muncul jika status Menunggu */}
                         {showVerifyButtons(detailModal.status_pembayaran) && (
-                            <div className="flex justify-between gap-3 p-5 bg-slate-50 border-t border-slate-100 rounded-b-xl">
+                            <div className="flex flex-col-reverse sm:flex-row justify-between gap-2 sm:gap-3 p-4 sm:p-5 bg-slate-50 border-t border-slate-100 rounded-b-xl">
                                 <button
                                     type="button"
                                     onClick={(e) => {
                                         e.preventDefault();
                                         handleVerify(detailModal.id_pembayaran, 'reject');
                                     }}
-                                    className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -301,7 +301,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                         e.preventDefault();
                                         handleVerify(detailModal.id_pembayaran, 'approve');
                                     }}
-                                    className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -329,23 +329,23 @@ const PembayaranPage = ({ setHeaderAction }) => {
 
             {/* Delete Confirmation Modal */}
                         <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Hapus Pemesanan">
-                            <div className="p-6">
+                            <div className="p-4 sm:p-6">
                                 <p className="text-sm text-slate-600">
                                     Anda yakin ingin menghapus Pembayaran dari <strong>{deleteConfirm?.nama}</strong>?
                                 </p>
                             </div>
-                            <div className="flex justify-end gap-3 p-5 bg-slate-50 border-t border-slate-100 rounded-b-xl">
+                            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 p-4 sm:p-5 bg-slate-50 border-t border-slate-100 rounded-b-xl">
                                 <button
                                     type="button"
                                     onClick={() => setDeleteConfirm(null)}
-                                    className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                                    className="w-full sm:w-auto px-4 sm:px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => handleDelete(deleteConfirm.id_pembayaran)}
-                                    className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                                    className="w-full sm:w-auto px-4 sm:px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
                                 >
                                     Hapus
                                 </button>
