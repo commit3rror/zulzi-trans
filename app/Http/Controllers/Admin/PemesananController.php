@@ -35,7 +35,7 @@ class PemesananController extends Controller
                 'pemesanan.id_armada',
                 'pemesanan.foto_barang',
                 'pemesanan.dp_amount',
-                DB::raw("CONCAT('RNT-', LPAD(pemesanan.id_pemesanan, 3, '0')) as kode_pesanan"),
+                DB::raw("CONCAT('ZT-', LPAD(pemesanan.id_pemesanan, 5, '0')) as kode_pesanan"),
                 'user.nama as nama_pelanggan',
                 'pemesanan.lokasi_jemput',
                 'pemesanan.lokasi_tujuan',
@@ -63,7 +63,7 @@ class PemesananController extends Controller
                     ->orWhere('pemesanan.lokasi_jemput', 'LIKE', "%{$search}%")
                     ->orWhere('supir.nama', 'LIKE', "%{$search}%")
                     ->orWhere('armada.jenis_kendaraan', 'LIKE', "%{$search}%")
-                    ->orWhere(DB::raw("CONCAT('RNT-', LPAD(pemesanan.id_pemesanan, 3, '0'))"), 'LIKE', "%{$search}%");
+                    ->orWhere(DB::raw("CONCAT('ZT-', LPAD(pemesanan.id_pemesanan, 5, '0'))"), 'LIKE', "%{$search}%");
             });
         }
 
@@ -210,14 +210,29 @@ class PemesananController extends Controller
             return response()->json(['message' => 'Pemesanan tidak ditemukan'], 404);
         }
 
-        // Ambil status baru jika dikirim FE (misal "Selesai")
+        // Ambil status baru jika dikirim FE (misal "Selesai" atau "Berlangsung")
         $requestedStatus = $request->input('status_pemesanan');
+
+        // Jika tombol "Berlangsung" diklik (FE kirim "status_pemesanan": "Berlangsung")
+        if ($requestedStatus === 'Berlangsung') {
+            DB::table('pemesanan')
+                ->where('id_pemesanan', $id)
+                ->update(['status_pemesanan' => 'Berlangsung']);
+
+            return response()->json([
+                'message' => 'Status pemesanan berhasil diubah ke Berlangsung',
+                'new_status' => 'Berlangsung'
+            ]);
+        }
 
         // Jika tombol "Selesai" diklik (FE kirim "status_pemesanan": "Selesai")
         if ($requestedStatus === 'Selesai') {
             DB::table('pemesanan')
                 ->where('id_pemesanan', $id)
-                ->update(['status_pemesanan' => 'Selesai']);
+                ->update([
+                    'status_pemesanan' => 'Selesai',
+                    'tgl_selesai' => now() // Auto-fill tanggal selesai
+                ]);
 
             return response()->json([
                 'message' => 'Status pemesanan berhasil diubah ke Selesai',

@@ -67,7 +67,7 @@ class ReviewController extends Controller
             'id_pemesanan' => $pemesanan->id_pemesanan,
             'id_armada' => $pemesanan->id_armada,
             'id_pengguna' => $pemesanan->id_pengguna,
-            'kode_pesanan' => 'ZT-2025-' . str_pad($pemesanan->id_pemesanan, 6, '0', STR_PAD_LEFT),
+            'kode_pesanan' => 'ZT-' . str_pad($pemesanan->id_pemesanan, 5, '0', STR_PAD_LEFT),
             'layanan' => $pemesanan->layanan ? $pemesanan->layanan->nama_layanan : 'Layanan',
             'tgl_pesan' => $pemesanan->tgl_pesan ? Carbon::parse($pemesanan->tgl_pesan)->translatedFormat('d F Y') : '-',
             'tgl_selesai' => $pemesanan->tgl_selesai ? Carbon::parse($pemesanan->tgl_selesai)->translatedFormat('d F Y') : '-',

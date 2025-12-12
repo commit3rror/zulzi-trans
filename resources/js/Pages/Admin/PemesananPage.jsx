@@ -30,6 +30,7 @@ const PemesananPage = ({ setHeaderAction }) => {
     const verifiedStatuses = ["Dikonfirmasi", "DP Dibayar", "Selesai"];
     const isVerified = verifiedStatuses.includes(editItem?.status_pemesanan);
     const isPaid = editItem?.status_pemesanan === "Lunas";
+    const isBerlangsung = editItem?.status_pemesanan === "Berlangsung";
 
 
     const api = axios.create({
@@ -152,6 +153,7 @@ const PemesananPage = ({ setHeaderAction }) => {
             'Pembayaran Ditolak': { bg: 'bg-red-100', text: 'text-red-800'},
             'DP Dibayar': { bg: 'bg-orange-100', text: 'text-orange-800' },
             'Lunas': { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+            'Berlangsung': { bg: 'bg-cyan-100', text: 'text-cyan-800' },
             'Selesai': { bg: 'bg-green-100', text: 'text-green-800' },
             'Dibatalkan': { bg: 'bg-red-100', text: 'text-red-800' }
 
@@ -169,6 +171,20 @@ const PemesananPage = ({ setHeaderAction }) => {
         { key: 'angkutan', label: 'Layanan Angkutan' },
         { key: 'sampah', label: 'Layanan Sampah' }
     ];
+
+    const updateToBerlangsung = (item) => {
+        // Update status ke Berlangsung
+        fetch(`/api/admin/pemesanan/${item.id_pemesanan}/verifikasi`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status_pemesanan: "Berlangsung" }),
+        })
+        .then(() => {
+            // refresh state/UI
+            fetchPemesanan();
+            setEditItem(null);
+        });
+    };
 
     const updateToSelesai = (item) => {
         // Update ke server pakai fetch/axios
@@ -223,10 +239,11 @@ const PemesananPage = ({ setHeaderAction }) => {
                             <th className="py-4 px-2 text-center">ID</th>
                             <th className="py-4 px-2 text-center">Pelanggan</th>
                             <th className="py-4 px-2 text-center">Lokasi Jemput</th>
-                            { (activeTab === 'rental' || activeTab === 'angkutan') && (
+                            { activeTab === 'angkutan' && (
                             <th className="py-4 px-2 text-center">Tujuan</th>
                             )}
                             <th className="py-4 px-2 text-center">Keberangkatan</th>
+                            <th className="py-4 px-2 text-center">Tgl Selesai</th>
                             <th className="py-4 px-2 text-center">
                             {activeTab === 'rental'
                                 ? 'Penumpang'
@@ -245,17 +262,20 @@ const PemesananPage = ({ setHeaderAction }) => {
                     </thead>
                     <tbody className="text-sm text-slate-700 divide-y divide-slate-100">
                         {isLoading ? (
-                            <tr><td colSpan="10" className="text-center py-12 text-slate-400">Memuat data...</td></tr>
+                            <tr><td colSpan="12" className="text-center py-12 text-slate-400">Memuat data...</td></tr>
                         ) : pemesanan.length > 0 ? (
                             pemesanan.map((item) => (
                                 <tr key={item.id_pemesanan} className="hover:bg-slate-50 transition-colors">
                                     <td className="py-3.5 px-4 font-medium text-slate-900">{item.kode_pesanan}</td>
                                     <td className="py-3.5 px-4 text-slate-600">{item.nama_pelanggan}</td>
                                     <td className="py-3.5 px-4 text-slate-600">{item.lokasi_jemput}</td>
-                                    { (activeTab === 'rental' || activeTab === 'angkutan') && (
+                                    { activeTab === 'angkutan' && (
                                         <td className="py-3.5 px-4 text-slate-600">{item.lokasi_tujuan}</td>
                                     )}
                                     <td className="py-3.5 px-4 text-slate-600">{formatDate(item.tgl_mulai)}</td>
+                                    <td className="py-3.5 px-4 text-slate-600">
+                                        {item.tgl_selesai ? formatDate(item.tgl_selesai) : '-'}
+                                    </td>
                                     <td className="py-3.5 px-4 text-slate-600">
                                         {activeTab === 'rental' ? `${item.jumlah_orang} orang` :
                                          activeTab === 'angkutan' ? `${item.est_berat_ton} ton` :
@@ -320,9 +340,15 @@ const PemesananPage = ({ setHeaderAction }) => {
                                     <span className="font-semibold text-slate-700 text-right max-w-[60%]">{editItem.lokasi_tujuan}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-400 shrink-0">Tanggal:</span>
+                                    <span className="text-slate-400 shrink-0">Tanggal Mulai:</span>
                                     <span className="font-semibold text-slate-700 text-right">{formatDate(editItem.tgl_mulai)}</span>
                                 </div>
+                                {editItem.tgl_selesai && (
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-400 shrink-0">Tanggal Selesai:</span>
+                                        <span className="font-semibold text-green-600 text-right">{formatDate(editItem.tgl_selesai)}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -405,17 +431,34 @@ const PemesananPage = ({ setHeaderAction }) => {
                         <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl">
 
                             {/* CASE 1: status DIKONFIRMASI */}
-                            {isVerified && !isPaid && (
+                            {isVerified && !isPaid && !isBerlangsung && (
                                 <p className="text-sm font-medium text-green-600 text-center sm:text-left">
                                     Pesanan sudah diverifikasi
                                 </p>
                             )}
 
-                            {/* CASE 2: status LUNAS — tampilkan tombol selesai */}
+                            {/* CASE 2: status LUNAS — tampilkan tombol Mulai Perjalanan */}
                             {isPaid && (
                                 <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
                                     <p className="text-sm font-medium text-green-600 text-center sm:text-left">
-                                        Pesanan sudah diverifikasi
+                                        Pesanan siap dilaksanakan
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => updateToBerlangsung(editItem)}
+                                        className="w-full sm:w-auto px-4 sm:px-5 py-2.5 text-sm font-medium text-white bg-cyan-600 rounded-lg hover:bg-cyan-700"
+                                    >
+                                        Mulai Perjalanan
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* CASE 3: status BERLANGSUNG — tampilkan tombol Selesai */}
+                            {isBerlangsung && (
+                                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                                    <p className="text-sm font-medium text-cyan-600 text-center sm:text-left">
+                                        Perjalanan sedang berlangsung
                                     </p>
 
                                     <button
@@ -428,8 +471,8 @@ const PemesananPage = ({ setHeaderAction }) => {
                                 </div>
                             )}
 
-                            {/* CASE 3: status masih MENUNGGU */}
-                            {!isVerified && !isPaid && (
+                            {/* CASE 4: status masih MENUNGGU */}
+                            {!isVerified && !isPaid && !isBerlangsung && (
                                 <>
                                     <button
                                         type="button"
