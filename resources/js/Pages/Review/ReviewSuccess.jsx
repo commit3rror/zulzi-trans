@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, MessageCircle, Truck, Heart, AlertCircle, Trash2 } from 'lucide-react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../../Components/Navbar';
 import Footer from '../../Components/Footer';
 
 export default function ReviewSuccess() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); // Get query params
-  const ulasanId = searchParams.get('ulasan_id'); // Get ?ulasan_id=1 from URL
+  const { id } = useParams(); // Get :id from /review-success/:id
+  const ulasanId = id; // Use URL path parameter as ulasan_id
   const [ulasan, setUlasan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

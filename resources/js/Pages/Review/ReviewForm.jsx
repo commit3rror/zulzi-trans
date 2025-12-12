@@ -98,7 +98,7 @@ export default function ReviewForm() {
         throw new Error(data.message || data.errors?.komentar?.[0] || 'Gagal menyimpan ulasan');
       }
 
-      // Redirect ke success page dengan ulasan ID
+      // Redirect ke success page dengan ulasan ID (path parameter)
       navigate(`/review-success/${data.data.id_ulasan}`);
     } catch (err) {
       setError(err.message || 'Gagal menyimpan ulasan');

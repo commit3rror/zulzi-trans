@@ -385,12 +385,18 @@ const ProfilePage = () => {
                                                             Menunggu Pelunasan
                                                         </span>
                                                     )}
-                                                    {/* Badge Sudah Review */}
+                                                    {/* Badge Sudah Review - Clickable */}
                                                     {order.status_pemesanan === 'Selesai' && order.ulasan && order.ulasan.length > 0 && (
-                                                        <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full inline-flex items-center gap-1">
-                                                            <CheckCircle size={12} />
-                                                            Sudah Direview
-                                                        </span>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation(); // Prevent card click
+                                                                navigate(`/review-success/${order.ulasan[0].id_ulasan}`);
+                                                            }}
+                                                            className="text-xs text-green-600 bg-green-50 hover:bg-green-100 px-2 py-1 rounded-full inline-flex items-center gap-1 transition cursor-pointer border border-green-200 hover:border-green-300"
+                                                        >
+                                                            <Eye size={12} />
+                                                            Lihat Review
+                                                        </button>
                                                     )}
                                                 </div>
                                                 <p className="text-sm text-gray-500 font-mono">Order #{order.id_pemesanan}</p>
@@ -603,44 +609,61 @@ const ProfilePage = () => {
             {/* Modal Detail Pesanan */}
             {isDetailModalOpen && selectedOrder && (
                 <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsDetailModalOpen(false)}>
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-[#003366] to-[#00a3e0] p-6 text-white">
-                            <h3 className="text-2xl font-bold">Detail Pesanan #{selectedOrder.id_pemesanan}</h3>
-                            <p className="text-sm opacity-90 mt-1">{selectedOrder.layanan?.nama_layanan}</p>
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+                        {/* Header - Clean dengan ID pesanan yang jelas */}
+                        <div className="relative bg-gradient-to-r from-[#0C4371] to-[#5CBCE2] p-6 overflow-hidden">
+                            {/* Decorative subtle */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
+                            
+                            <div className="relative z-10">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1">
+                                        <p className="text-xs uppercase tracking-wider text-white opacity-80 mb-2">Detail Pesanan</p>
+                                        <h3 className="text-3xl font-extrabold text-white tracking-tight mb-2">#{selectedOrder.id_pemesanan}</h3>
+                                        <p className="text-sm text-white opacity-90 flex items-center gap-2">
+                                            <Package size={14} />
+                                            {selectedOrder.layanan?.nama_layanan}
+                                        </p>
+                                    </div>
+                                    <StatusBadge status={selectedOrder.status_pemesanan} />
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="p-6 space-y-6">
-                            {/* Status Badge */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-500">Status</span>
-                                <StatusBadge status={selectedOrder.status_pemesanan} />
-                            </div>
+                        <div className="p-6 space-y-5 max-h-[calc(90vh-180px)] overflow-y-auto">
 
-                            {/* Info Grid */}
+                            {/* Info Grid - Clean dengan color palette */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-xs text-gray-500 mb-1">Tanggal Layanan</p>
-                                    <p className="font-bold text-gray-800">{formatDate(selectedOrder.tgl_mulai)}</p>
+                                <div className="bg-[#EFF6FF] p-5 rounded-xl border border-[#BBDEFF]">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Calendar className="text-[#5CBCE2]" size={16} />
+                                        <p className="text-xs font-semibold text-[#0C4371] uppercase tracking-wide">Tanggal Layanan</p>
+                                    </div>
+                                    <p className="font-bold text-[#0C4371] text-base">{formatDate(selectedOrder.tgl_mulai)}</p>
                                 </div>
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-xs text-gray-500 mb-1">Total Biaya</p>
-                                    <p className="font-bold text-[#003366] text-lg">{formatRupiah(selectedOrder.total_biaya)}</p>
+                                <div className="bg-[#ECFEFF] p-5 rounded-xl border border-[#5CBCE2]">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Wallet className="text-[#0C4371]" size={16} />
+                                        <p className="text-xs font-semibold text-[#0C4371] uppercase tracking-wide">Total Biaya</p>
+                                    </div>
+                                    <p className="font-extrabold text-[#0C4371] text-xl">{formatRupiah(selectedOrder.total_biaya)}</p>
                                 </div>
                             </div>
 
-                            {/* Payment Breakdown - Show if has payments or DP Dibayar */}
+                            {/* Payment Breakdown - Clean styling */}
                             {(selectedOrder.pembayaran?.length > 0 || selectedOrder.status_pemesanan === 'DP Dibayar') && (
-                                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-5">
-                                    <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                        <Wallet size={20} className="text-[#00a3e0]" />
-                                        Rincian Pembayaran
-                                    </h4>
+                                <div className="bg-[#FAFAFA] border border-[#E1E3E7] rounded-xl p-5">
+                                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[#E1E3E7]">
+                                        <div className="w-9 h-9 bg-[#5CBCE2] rounded-lg flex items-center justify-center">
+                                            <Wallet size={18} className="text-white" />
+                                        </div>
+                                        <h4 className="font-bold text-[#0C4371] text-base">Rincian Pembayaran</h4>
+                                    </div>
                                     <div className="space-y-3">
                                         {/* Total Biaya */}
-                                        <div className="flex justify-between items-center pb-3 border-b border-blue-200">
-                                            <span className="text-sm text-gray-600">Total Biaya</span>
-                                            <span className="font-bold text-gray-800">{formatRupiah(selectedOrder.total_biaya)}</span>
+                                        <div className="flex justify-between items-center pb-3 border-b border-[#E1E3E7]">
+                                            <span className="text-sm font-semibold text-gray-700">Total Biaya</span>
+                                            <span className="font-bold text-[#0C4371] text-base">{formatRupiah(selectedOrder.total_biaya)}</span>
                                         </div>
 
                                         {/* Yang Sudah Dibayar (hanya verified) */}
@@ -651,16 +674,22 @@ const ProfilePage = () => {
                                             return (
                                                 <>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-sm text-gray-600">Sudah Dibayar</span>
-                                                        <span className="font-bold text-green-600">
+                                                        <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                                            <CheckCircle size={14} className="text-green-600" />
+                                                            Sudah Dibayar
+                                                        </span>
+                                                        <span className="font-bold text-green-600 text-base">
                                                             {formatRupiah(totalTerbayar)}
                                                         </span>
                                                     </div>
 
                                                     {/* Sisa Pembayaran */}
                                                     {sisaPembayaran > 0 && (
-                                                        <div className="flex justify-between items-center pt-3 border-t border-blue-200">
-                                                            <span className="text-sm font-bold text-gray-700">Sisa Pembayaran</span>
+                                                        <div className="flex justify-between items-center pt-3 border-t border-[#E1E3E7] bg-orange-50 -mx-5 px-5 py-3 -mb-5 rounded-b-xl">
+                                                            <span className="text-sm font-bold text-orange-700 flex items-center gap-2">
+                                                                <AlertTriangle size={16} className="text-orange-600" />
+                                                                Sisa Pembayaran
+                                                            </span>
                                                             <span className="font-bold text-orange-600 text-lg">
                                                                 {formatRupiah(sisaPembayaran)}
                                                             </span>
@@ -669,8 +698,9 @@ const ProfilePage = () => {
 
                                                     {/* Status Lunas */}
                                                     {sisaPembayaran === 0 && totalTerbayar > 0 && (
-                                                        <div className="mt-3 bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-bold text-center">
-                                                            ✓ Pembayaran Lunas
+                                                        <div className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold text-center flex items-center justify-center gap-2">
+                                                            <CheckCircle size={16} />
+                                                            Pembayaran Lunas
                                                         </div>
                                                     )}
                                                 </>
@@ -680,41 +710,49 @@ const ProfilePage = () => {
 
                                     {/* List Pembayaran */}
                                     {selectedOrder.pembayaran?.length > 0 && (
-                                        <div className="mt-4 pt-4 border-t border-blue-200">
-                                            <p className="text-xs text-gray-500 mb-3 font-semibold">Riwayat Transaksi:</p>
+                                        <div className="mt-5 pt-4 border-t border-[#E1E3E7]">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Clock size={14} className="text-[#5CBCE2]" />
+                                                <p className="text-xs text-[#0C4371] font-bold uppercase tracking-wide">Riwayat Transaksi</p>
+                                            </div>
                                             <div className="space-y-2">
                                                 {selectedOrder.pembayaran.map((payment, idx) => (
-                                                    <div key={payment.id_pembayaran} className="flex justify-between items-center text-sm bg-white rounded-lg p-3">
-                                                        <div>
-                                                            <p className="font-medium text-gray-800">
+                                                    <div key={payment.id_pembayaran} className="flex justify-between items-center text-sm bg-white border border-[#E1E3E7] rounded-lg p-3">
+                                                        <div className="flex-1">
+                                                            <p className="font-bold text-[#0C4371] text-sm mb-1">
                                                                 Pembayaran #{idx + 1}
                                                             </p>
-                                                            <p className="text-xs text-gray-500">
-                                                                {payment.metode_pembayaran} • {formatDate(payment.tgl_bayar)}
+                                                            <p className="text-xs text-gray-600 flex items-center gap-1.5">
+                                                                <span className="font-medium">{payment.metode_pembayaran}</span>
+                                                                <span className="text-gray-400">•</span>
+                                                                <span>{formatDate(payment.tgl_bayar)}</span>
                                                             </p>
                                                             {/* Alasan penolakan jika ada */}
                                                             {payment.status_pembayaran === 'Rejected' && payment.catatan && (
-                                                                <div className="mt-2 bg-red-50 border border-red-200 rounded p-2">
-                                                                    <p className="text-xs text-red-700 font-medium">Alasan Penolakan:</p>
-                                                                    <p className="text-xs text-red-600 mt-1">{payment.catatan}</p>
+                                                                <div className="mt-2 bg-red-50 border-l-2 border-red-500 rounded p-2">
+                                                                    <p className="text-xs text-red-700 font-semibold mb-0.5">Alasan:</p>
+                                                                    <p className="text-xs text-red-600">{payment.catatan}</p>
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div className="text-right">
-                                                            <p className={`font-bold ${
+                                                        <div className="text-right ml-3">
+                                                            <p className={`font-bold text-base mb-1 ${
                                                                 payment.status_pembayaran === 'Terverifikasi' ? 'text-green-600' :
                                                                 payment.status_pembayaran === 'Ditolak' ? 'text-red-600' :
                                                                 'text-orange-600'
                                                             }`}>
                                                                 {formatRupiah(payment.jumlah_bayar)}
                                                             </p>
-                                                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                                            <span className={`text-xs px-2 py-1 rounded-full font-semibold inline-flex items-center gap-1 ${
                                                                 payment.status_pembayaran === 'Terverifikasi' ? 'bg-green-100 text-green-700' :
                                                                 payment.status_pembayaran === 'Ditolak' ? 'bg-red-100 text-red-700' :
                                                                 'bg-orange-100 text-orange-700'
                                                             }`}>
-                                                                {payment.status_pembayaran === 'Terverifikasi' ? 'Terverifikasi' :
-                                                                 payment.status_pembayaran === 'Ditolak' ? 'Ditolak' : 'Menunggu'}
+                                                                {payment.status_pembayaran === 'Terverifikasi' && <CheckCircle size={10} />}
+                                                                {payment.status_pembayaran === 'Ditolak' && <XCircle size={10} />}
+                                                                {payment.status_pembayaran === 'Pending' && <Clock size={10} />}
+                                                                {payment.status_pembayaran === 'Terverifikasi' ? 'Berhasil' :
+                                                                 payment.status_pembayaran === 'Ditolak' ? 'Ditolak' : 'Pending'}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -725,38 +763,56 @@ const ProfilePage = () => {
                                 </div>
                             )}
 
-                            {/* Lokasi */}
-                            <div className="space-y-3">
-                                <div className="flex gap-3 items-start">
-                                    <MapPin className="text-[#00a3e0] shrink-0 mt-1" size={20} />
-                                    <div className="flex-1">
-                                        <p className="text-xs text-gray-500">Lokasi Jemput</p>
-                                        <p className="font-medium text-gray-800">{selectedOrder.lokasi_jemput}</p>
-                                    </div>
+                            {/* Lokasi - Clean style */}
+                            <div className="bg-[#FAFAFA] border border-[#E1E3E7] rounded-xl p-5">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <MapPin className="text-[#5CBCE2]" size={16} />
+                                    <p className="text-sm font-bold text-[#0C4371]">Lokasi Perjalanan</p>
                                 </div>
-                                {selectedOrder.lokasi_tujuan && selectedOrder.lokasi_tujuan !== '-' && (
+                                <div className="space-y-3">
                                     <div className="flex gap-3 items-start">
-                                        <MapPin className="text-[#00a3e0] shrink-0 mt-1" size={20} />
+                                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                                        </div>
                                         <div className="flex-1">
-                                            <p className="text-xs text-gray-500">Lokasi Tujuan</p>
-                                            <p className="font-medium text-gray-800">{selectedOrder.lokasi_tujuan}</p>
+                                            <p className="text-xs font-semibold text-gray-500 mb-1">Lokasi Jemput</p>
+                                            <p className="font-semibold text-[#0C4371] text-sm">{selectedOrder.lokasi_jemput}</p>
                                         </div>
                                     </div>
-                                )}
+                                    {selectedOrder.lokasi_tujuan && selectedOrder.lokasi_tujuan !== '-' && (
+                                        <>
+                                            <div className="flex justify-center">
+                                                <div className="w-px h-6 bg-[#E1E3E7]"></div>
+                                            </div>
+                                            <div className="flex gap-3 items-start">
+                                                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <MapPin className="text-white" size={14} />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-xs font-semibold text-gray-500 mb-1">Lokasi Tujuan</p>
+                                                    <p className="font-semibold text-[#0C4371] text-sm">{selectedOrder.lokasi_tujuan}</p>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Armada */}
+                            {/* Armada - Clean card */}
                             {selectedOrder.armada && (
-                                <div className="border border-gray-200 rounded-xl p-4">
-                                    <p className="text-xs text-gray-500 mb-3">Armada</p>
+                                <div className="bg-[#FAFAFA] border border-[#E1E3E7] rounded-xl p-5">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <Package className="text-[#5CBCE2]" size={16} />
+                                        <p className="text-sm font-bold text-[#0C4371]">Armada</p>
+                                    </div>
                                     <div className="flex gap-4 items-center">
-                                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                                            <Package size={32} className="text-gray-400" />
+                                        <div className="w-16 h-16 bg-[#BBDEFF] rounded-xl flex items-center justify-center">
+                                            <Package size={28} className="text-[#0C4371]" />
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-gray-800">{selectedOrder.armada.nama_armada}</p>
-                                            <p className="text-sm text-gray-600">{selectedOrder.armada.no_plat}</p>
-                                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">
+                                        <div className="flex-1">
+                                            <p className="font-bold text-[#0C4371] text-base mb-1">{selectedOrder.armada.nama_armada}</p>
+                                            <p className="text-sm font-semibold text-gray-700 mb-2 font-mono">{selectedOrder.armada.no_plat}</p>
+                                            <span className="text-xs bg-[#5CBCE2] text-white px-3 py-1 rounded-full font-semibold inline-block">
                                                 {selectedOrder.armada.jenis_kendaraan}
                                             </span>
                                         </div>
@@ -764,59 +820,65 @@ const ProfilePage = () => {
                                 </div>
                             )}
 
-                            {/* Supir */}
+                            {/* Supir - Clean card */}
                             {selectedOrder.supir && (
-                                <div className="border border-gray-200 rounded-xl p-4">
-                                    <p className="text-xs text-gray-500 mb-3">Supir</p>
+                                <div className="bg-[#FAFAFA] border border-[#E1E3E7] rounded-xl p-5">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <User className="text-[#5CBCE2]" size={16} />
+                                        <p className="text-sm font-bold text-[#0C4371]">Supir</p>
+                                    </div>
                                     <div className="flex gap-4 items-center">
-                                        <div className="w-16 h-16 bg-[#003366] rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                                        <div className="w-16 h-16 bg-[#0C4371] rounded-xl flex items-center justify-center text-white font-bold text-2xl">
                                             {selectedOrder.supir.nama?.charAt(0).toUpperCase()}
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-gray-800">{selectedOrder.supir.nama}</p>
-                                            <p className="text-sm text-gray-600">{selectedOrder.supir.no_telepon}</p>
-                                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">
-                                                SIM: {selectedOrder.supir.no_sim}
-                                            </span>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-[#0C4371] text-base mb-1">{selectedOrder.supir.nama}</p>
+                                            <p className="text-sm text-gray-700 flex items-center gap-2">
+                                                <Phone size={12} className="text-[#5CBCE2]" />
+                                                {selectedOrder.supir.no_telepon}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Deskripsi */}
+                            {/* Deskripsi - Clean styling */}
                             {selectedOrder.deskripsi_barang && (
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-xs text-gray-500 mb-2">Deskripsi</p>
-                                    <p className="text-sm text-gray-700">{selectedOrder.deskripsi_barang}</p>
+                                <div className="bg-[#FAFAFA] border border-[#E1E3E7] p-4 rounded-xl">
+                                    <p className="text-xs font-bold text-[#0C4371] mb-2">Deskripsi Tambahan</p>
+                                    <p className="text-sm text-gray-700 leading-relaxed italic">"{selectedOrder.deskripsi_barang}"</p>
                                 </div>
                             )}
 
-                            {/* Timeline */}
-                            <div className="border-t border-gray-200 pt-4">
-                                <p className="text-xs text-gray-500 mb-3">Timeline</p>
+                            {/* Timeline - Clean dengan color palette */}
+                            <div className="border-t border-[#E1E3E7] pt-5">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Clock size={16} className="text-[#5CBCE2]" />
+                                    <p className="text-sm font-bold text-[#0C4371]">Timeline</p>
+                                </div>
                                 <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Tanggal Pesan</span>
-                                        <span className="font-medium">{formatDate(selectedOrder.tgl_pesan)}</span>
+                                    <div className="flex justify-between items-center p-3 bg-[#EFF6FF] rounded-lg">
+                                        <span className="text-gray-700 font-medium">Tanggal Dibuat</span>
+                                        <span className="font-bold text-[#0C4371]">{formatDate(selectedOrder.tgl_pesan)}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Tanggal Mulai</span>
-                                        <span className="font-medium">{formatDate(selectedOrder.tgl_mulai)}</span>
+                                    <div className="flex justify-between items-center p-3 bg-[#ECFEFF] rounded-lg">
+                                        <span className="text-gray-700 font-medium">Tanggal Mulai</span>
+                                        <span className="font-bold text-[#0C4371]">{formatDate(selectedOrder.tgl_mulai)}</span>
                                     </div>
                                     {selectedOrder.tgl_selesai && (
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Tanggal Selesai</span>
-                                            <span className="font-medium">{formatDate(selectedOrder.tgl_selesai)}</span>
+                                        <div className="flex justify-between items-center p-3 bg-[#FAFAFA] rounded-lg">
+                                            <span className="text-gray-700 font-medium">Tanggal Selesai</span>
+                                            <span className="font-bold text-[#0C4371]">{formatDate(selectedOrder.tgl_selesai)}</span>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    onClick={() => setIsDetailModalOpen(false)}
-                                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 font-bold rounded-xl hover:bg-gray-300 transition"
+{/* Action Buttons - Clean dengan color palette */}
+                <div className="flex gap-3 pt-5 border-t border-[#E1E3E7] mt-5">
+                    <button
+                        onClick={() => setIsDetailModalOpen(false)}
+                        className="flex-1 px-6 py-3 bg-[#E1E3E7] text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition"
                                 >
                                     Tutup
                                 </button>
@@ -836,22 +898,27 @@ const ProfilePage = () => {
                                                     ? 'bg-red-600 hover:bg-red-700'
                                                     : selectedOrder.status_pemesanan === 'DP Dibayar'
                                                     ? 'bg-orange-600 hover:bg-orange-700'
-                                                    : 'bg-[#00a3e0] hover:bg-[#0082b3]'
+                                                    : 'bg-[#5CBCE2] hover:bg-[#0C4371]'
                                             }`}
                                         >
                                             {selectedOrder.status_pemesanan === 'Pembayaran Ditolak' && (
                                                 <>
-                                                    <XCircle size={20} />
+                                                    <XCircle size={18} />
                                                     Upload Ulang Pembayaran
                                                 </>
                                             )}
                                             {selectedOrder.status_pemesanan === 'DP Dibayar' && (
                                                 <>
-                                                    <AlertTriangle size={20} />
-                                                    Lanjutkan Pelunasan ({formatRupiah(sisaPembayaran)})
+                                                    <AlertTriangle size={18} />
+                                                    Lanjutkan Pelunasan
                                                 </>
                                             )}
-                                            {selectedOrder.status_pemesanan === 'Dikonfirmasi' && 'Bayar Sekarang'}
+                                            {selectedOrder.status_pemesanan === 'Dikonfirmasi' && (
+                                                <>
+                                                    <Wallet size={18} />
+                                                    Bayar Sekarang
+                                                </>
+                                            )}
                                         </button>
                                     );
                                 })()}
@@ -860,11 +927,17 @@ const ProfilePage = () => {
                                 {selectedOrder.status_pemesanan === 'Selesai' && (
                                     <>
                                         {selectedOrder.ulasan && selectedOrder.ulasan.length > 0 ? (
-                                            // Jika sudah ada review, tampilkan badge
-                                            <div className="flex-1 px-6 py-3 bg-green-50 border-2 border-green-200 text-green-700 font-bold rounded-xl text-center inline-flex items-center justify-center gap-2">
-                                                <CheckCircle size={20} />
-                                                Sudah Direview
-                                            </div>
+                                            // Jika sudah ada review, tampilkan button untuk lihat review
+                                            <button
+                                                onClick={() => {
+                                                    setIsDetailModalOpen(false);
+                                                    navigate(`/review-success/${selectedOrder.ulasan[0].id_ulasan}`);
+                                                }}
+                                                className="flex-1 px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition inline-flex items-center justify-center gap-2"
+                                            >
+                                                <Eye size={18} />
+                                                Lihat Review Saya
+                                            </button>
                                         ) : (
                                             // Jika belum ada review, tampilkan button
                                             <button
@@ -872,7 +945,7 @@ const ProfilePage = () => {
                                                     setIsDetailModalOpen(false);
                                                     navigate(`/review-form/${selectedOrder.id_pemesanan}`);
                                                 }}
-                                                className="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl hover:from-yellow-600 hover:to-orange-600 transition inline-flex items-center justify-center gap-2"
+                                                className="flex-1 px-6 py-3 bg-yellow-500 text-white font-bold rounded-xl hover:bg-yellow-600 transition inline-flex items-center justify-center gap-2"
                                             >
                                                 <Star size={20} />
                                                 Beri Review
