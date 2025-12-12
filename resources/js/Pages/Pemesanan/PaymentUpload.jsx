@@ -137,7 +137,7 @@ const PaymentUpload = () => {
     };
 
     const bankOptions = {
-        'BCA': { name: 'Bank BCA', rekening: '1234567890', atasNama: 'Zulzi Trans' },
+        'BCA': { name: 'Bank BCA', rekening: '5290249017', atasNama: 'Feri Antono' },
         'QRIS': { name: 'QRIS', rekening: 'Scan QR Code', atasNama: 'Zulzi Trans' },
     };
 

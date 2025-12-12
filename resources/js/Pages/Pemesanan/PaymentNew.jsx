@@ -98,8 +98,8 @@ const PaymentNew = () => {
     // Data rekening BCA
     const bankAccount = {
         name: 'Bank BCA',
-        rekening: '1234567890',
-        atasNama: 'Zulzi Trans'
+        rekening: '5290249017',
+        atasNama: 'Feri Antono'
     };
 
     // Metode pembayaran options

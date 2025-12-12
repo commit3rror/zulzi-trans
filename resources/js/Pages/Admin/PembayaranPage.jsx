@@ -252,7 +252,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500 mb-1">Rekening Tujuan</p>
-                                    <p className="text-sm font-semibold text-slate-900">{detailModal.rekening_tujuan || 'BCA - 1234567890'}</p>
+                                    <p className="text-sm font-semibold text-slate-900">{detailModal.rekening_tujuan || 'BCA - 5290249017 (Feri Antono)'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500 mb-1">Jenis Pembayaran</p>

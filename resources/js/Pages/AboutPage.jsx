@@ -140,18 +140,6 @@ export default function AboutPage(props) {
                         Memberikan solusi logistik yang terintegrasi dan kompetitif untuk memenuhi kebutuhan pelanggan.
                     </p>
                 </div>
-
-                {/* Card 3 - Nilai */}
-                <div className="bg-gradient-to-br from-white to-blue-50 p-10 rounded-3xl shadow-xl border-2 border-blue-100 hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 group relative overflow-hidden">
-                    <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#5eb3ff] rounded-full opacity-5 group-hover:opacity-10 transition-opacity duration-500"></div>
-                    <div className="w-20 h-20 bg-gradient-to-br from-[#5eb3ff] to-[#3d9cff] rounded-2xl flex items-center justify-center text-white mb-6 group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 shadow-lg">
-                        <Award size={40} />
-                    </div>
-                    <h3 className="text-2xl font-black text-[#3d9cff] mb-4">Tujuan Kami</h3>
-                    <p className="text-gray-700 leading-relaxed text-sm font-medium">
-                        Memberikan solusi logistik yang terintegrasi dan kompetitif untuk memenuhi kebutuhan pelanggan.
-                    </p>
-                </div>
             </div>
         </div>
       </section>

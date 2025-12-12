@@ -243,7 +243,7 @@ const PemesananPage = ({ setHeaderAction }) => {
                             <th className="py-4 px-2 text-center">Tujuan</th>
                             )}
                             <th className="py-4 px-2 text-center">Keberangkatan</th>
-                            <th className="py-4 px-2 text-center">Tgl Selesai</th>
+                            <th className="py-4 px-2 text-center">Tanggal Selesai</th>
                             <th className="py-4 px-2 text-center">
                             {activeTab === 'rental'
                                 ? 'Penumpang'
