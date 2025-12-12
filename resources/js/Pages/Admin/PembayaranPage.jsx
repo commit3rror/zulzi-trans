@@ -171,7 +171,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
                         ) : payments.length > 0 ? (
                             payments.map((payment) => (
                                 <tr key={payment.id_pembayaran} className="hover:bg-slate-50 transition-colors">
-                                    <td className="py-3.5 px-4 text-center font-medium text-slate-600 w-10">{payment.id_pemesanan}</td>
+                                    <td className="py-3.5 px-4 text-center font-medium text-slate-900">{payment.kode_pesanan || 'ZT-' + String(payment.id_pemesanan).padStart(5, '0')}</td>
                                     <td className="py-3.5 px-4 text-center text-slate-600">{payment.nama}</td>
                                     <td className="py-3.5 px-4 text-center text-slate-600">{formatRupiah(payment.jumlah_bayar)}</td>
                                     <td className="py-3.5 px-4 text-center text-slate-600">{formatDate(payment.tgl_bayar)}</td>
@@ -221,7 +221,7 @@ const PembayaranPage = ({ setHeaderAction }) => {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-xs text-slate-500 mb-1">ID Pesanan</p>
-                                        <p className="text-lg font-bold text-slate-900">#{detailModal.id_pemesanan}</p>
+                                        <p className="text-lg font-bold text-slate-900">{detailModal.kode_pesanan || 'ZT-' + String(detailModal.id_pemesanan).padStart(5, '0')}</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xs text-slate-500 mb-1">Status</p>

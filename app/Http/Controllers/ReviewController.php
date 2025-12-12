@@ -153,10 +153,18 @@ class ReviewController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Ulasan tidak ditemukan'], 404);
             }
 
+            // Format ulasan data with kode_pesanan
+            $ulasanArray = $ulasan->toArray();
+            
+            // Add kode_pesanan to pemesanan if it exists
+            if ($ulasan->pemesanan) {
+                $ulasanArray['pemesanan']['kode_pesanan'] = 'ZT-' . str_pad($ulasan->pemesanan->id_pemesanan, 5, '0', STR_PAD_LEFT);
+            }
+
             // TEST MODE: Allow anyone to view ulasan for demo
             return response()->json([
                 'status' => 'success',
-                'data' => $ulasan
+                'data' => $ulasanArray
             ]);
 
         } catch (\Exception $e) {
